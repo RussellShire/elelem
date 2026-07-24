@@ -16,7 +16,7 @@ For the rule that no implementation may begin until the user has approved a desi
 
 ## Procedure
 
-1. **Explore project context.** Read files, docs, and recent commits in the area the request touches. Stay focused: do not exhaustively map the codebase. If after the initial pass the request appears to span more than ~3 subsystems, stop and tell the user; help them decompose into subprojects before continuing.
+1. **Explore project context.** Before exploring, read `../_shared/project-context-discovery.md` using `{{READ_FILE_TOOL}}` if you have not already read it in this session, then run that shared procedure as part of this step. Read files, docs, ADRs, and recent commits in the area the request touches. Stay focused: do not exhaustively map the codebase. If after the initial pass the request appears to span more than ~3 subsystems, stop and tell the user; help them decompose into subprojects before continuing.
 2. **Ask clarifying questions.** One question per message. Prefer multiple choice via `{{ASK_USER_QUESTION_TOOL}}` over open-ended prose. Focus on purpose, constraints, and success criteria. **MUST NOT** stack multiple questions in one turn.
 3. **Propose 2-3 approaches.** Present trade-offs explicitly. Lead with the recommended option and explain why it is recommended.
 4. **Present the design in sections.** Cover architecture, components, data flow, error handling, and testing. Scale each section to its complexity: a few sentences for straightforward sections, up to ~300 words for nuanced ones. Get user approval on each section before moving to the next.

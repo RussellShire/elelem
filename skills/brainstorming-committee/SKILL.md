@@ -15,6 +15,7 @@ This skill depends on two sibling/shared files that are **not** always in contex
 
 - `committee-member-prompt.md` (sibling) - prompt templates paste-filled in step 4
 - `../_shared/subagent-dispatch.md` - procedural rules for dispatching the committee members
+- `../_shared/project-context-discovery.md` - bounded docs and ADR discovery during context exploration
 
 Before running the procedure below, you **MUST** read both files using the {{READ_FILE_TOOL}} tool if you have not already read them in this session.
 
