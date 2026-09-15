@@ -27,17 +27,20 @@ This skill **MUST NOT** be invoked until the caller has produced a consolidated 
 
 ## What the Reviewer Checks
 
-| Category     | What to look for                                                               |
-|--------------|--------------------------------------------------------------------------------|
-| Completeness | Gaps, undefined behaviour, missing components, unanswered questions            |
-| Consistency  | Contradictions between sections, conflicting requirements                      |
-| Clarity      | Requirements ambiguous enough that someone could build the wrong thing         |
-| Scope        | Focused enough for a single plan, not covering multiple independent subsystems |
-| YAGNI        | Unrequested features, over-engineering, unnecessary complexity                 |
+| Category     | What to look for                                                                                 |
+|--------------|--------------------------------------------------------------------------------------------------|
+| Completeness | Gaps, undefined behaviour, missing components, unanswered questions                              |
+| Consistency  | Contradictions between sections, conflicting requirements                                        |
+| Clarity      | Requirements ambiguous enough that someone could build the wrong thing                           |
+| Scope        | Focused enough for a single plan, not covering multiple independent subsystems                   |
+| YAGNI        | Unrequested features, over-engineering, unnecessary complexity                                   |
+| Simplicity   | Has the design grown beyond the initial problem being solved, could it be done with less changes |
 
 ## Calibration
 
-The reviewer **MUST** only flag issues that would cause real problems during implementation planning. A missing component, a contradiction, or a requirement so ambiguous it could be interpreted two different ways are issues. Minor wording improvements, stylistic preferences, and "sections less detailed than others" are not.
+The reviewer should push back if plans are overly complicated and the same result can be achieved with less changes.
+
+Otherwise the reviewer **MUST** only flag issues that would cause real problems during implementation planning. A missing component, a contradiction, or a requirement so ambiguous it could be interpreted two different ways are issues. Minor wording improvements, stylistic preferences, and "sections less detailed than others" are not.
 
 The full prompt with calibration language and output format lives in `design-reviewer-prompt.md`.
 
