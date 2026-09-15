@@ -23,7 +23,11 @@ For the rule that no implementation may begin until the user has approved a desi
 
 3. **Capture additional context only if genuinely ambiguous.** Whether the design came from prior context or a fresh answer, only ask a targeted follow-up question if you genuinely cannot derive acceptance criteria from it, e.g. it is contradictory, missing a decision point you cannot infer, or too vague to act on. **MUST NOT** ask a follow-up merely to double-check something already stated clearly in context. **MUST NOT** stack multiple questions. **MUST NOT** turn this into a brainstorming dialogue, if you find yourself needing more than one follow-up, stop and tell the user that skip mode is the wrong choice for this work; they should re-invoke `brainstorming` and pick standard or guided mode instead.
 
-4. **Present the captured design via plan mode.** Use `{{EXIT_PLAN_TOOL}}` to present the design statement as the plan content. Format:
+4. **Prioritise simplicity and readability.** Before expanding a design, identify the minimum viable change. Start from existing code and add only what is necessary for the stated requirement. Treat new layers, files, interfaces, configuration, and extension points as costs requiring explicit justification.
+ 
+5. **Use existing patterns.** If a similar problem has already been solved elsewhere in the codebase we should use a similar pattern again to reduce cognitive load. An existing implementation might also be extensible to solve the current problem but reuse is acceptable only when it is demonstrably smaller than a local change for the current request.
+
+6. **Present the captured design via plan mode.** Use `{{EXIT_PLAN_TOOL}}` to present the design statement as the plan content. Format:
 
    ```
    ## Approved Design (skip mode)
