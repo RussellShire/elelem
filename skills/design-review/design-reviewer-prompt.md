@@ -20,20 +20,24 @@ Use this template when dispatching a design reviewer subagent.
 
     ## What to Check
 
-    | Category     | What to Look For                                                               |
-    |--------------|--------------------------------------------------------------------------------|
-    | Completeness | Gaps, undefined behaviour, missing components, unanswered questions            |
-    | Consistency  | Contradictions between sections, conflicting requirements                      |
-    | Clarity      | Requirements ambiguous enough to cause someone to build the wrong thing        |
-    | Scope        | Focused enough for a single plan, not covering multiple independent subsystems |
-    | YAGNI        | Unrequested features, over-engineering, unnecessary complexity                 |
+    | Category     | What to Look For                                                                                 |
+    |--------------|--------------------------------------------------------------------------------------------------|
+    | Completeness | Gaps, undefined behaviour, missing components, unanswered questions                              |
+    | Consistency  | Contradictions between sections, conflicting requirements                                        |
+    | Clarity      | Requirements ambiguous enough to cause someone to build the wrong thing                          |
+    | Scope        | Focused enough for a single plan, not covering multiple independent subsystems                   |
+    | YAGNI        | (You Aren't Going To Need It) Unrequested features, over-engineering, unnecessary complexity     |
+    | Simplicity   | Has the design grown beyond the initial problem being solved, could it be done with less changes |
+    
 
     ## Calibration
 
-    **Only flag issues that would cause real problems during implementation planning.**
+    **Push back if plans are overly complicated and the same result can be achieved with less changes.**
+    Otherwise only flag issues that would cause real problems during implementation planning.
     A missing component, a contradiction, or a requirement so ambiguous it could be
     interpreted two different ways are issues. Minor wording improvements,
     stylistic preferences, and "sections less detailed than others" are not.
+     
 
     Approve unless there are serious gaps that would lead to a flawed plan.
 
