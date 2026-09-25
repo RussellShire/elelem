@@ -1,6 +1,9 @@
 ---
 name: work-on-ticket
 description: Picks up a ticket from the project's ticketing system, fetches its parent epic, recovers the embedded design context, presents the scope to the user for confirmation, and hands off to subagent-driven-development with the recovered design as the approved input. The re-entry point for work planned in a previous session via brainstorming and create-tickets.
+metadata:
+  model: openai/gpt-5.6-terra
+  reasoning_effort: high
 ---
 
 # Work on Ticket

@@ -1,6 +1,9 @@
 ---
 name: brainstorming-committee
 description: "Turns an idea into an approved design through autonomous deliberation by three subagents with different perspectives, who debate decisions and converge on consensus without user involvement until the final design is ready for review. Then runs design-review and hands off to create-tickets or subagent-driven-development."
+metadata:
+  model: openai/gpt-5.6-terra
+  reasoning_effort: high
 ---
 
 # Brainstorming (Committee)

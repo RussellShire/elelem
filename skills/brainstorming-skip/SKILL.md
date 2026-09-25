@@ -1,6 +1,8 @@
 ---
 name: brainstorming-skip
 description: "Lightweight design capture for cases where structured brainstorming would be overkill. Reuses a design already discussed in context when present, otherwise asks the user for a brief design statement; presents it for explicit approval and hands off to create-tickets or subagent-driven-development. Only invoked from the brainstorming router when the user picks the skip option."
+metadata:
+  model: openai/gpt-5.6-luna
 ---
 
 # Brainstorming (Skip)

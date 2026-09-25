@@ -1,6 +1,9 @@
 ---
 name: brainstorming-standard
 description: "Turns an idea into an approved design through interactive dialogue with a user who already knows the codebase. Explores context, asks one question at a time, proposes alternatives, presents the design in sections, runs design-review, and hands off to create-tickets or subagent-driven-development."
+metadata:
+  model: openai/gpt-5.6-terra
+  reasoning_effort: high
 ---
 
 # Brainstorming (Standard)

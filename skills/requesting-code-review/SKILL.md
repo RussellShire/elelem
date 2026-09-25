@@ -1,6 +1,8 @@
 ---
 name: requesting-code-review
 description: Dispatches a code-reviewer subagent against a specific git range with the context it needs to assess production readiness. Selects the most specific reviewer type available, starts on the cheapest capable model, and applies severity discipline to the result.
+metadata:
+  model: openai/gpt-5.6-luna
 ---
 
 # Requesting Code Review

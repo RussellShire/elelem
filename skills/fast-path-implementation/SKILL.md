@@ -1,6 +1,8 @@
 ---
 name: fast-path-implementation
 description: Implements a batch of uniformly simple changes via a single implementer dispatch and a single combined review. Only invoked when complexity-triage has classified the work as SIMPLE.
+metadata:
+  model: openai/gpt-5.6-luna
 ---
 
 # Fast Path Implementation

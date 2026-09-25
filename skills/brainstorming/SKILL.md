@@ -1,6 +1,8 @@
 ---
 name: brainstorming
 description: "You MUST use this before any code edit: creating features, fixing bugs, building components, adding functionality, refactoring, or modifying behaviour. Routes the design step to standard, guided, committee, or skip mode based on a single user choice, then hands off to the chosen mode skill."
+metadata:
+  model: openai/gpt-5.6-luna
 ---
 
 # Brainstorming (Router)

@@ -1,6 +1,9 @@
 ---
 name: test-driven-development
 description: Runs the red-green-refactor cycle. Writes a failing test, verifies it fails for the right reason, writes minimal code to pass, then refactors while green. Enforces the iron law that no production code is written without a failing test first.
+metadata:
+  model: openai/gpt-5.6-terra
+  reasoning_effort: high
 ---
 
 # Test-Driven Development

@@ -1,6 +1,9 @@
 ---
 name: debugging
 description: "Runs a disciplined, evidence-driven investigation to reproduce a bug, identify its root cause, and deliver a minimal verified fix. Triggered by bugs, errors, failing tests, unexpected behaviour, or anything described as not working. Enforces the hard gate (no fix without reproduction and identified root cause), scope discipline, the investigation budget, and the minimal fix principle."
+metadata:
+  model: openai/gpt-5.6-terra
+  reasoning_effort: high
 ---
 
 # Debugging

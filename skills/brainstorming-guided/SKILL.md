@@ -1,6 +1,9 @@
 ---
 name: brainstorming-guided
 description: "Turns an idea into an approved design through interactive dialogue with a user who is unfamiliar with the codebase. Walks the user through the relevant architecture, patterns, and conventions while designing, builds their mental model alongside the design, then runs design-review and hands off to create-tickets or subagent-driven-development."
+metadata:
+  model: openai/gpt-5.6-terra
+  reasoning_effort: high
 ---
 
 # Brainstorming (Guided)

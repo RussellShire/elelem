@@ -1,6 +1,8 @@
 ---
 name: detect-ticketing-system
 description: Identifies which ticketing system the current project uses (GitHub Issues, Jira, GitLab, Linear, or none) by scanning available MCP tools, git remotes, and CLI binaries. Returns the detected system so a caller can pick the right API, or reports that no system is available so the caller can fall back.
+metadata:
+  model: openai/gpt-5.6-luna
 ---
 
 # Detect Ticketing System
