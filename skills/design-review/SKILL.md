@@ -2,7 +2,7 @@
 name: design-review
 description: "Reviews a consolidated design summary for completeness, consistency, clarity, scope, and YAGNI issues by dispatching a reviewer subagent against the summary text and iterating until the design is approved or escalated."
 metadata:
-  model: openai/gpt-5.6-terra
+  model: openai/gpt-6-sol
   reasoning_effort: high
 ---
 

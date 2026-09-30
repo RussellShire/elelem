@@ -2,7 +2,7 @@
 name: create-tickets
 description: Turns an approved design into tickets in the project's ticketing system, or into a structured Markdown document when no ticketing system is available. Decomposes the design into right-sized child tickets under a single parent epic whose body carries the full design for future sessions to recover.
 metadata:
-  model: openai/gpt-5.6-terra
+  model: openai/gpt-6-sol
   reasoning_effort: high
 ---
 

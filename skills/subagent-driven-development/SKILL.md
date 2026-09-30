@@ -2,7 +2,7 @@
 name: subagent-driven-development
 description: Implements an approved design by decomposing it into sequential tasks, dispatching a fresh subagent per task with a combined review, and checkpointing with the user after each task. Delegates uniformly simple work to fast-path-implementation via complexity-triage.
 metadata:
-  model: openai/gpt-5.6-terra
+  model: openai/gpt-6-sol
   reasoning_effort: high
 ---
 
