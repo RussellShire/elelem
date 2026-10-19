@@ -1,6 +1,9 @@
 ---
 name: complexity-triage
 description: Classifies a unit of implementation work as SIMPLE or COMPLEX against six strict binary criteria with mandatory evidence. Defaults to COMPLEX; SIMPLE must be proven with specific observations from the design.
+metadata:
+  model: openai/gpt-6.1-sol
+  reasoning_effort: medium
 ---
 
 # Complexity Triage

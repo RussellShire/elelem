@@ -1,6 +1,9 @@
 ---
 name: verification-before-completion
 description: Runs the gate function that produces fresh verification evidence before a completion claim. Identifies the proving command, runs it fresh in the current message, reads the output, and only states the claim with cited evidence.
+metadata:
+  model: openai/gpt-6.1-sol
+  reasoning_effort: medium
 ---
 
 # Verification Before Completion

@@ -1,6 +1,9 @@
 ---
 name: dispatching-parallel-agents
 description: Dispatches multiple focused subagents concurrently in a single message when a problem decomposes into independent domains. Each agent gets isolated context and a self-contained task; the orchestrator reconciles their outputs.
+metadata:
+  model: openai/gpt-6.1-sol
+  reasoning_effort: medium
 ---
 
 # Dispatching Parallel Agents
