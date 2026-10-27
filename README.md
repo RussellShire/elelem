@@ -147,6 +147,19 @@ bash _tests/run_install_codex_tests.sh
 
 The scenarios in `_tests/workflow_scenarios.md` are manual live-harness checks, not automated checks and not evidence that those scenarios have already been run. Harness-specific routing and actual model capability must be verified in the target harness.
 
+### Test pruning
+
+When a task changes a test-bearing file, the coordinator uses the shared
+test-pruning procedure to audit every test and parameterised case in each
+actually touched file, including older cases. Removal requires evidence that
+retained survivors preserve every distinct defect, a scoped recovery record,
+and stable pre-prune and post-prune discovery counts. Uncertainty keeps the
+test. An empty test-bearing scope is recorded as not applicable, not as an
+audit. Automated workflow checks verify policy and installation contracts;
+they do not establish live agent compliance. The adversarial scenarios in
+`_tests/workflow_scenarios.md` are manual and remain unrun unless explicitly
+reported otherwise.
+
 ## Writing a new language pack
 
 Create `rules/<language>/<topic>.md` and start the file with the only frontmatter format that is known to work reliably:

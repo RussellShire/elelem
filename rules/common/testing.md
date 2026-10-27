@@ -43,6 +43,34 @@ You **MUST NOT** mock:
 - Pure functions or data classes
 - Internal collaborators that you own and can drive with real data
 
+## Meaningful Assertions
+
+Assertions protect named behaviour and distinct defects, not incidental
+structure. A test or assertion is meaningful when it would detect a specific
+incorrect behaviour that matters to an approved requirement, public contract,
+or existing supported behaviour.
+
+When assessing test removal:
+
+- Name every distinct defect the test or case can detect. Similar setup,
+  overlapping assertions, or one shared failure does not prove redundancy.
+- Remove a redundant test or case only when retained survivor tests detect
+  every distinct defect it detects. Identify the survivor for each defect.
+- Treat parameterised cases independently when their inputs, outcomes, or
+  defect coverage differ. Include older tests in every task-touched test file.
+- Treat uncertainty, missing historical RED evidence, and inability to name a
+  defect as reasons to keep the test, not evidence that it is redundant or
+  ineffective.
+- Keep a uniquely valuable but ineffective test pending correction. Report
+  why it is ineffective and which behaviour it fails to protect.
+- Do not remove a test merely because it asserts implementation details if
+  those details are part of an approved contract or prevent a named defect.
+
+Use the shared test-pruning procedure for the audit, evidence, application,
+recovery, and invalidation lifecycle. This section is the sole canonical value
+rule. Auditor prompts receive this section verbatim; they must not substitute
+or paraphrase it.
+
 ## Test-Driven Development
 
 ### The Iron Law

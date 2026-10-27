@@ -21,6 +21,11 @@ workflow_files=(
   "skills/_shared/workflow-artifacts.md"
   "skills/_shared/task-briefs.md"
   "skills/_shared/wave-readiness.md"
+  "skills/_shared/test-pruning.md"
+  "skills/test-driven-development/SKILL.md"
+  "skills/subagent-driven-development/SKILL.md"
+  "skills/subagent-driven-development/implementer-prompt.md"
+  "skills/subagent-driven-development/reviewer-prompt.md"
 )
 skill_files=(
   "skills/workflow-coordinator/SKILL.md"
@@ -174,6 +179,155 @@ test_codex_installer_copy_and_substitution() {
   _pass "codex_installer_copy_and_substitution"
 }
 
+test_test_pruning_contract_is_documented() {
+  local file token requirement normalized missing=0
+  local requirements=(
+    "rules/common/testing.md|Meaningful Assertions"
+    "rules/common/testing.md|distinct defects"
+    "skills/_shared/test-pruning.md|uncertain"
+    "skills/_shared/test-pruning.md|distinct"
+    "skills/_shared/test-pruning.md|survivor"
+    "skills/_shared/test-pruning.md|read-only"
+    "skills/_shared/test-pruning.md|NOT APPLICABLE"
+    "skills/_shared/test-pruning.md|canonical value rule"
+    "skills/_shared/test-pruning.md|pre-prune"
+    "skills/_shared/test-pruning.md|post-prune"
+    "skills/_shared/test-pruning.md|discovery-count"
+    "skills/_shared/test-pruning.md|invalidation"
+    "skills/_shared/test-pruning.md|workflow.md"
+    "skills/_shared/test-pruning.md|{{DISPATCH_AGENT_TOOL}}"
+    "skills/_shared/test-pruning.md|COMPLETE CURRENT MEANINGFUL ASSERTIONS SECTION VERBATIM"
+    "skills/_shared/test-pruning.md|TASK_START_HEAD_AND_BASELINE_REFERENCE"
+    "skills/_shared/test-pruning.md|PRE_EXISTING_CONTENT_IDENTITIES_OR_SNAPSHOTS"
+    "skills/_shared/test-pruning.md|ACTUAL_TASK_DIFF_PATHS_AND_SCOPE_EVIDENCE"
+    "skills/_shared/test-pruning.md|TEST_SOURCE_AND_CONTEXT"
+    "skills/_shared/test-pruning.md|INPUT_PATHS_AND_CONTENT_IDENTITIES"
+    "skills/_shared/test-pruning.md|ACTIVE_TASK_OWNERSHIP_AND_STABILITY_EVIDENCE"
+    "skills/_shared/test-pruning.md|APPROVED_BEHAVIOUR_TO_REQUIREMENT_MAP"
+    "skills/_shared/test-pruning.md|PRE_PRUNE_CHECKS_AND_DISCOVERY_COUNTS"
+    "skills/_shared/test-pruning.md|POST_PRUNE_COMMAND_AND_COUNTING_METHOD"
+    "skills/_shared/test-pruning.md|RECOVERY"
+    "skills/_shared/test-pruning.md|survivor stability"
+    "skills/test-driven-development/SKILL.md|TDD-only skip"
+    "skills/test-driven-development/SKILL.md|Assertions protect named behaviour"
+    "skills/subagent-driven-development/SKILL.md|pre-prune"
+    "skills/subagent-driven-development/SKILL.md|post-prune"
+    "skills/subagent-driven-development/SKILL.md|no nested audit dispatch"
+    "skills/subagent-driven-development/implementer-prompt.md|baseline"
+    "skills/subagent-driven-development/implementer-prompt.md|recovery"
+    "skills/subagent-driven-development/implementer-prompt.md|Do not prune"
+    "skills/subagent-driven-development/implementer-prompt.md|audit your own work"
+    "skills/subagent-driven-development/reviewer-prompt.md|survivor mapping"
+    "skills/subagent-driven-development/reviewer-prompt.md|final green snapshot"
+    "skills/subagent-driven-development/reviewer-prompt.md|Important finding"
+    "README.md|test pruning"
+    "README.md|live"
+  )
+  for requirement in "${requirements[@]}"; do
+    file="${requirement%%|*}"
+    token="${requirement#*|}"
+    if [[ ! -f "$REPO_ROOT/$file" ]]; then
+      _fail "test_pruning_contract_${file//\//_}_${token//[^[:alnum:]]/_}" "expected $file to document $token"
+      missing=1
+      continue
+    fi
+    normalized="$(tr '\n' ' ' < "$REPO_ROOT/$file" | tr -s '[:space:]' ' ')"
+    if ! grep -Fqi "$token" <<< "$normalized"; then
+      _fail "test_pruning_contract_${file//\//_}_${token//[^[:alnum:]]/_}" "expected $file to document $token"
+      missing=1
+    fi
+  done
+  if (( missing == 0 )); then
+    _pass "test_pruning_contract_is_documented"
+  fi
+}
+
+test_tdd_completion_gate_is_behaviour_based() {
+  local file="$REPO_ROOT/skills/test-driven-development/SKILL.md"
+  local content
+  content="$(tr '\n' ' ' < "$file")"
+  if grep -Fq 'Every new function or method has a test' <<< "$content" || grep -Fq 'Edge cases and error paths covered' <<< "$content"; then
+    _fail "tdd_completion_gate_is_behaviour_based" "generic function and edge-case checklist remains"
+    return
+  fi
+  if ! grep -Eiq 'Every new (or changed )?behaviour' <<< "$content" || ! grep -Eiq 'cases?[^.]{0,120}(defined|derived|mapped)[^.]{0,120}approved behaviours' <<< "$content"; then
+    _fail "tdd_completion_gate_is_behaviour_based" "expected new behaviours and behaviour-defined cases in the completion gate"
+    return
+  fi
+  _pass "tdd_completion_gate_is_behaviour_based"
+}
+
+test_pruning_safety_gates_are_explicit() {
+  local helper="$REPO_ROOT/skills/_shared/test-pruning.md"
+  local helper_content
+  helper_content="$(tr '\n' ' ' < "$helper")"
+  if ! grep -Eiq 'non-zero exit (status|code)' <<< "$helper_content" || ! grep -Eiq 'blocks? (any )?removal' <<< "$helper_content"; then
+    _fail "pruning_safety_gates_are_explicit" "a non-zero pre-prune check must block removals"
+    return
+  fi
+  if ! grep -Eiq 'worker[^.]{0,100}restor' <<< "$helper_content" || ! grep -Eiq 'coordinator[^.]{0,100}(must not|does not|never)[^.]{0,80}(edit|restor|apply)' <<< "$helper_content"; then
+    _fail "pruning_safety_gates_are_explicit" "restoration must be assigned to a worker, not coordinator edits"
+    return
+  fi
+  _pass "pruning_safety_gates_are_explicit"
+}
+
+test_auditor_rule_source_is_harness_aware_and_bounded() {
+  local helper="$REPO_ROOT/skills/_shared/test-pruning.md"
+  local content requirement pattern missing=0
+  content="$(tr '\n' ' ' < "$helper")"
+  local requirements=(
+    'Claude Code source|Claude Code.{0,160}rules/common/testing\.md'
+    'OpenCode source|OpenCode.{0,160}rules/common/testing\.md'
+    'Codex source|Codex.{0,200}(AGENTS\.md.{0,100}rules/common/testing\.md|rules/common/testing\.md.{0,100}AGENTS\.md)'
+    'Codex managed block|Codex.{0,200}(active.{0,100}elelem-managed.{0,100}AGENTS\.md|AGENTS\.md.{0,100}active.{0,100}elelem-managed)'
+    'exact section|only.{0,100}Meaningful Assertions section.{0,100}verbatim'
+    'section boundary|next level-two heading'
+    'unavailable authority|authoritative.{0,160}(unavailable|cannot be retrieved)'
+    'blocked dispatch|block.{0,100}dispatch'
+  )
+  for requirement in "${requirements[@]}"; do
+    pattern="${requirement#*|}"
+    if ! grep -Eiq "$pattern" <<< "$content"; then
+      _fail "auditor_rule_source_${requirement%%|*}" "expected harness-specific authoritative rule retrieval contract"
+      missing=1
+    fi
+  done
+  if (( missing == 0 )); then
+    _pass "auditor_rule_source_is_harness_aware_and_bounded"
+  fi
+}
+
+test_audit_invalidation_uses_accepted_green_snapshot() {
+  local helper="$REPO_ROOT/skills/_shared/test-pruning.md"
+  local content
+  content="$(tr '\n' ' ' < "$helper")"
+  if ! grep -Eiq 'accepted post-prune snapshot' <<< "$content" || ! grep -Eiq 'exact authorised pruning changes' <<< "$content" || ! grep -Eiq 'authorised pruning changes (do not|must not) invalidate' <<< "$content"; then
+    _fail "audit_invalidation_uses_accepted_green_snapshot" "invalidation must distinguish accepted pruning changes from later input changes"
+    return
+  fi
+  _pass "audit_invalidation_uses_accepted_green_snapshot"
+}
+
+test_test_pruning_helper_installs_and_skill_links_resolve() {
+  local harness root skill relative target unresolved=0
+  local harnesses=(claude opencode codex)
+  local skills=("test-driven-development/SKILL.md" "subagent-driven-development/SKILL.md")
+  for harness in "${harnesses[@]}"; do
+    root="$TEST_TMP/$harness/skills"
+    for skill in "${skills[@]}"; do
+      relative="../_shared/test-pruning.md"
+      if ! grep -Fq "$relative" "$root/$skill" || [[ ! -f "$root/$(dirname "$skill")/$relative" ]]; then
+        _fail "${harness}_test_pruning_skill_link_${skill//\//_}" "expected the installed skill link to resolve to the shared helper"
+        unresolved=1
+      else
+        _pass "${harness}_test_pruning_skill_link_${skill//\//_}"
+      fi
+    done
+  done
+  (( unresolved == 0 ))
+}
+
 test_stale_workflow_lifecycle_instructions_are_absent() {
   local file stale=0
   local targets=(
@@ -310,11 +464,16 @@ test_required_files_exist() {
   _check_required_files || true
 }
 
-test_required_files_exist
 _check_skill_frontmatter
 test_claude_installer_copy_and_substitution
 test_opencode_installer_copy_and_substitution
 test_codex_installer_copy_and_substitution
+test_test_pruning_contract_is_documented
+test_test_pruning_helper_installs_and_skill_links_resolve
+test_tdd_completion_gate_is_behaviour_based
+test_pruning_safety_gates_are_explicit
+test_auditor_rule_source_is_harness_aware_and_bounded
+test_audit_invalidation_uses_accepted_green_snapshot
 test_stale_workflow_lifecycle_instructions_are_absent
 test_gitignore_excludes_workflow_artifacts
 test_new_markdown_links_resolve

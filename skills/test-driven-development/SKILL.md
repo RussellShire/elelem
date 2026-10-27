@@ -8,7 +8,7 @@ metadata:
 
 # Test-Driven Development
 
-This skill executes the red-green-refactor cycle. The iron-law rules (the iron law itself, when TDD applies, the verification requirement, YAGNI during GREEN, good-test criteria) live in `../../rules/common/testing.md` and apply throughout. The procedural rules that bind once this skill is running (the rationalisation table, the red-flags stop list) live in `RULES.md` alongside this file.
+This skill executes the red-green-refactor cycle. The iron-law rules (the iron law itself, when TDD applies, the verification requirement, YAGNI during GREEN, good-test criteria) live in `../../rules/common/testing.md` and apply throughout. The procedural rules that bind once this skill is running (the rationalisation table, the red-flags stop list) live in `RULES.md` alongside this file. For a coordinator-managed task that changes test-bearing files, the separate pruning audit and evidence handoff follow `../_shared/test-pruning.md`.
 
 Before running the cycle below, you **MUST** read `RULES.md` (sibling file in this skill directory) using the Read tool if you have not already read it in this session.
 
@@ -200,16 +200,27 @@ Extract validation for multiple fields if the pattern repeats.
 
 Before claiming a cycle complete, confirm every box:
 
-- [ ] Every new function or method has a test
+- [ ] Every new or changed behaviour has a test
 - [ ] You watched each test fail before implementing
 - [ ] Each test failed for the expected reason, not a typo or import error
 - [ ] You wrote only the minimal code to pass each test
 - [ ] All tests pass
 - [ ] Output is pristine
 - [ ] Tests exercise real code, mocks only at true boundaries
-- [ ] Edge cases and error paths covered
+- [ ] Cases are defined by approved behaviours and named defects
+- [ ] Assertions protect named behaviour rather than incidental structure
 
 If any box is unchecked, you skipped part of the cycle. The rules in `../../rules/common/testing.md` apply.
+
+For a coordinator-managed task, report the immutable baseline reference supplied
+by the coordinator, exact changed paths, every test and parameterised case in
+each test-bearing file actually changed by the task, including older cases, the
+approved behaviours those cases cover, and the RED/GREEN evidence. The
+coordinator derives the audit scope from actual task edits and owns the
+independent audit, any removal dispatch, and recovery record. Do not remove
+tests as part of the ordinary TDD cycle, audit your own work, or dispatch an
+auditor. A TDD-only skip does not waive the pruning audit. An empty test-bearing
+scope is recorded as not applicable, not as a successful audit.
 
 ## When Stuck
 

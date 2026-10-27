@@ -46,6 +46,26 @@ recorded skip.
     commands as fresh independent verification. Do not expand the approved
     design or suggest unrelated clean-up.
 
+    For a task that touched test-bearing files, inspect the pruning evidence
+    under `../_shared/test-pruning.md`. Check that the scope came from actual
+    task changes and includes every test and parameterised case in each touched
+    test-bearing file, including older cases. Inspect the coordinator's
+    immutable baseline reference, pre-prune input identities and checks, the
+    independent auditor's KEEP/REMOVE inventory, and the final green snapshot.
+    Verify each removed case's exact source and surrounding context, the named
+    distinct defects, and the survivor mapping. Check that every survivor is
+    retained, stable, and not owned by another active task. Confirm that the
+    recorded recovery material is scoped to the removals, no file or last test
+    was deleted, and post-prune per-file and total discovery counts match the
+    expected removals and are non-zero.
+
+    Check the map from every approved behaviour to retained tests. Required
+    approved behaviour without retained coverage is an Important finding.
+    Report unrelated pre-existing gaps separately without expanding scope. This
+    review checks the recorded audit evidence; do not dispatch or repeat the
+    independent pruning audit unless the coordinator records that its inputs
+    changed and requests a fresh audit under the approved procedure.
+
     For each finding, provide severity (Critical, Important or Minor), exact
     path and line or a precise location, evidence, impact, and a bounded
     correction when one fits the task contract. Missing requirements or

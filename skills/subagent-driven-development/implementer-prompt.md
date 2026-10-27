@@ -41,6 +41,13 @@ dispatch procedure. Do not rely on skill metadata to switch models.
     stop and report BLOCKED. Do not guess, broaden the task or dispatch another
     worker. Ask the coordinator for resolution.
 
+    Before the first RED step, confirm that the coordinator supplied or
+    validated the immutable task-start HEAD and relevant dirty or untracked
+    contents. This baseline is recorded by the coordinator in workflow.md and
+    must remain distinct from task and audit snapshots. If it is missing or
+    does not cover relevant pre-existing changes, report NEEDS_CONTEXT before
+    writing.
+
     ## Scope and side effects
 
     Change only the exact allowed write paths and named outputs in the brief.
@@ -60,6 +67,27 @@ dispatch procedure. Do not rely on skill metadata to switch models.
     do not claim RED-to-GREEN evidence. Report the skip and its consequence.
     Otherwise report the test name, RED output, GREEN output and commands with
     exit codes. Do not claim TDD from tests written after implementation.
+
+    For a coordinator-managed task that touches test-bearing files, use
+    `../_shared/test-pruning.md`. Report the exact actual changed paths, every
+    test and parameterised case in each test-bearing file actually changed by
+    the task, including older cases, the approved behaviours covered, and
+    relevant RED/GREEN evidence. Do not use a broad HEAD diff to invent the
+    audit scope. Stop writing after this implementation handoff. Do not prune
+    tests, audit your own work, or dispatch an auditor. A TDD-only skip does not
+    waive the independent audit.
+
+    If the coordinator later assigns this worker a bounded removal after an
+    independent audit, require the exact audited cases, defect-to-survivor
+    evidence, source context, and scoped recovery patch or snapshot recorded by
+    the coordinator in workflow.md. Remove only those supported cases. Do not
+    change production code, add tests, clean up unrelated helpers, delete a
+    test file, or remove its last test. Report every applied and withheld
+    removal. If removal application or its check fails, restore only the
+    pruning-owned changes from the recorded recovery material when the
+    coordinator assigns that restoration to you. The coordinator must not edit
+    files or apply restoration directly. If the source or recovery context is
+    incomplete or cannot be applied safely, stop and report NEEDS_CONTEXT.
 
     Apply only exceptions explicitly authorised by the user and recorded by the
     coordinator, including a scoped TDD or check skip, or a non-code exception

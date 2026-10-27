@@ -80,6 +80,27 @@ concurrent. If concurrency is unavailable, report the limitation and follow
 the approved schedule only where serial execution is valid; do not silently
 substitute a different plan.
 
+Before the first RED step, the coordinator records or validates the immutable
+task-start HEAD and relevant dirty or untracked contents in `workflow.md`.
+Preserve that baseline separately from later task and audit snapshots.
+
+## Test pruning audit and application
+
+For each task that actually changes a test-bearing file, complete the
+coordinator-owned procedure in `../_shared/test-pruning.md` before independent
+task review. That helper owns scope, safety gates, source retrieval, audit
+evidence, recovery, and invalidation. An empty test-bearing scope is recorded as
+`NOT APPLICABLE`.
+
+The stage order is fixed: after the implementation worker stops, the coordinator
+freezes inputs and runs pre-prune checks, then alone dispatches the independent
+read-only auditor. After its verdict, the coordinator records exact source and
+recovery context and assigns any supported removal or restoration to the
+implementation worker. Once that worker stops, the coordinator inspects the
+diff, runs post-prune checks, and records the accepted snapshot. No nested audit
+dispatch or worker self-audit is allowed. A TDD-only skip does not skip the
+audit.
+
 ## Task lifecycle and barriers
 
 For every task, independently review the actual changes against its brief and
