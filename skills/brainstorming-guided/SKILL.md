@@ -1,6 +1,6 @@
 ---
 name: brainstorming-guided
-description: "Turns an idea into an approved design through interactive dialogue with a user who is unfamiliar with the codebase. Walks the user through the relevant architecture, patterns, and conventions while designing, builds their mental model alongside the design, then runs design-review and hands off to create-tickets or subagent-driven-development."
+description: "Develops a proposed design with an explanatory codebase walkthrough for a user new to the area."
 metadata:
   model: openai/gpt-6.1-sol
   reasoning_effort: high
@@ -8,14 +8,15 @@ metadata:
 
 # Brainstorming (Guided)
 
-Interactive design dialogue with built-in teaching for a user who does not know the codebase well. Same outcome as `brainstorming-standard`, but every phase explicitly surfaces what was found in the codebase and why it matters, so the user finishes the session with both a design and a working mental model of the area they will be touching.
+Interactive Planning dialogue with built-in teaching for a user who does not know the codebase well. Use the coordinator's recorded Research instead of repeating broad discovery. Return a self-contained proposed design; review, final approval, persistence and later phases belong to the coordinator.
 
-For the rule that no implementation may begin until the user has approved a design, see `../../rules/common/workflow.md`. The design review step is delegated to the `design-review` skill.
+The `workflow-coordinator` owns lifecycle and verifies the active model and actual plan-mode restrictions. Do not silently switch models or assume repository writes are allowed in plan mode.
 
 ## Preconditions
 
-- You **MUST** be in plan mode before invoking this skill. Use `{{ENTER_PLAN_TOOL}}` if you are not.
-- This skill is invoked either directly or by the `brainstorming` router after the user selects guided mode.
+- This skill runs only in the coordinator's active Planning phase. If directly invoked without an active workflow, invoke `workflow-coordinator`, preserve guided mode as the requested method and stop. Do not start another workflow or invoke the router recursively.
+- If a coordinator is active but Planning is not the current phase, return control to it without continuing this skill.
+- Keep drafts in conversation or coordinator-authorised staging. Use research.md and relevant approved inputs supplied by the coordinator; investigate only a consequential gap. Respect actual harness plan-mode controls without repeatedly forcing toggles.
 
 ## Communication Principles
 
@@ -28,42 +29,18 @@ These principles apply at every step of the procedure. They are what makes this 
 
 ## Procedure
 
-1. **Guided codebase walkthrough.** Before the walkthrough, read `../_shared/project-context-discovery.md` using `{{READ_FILE_TOOL}}` if you have not already read it in this session, then run that shared procedure during the walkthrough. Read the area of the codebase relevant to the brief and present what you found in a structured way, including relevant docs and ADRs, or state explicitly that none were found. Cover: how the project is organised (directory structure, key entry points), patterns in use and why, the relevant subsystems (which parts relate to what is being built and how they interact), and conventions in those areas (naming, testing, error handling). After each section ask, "Does this make sense, or would you like me to dig deeper into anything here?" via `{{ASK_USER_QUESTION_TOOL}}`. Stay scoped to the brief; do not exhaustively map the codebase.
-2. **Contextualised clarifying questions.** One question per message, anchored to what you found. For example, "The codebase uses the repository pattern for data access. Should this feature follow that or sit outside it?" rather than "How should we handle data access?" Prefer multiple choice via `{{ASK_USER_QUESTION_TOOL}}`.
-3. **Contextualised approaches.** Propose 2-3 approaches, each anchored to existing code. For example, "Option A follows the existing pattern in `src/services/`, the lowest friction. Option B introduces a new pattern, the trade-off is inconsistency until migration." Lead with the recommendation and explain why.
-4. **Present the design in sections.** Cover architecture, components, data flow, error handling, and testing. For each section, reference the existing code that informed the choice. Get user approval on each section before moving to the next.
-5. **Consolidate the design summary.** Once every section has been approved, write a single structured summary covering goal, architecture, components, interfaces, data flow, error handling, and testing strategy. The summary stands alone: it does not require the walkthrough to be understood.
-6. **Invoke `design-review`.** Use `{{INVOKE_SKILL_TOOL}}` against the consolidated summary. Surface substantive change notes to the user before continuing. If `design-review` escalates, stop and ask the user how to proceed.
-7. **Get explicit final approval.** Present the reviewed summary and ask directly. "Looks fine" is not approval.
-8. **Decide the next step.** Use `{{ASK_USER_QUESTION_TOOL}}` to ask whether to create tickets or start implementation. The only permitted downstream skills are `create-tickets` and `subagent-driven-development`; invoke whichever the user picks via `{{INVOKE_SKILL_TOOL}}`.
+1. **Walk through relevant research.** Explain verified findings from Research, their sources, relevant patterns and why each matters to the design. Distinguish facts, assumptions and user decisions. Do not repeat broad codebase discovery already done in Research.
+2. **Invite exploration.** After each short explanatory section, ask whether the user wants more detail before proceeding. Ask one contextualised design question per message when needed. Explain unfamiliar terminology and anchor questions to evidence.
+3. **Compare approaches.** For consequential open decisions, present two or three feasible approaches grounded in research, their trade-offs and a recommendation. Let the user decide.
+4. **Refine sections progressively.** Explain and refine goal and requirements, exclusions, architecture, components, interfaces, data flow, errors/failure behaviour, and tests/verification. Seek agreement on each section before proceeding. Teaching is not permission to add features.
+5. **Consolidate and return.** Provide a self-contained proposed design covering these sections, assumptions and evidence references. Return it to `workflow-coordinator` for independent review. It is not final approval.
+6. **Stop at the Planning boundary.** Do not invoke design review, ask for final approval, persist an approved plan, create tickets or begin implementation.
 
 ## What Guided Mode Does Not Change
 
-- The hard gate from `../../rules/common/workflow.md` still applies. No implementation before approval.
 - One question per message, multiple choices are preferred.
 - YAGNI applies. Teaching the user about the codebase is not a licence to design extra features.
-- The completion gate is identical to `brainstorming-standard`: consolidated summary, `design-review` Approved, explicit final approval.
-
-## Worked Example
-
-User: "I need to add an audit log for admin actions. I've never worked on this codebase before."
-
-1. **Walkthrough.** Read `src/admin/`, `src/audit/` (if it exists), the routing layer, and the persistence layer. Present: "The project is organised by feature, not by layer. Each feature lives under `src/<feature>/` with its own routes, services, and tests. There is no existing `audit/` directory. The pattern for cross-cutting concerns in this codebase is middleware in `src/middleware/`, and there are two existing examples: `src/middleware/request_id.go` and `src/middleware/auth.go`. Tests live next to code as `*_test.go` and use table-driven tests, no external test framework. Errors are returned, never panicked, and wrapped with `fmt.Errorf` at every layer." Ask: "Does this layout make sense, or would you like me to look more closely at any of these?"
-2. **Contextualised question 1**: "Both existing middlewares write directly to `slog`. For audit logging, do you want the same approach (logs flow through the same pipeline), or a separate persistent store (database table)?" → User picks "database table".
-3. **Contextualised question 2**: "There is no existing database access in the middleware layer. Are you happy introducing it there, or would you rather the middleware emit events that a separate audit service consumes?" → "Emit events".
-4. **Contextualised approaches**: A) follow the existing middleware pattern, emit events on a Go channel consumed by a new `audit` package. B) introduce a third-party event bus. C) skip the middleware entirely, instrument each admin handler. Recommend A.
-5. **Sections**: architecture (middleware + event channel + audit service), components (`AuditEvent` struct, `AuditMiddleware`, `AuditService`), data flow (admin handler → middleware → channel → service → DB), error handling (audit failures must not block the admin action, log and continue), testing (table-driven tests for the middleware, integration test for the service against a test DB). Each section is approved.
-6. **Consolidate**, invoke `design-review`, returns Approved on first pass.
-7. **Final approval** explicit.
-8. **Next step**: `create-tickets`.
-
-## Completion Gate
-
-Same as `brainstorming-standard`. You **MUST NOT** hand off until:
-
-- The design summary was consolidated into a single text block
-- `design-review` returned Approved
-- The user gave explicit final approval against the reviewed summary
+- The coordinator owns independent review, explicit final approval and all subsequent phases.
 
 ## Common Mistakes
 

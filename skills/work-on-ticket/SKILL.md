@@ -1,6 +1,6 @@
 ---
 name: work-on-ticket
-description: Picks up a ticket from the project's ticketing system, fetches its parent epic, recovers the embedded design context, presents the scope to the user for confirmation, and hands off to subagent-driven-development with the recovered design as the approved input. The re-entry point for work planned in a previous session via brainstorming and create-tickets.
+description: Picks up a ticket from the project's ticketing system, fetches its parent epic, recovers the durable design context, confirms the ticket scope, and routes the recovered context through workflow-coordinator for baseline validation and implementation.
 metadata:
   model: openai/gpt-6.1-sol
   reasoning_effort: medium
@@ -12,7 +12,7 @@ metadata:
 
 This skill depends on the rules in `skills/_shared/tickets.md`. Those rules are **not** always in context; they live next to the ticket skills and are loaded only when a ticket skill is invoked. Before running the procedure below, you **MUST** read `skills/_shared/tickets.md` using the {{READ_FILE_TOOL}} tool if you have not already read it in this session.
 
-The detection of which ticketing system is in use lives in the `detect-ticketing-system` skill. The downstream implementation workflow lives in the `subagent-driven-development` skill. This skill bridges the gap across session boundaries between a ticket that was created in a prior session and the implementation workflow that delivers it.
+The detection of which ticketing system is in use lives in the `detect-ticketing-system` skill. The `workflow-coordinator` owns phase transitions and routes eligible work to the downstream implementation workflow. This skill bridges the gap across session boundaries without bypassing current workflow validation.
 
 **Precondition**: the user has referenced a specific ticket to work on (for example, "work on #42", "pick up PROJ-123", "implement issue 7"). Without a specific reference, this skill does not apply; if the user is asking what to work on next, that is a triage question, not this skill.
 
@@ -24,7 +24,7 @@ You **MUST** complete these steps in order. Do not skip a step and do not reorde
 
 2. **Fetch the ticket.** Retrieve its full content: title, description, labels, status, parent or epic relationship, child or sub-issue references, and linked tickets. See "Per-system fetch" below for the specific API calls.
 
-3. **Run `resolve_epic_context`.** Per `skills/_shared/tickets.md`, this is the named procedure that walks from the fetched ticket up to its Epic and recovers the approved design. The procedure is tier-marker-driven: it reads each node's tier marker (Jira issue type, `tier:epic`/`tier:story`/`tier:task` label, or markdown heading level depending on the system), walks at most 2 hops, and terminates at the Epic. See `skills/_shared/tickets.md` "Recovery Before Implementation" for the full procedure, the termination rule, the legacy fallback boundary, and the decision tree.
+3. **Run `resolve_epic_context`.** Per `skills/_shared/tickets.md`, this named procedure walks from the fetched ticket up to its Epic and recovers the durable design. The procedure is tier-marker-driven: it reads each node's tier marker (Jira issue type, `tier:epic`/`tier:story`/`tier:task` label, or markdown heading level depending on the system), walks at most 2 hops, and terminates at the Epic. See `skills/_shared/tickets.md` "Recovery Before Implementation" for the full procedure, the termination rule, the legacy fallback boundary, and the decision tree.
 
    The walker **MUST**:
    - Identify the ticket's tier marker.
@@ -33,13 +33,13 @@ You **MUST** complete these steps in order. Do not skip a step and do not reorde
    - Surface the **specific reference that could not be resolved** on any failure (missing parent, no Epic found, cycle, depth exceeded). Do not silently continue with partial context.
    - Apply the legacy fallback only when a node has no tier marker AND no further parent reference, per `skills/_shared/tickets.md`.
 
-4. **Extract the design.** `resolve_epic_context` returns the Epic and (if walked through one) the Story's theme statement. Extract the Epic body's `## Design` section. This becomes the approved design input for the implementation workflow.
+4. **Extract and qualify the design.** `resolve_epic_context` returns the Epic and (if walked through one) the Story's theme statement. Extract the Epic body's `## Design` section and any approval/revision or external specification provenance. This durable ticket content is recovered context, not automatic proof that its assumptions remain valid or that current implementation is approved. Carry the entire explicit ticket scope, acceptance criteria, exclusions, and provenance forward without broadening it.
 
    If `resolve_epic_context` succeeds but the resolved Epic has **no** `## Design` section at all (tickets created manually or by an older workflow predating the rule), follow the manual fallback documented in `skills/_shared/tickets.md` under "Recovery Before Implementation". You **MUST NOT** guess the design and proceed.
 
    If `resolve_epic_context` fails (any error condition above), surface the specific failure to the user and stop. You **MUST NOT** proceed to implementation with partial context.
 
-5. **Explore the codebase.** Read the current state of files relevant to the ticket. Note anything that has changed since the design was written, anything already partially implemented, and anything the design assumes but does not actually exist yet.
+5. **Explore the codebase.** Read the current state of files relevant to the ticket. Note anything that has changed since the design was written, anything already partially implemented, and anything the design assumes but does not actually exist yet. This is a preliminary baseline for coordinator validation, not a substitute for the coordinator's recorded baseline and resume checks. Evaluate recovered prior context for current validity; do not blindly skip Research or Planning because a ticket or approval exists.
 
 6. **Present the scope.** Show the user a structured summary before asking for confirmation:
 
@@ -52,7 +52,7 @@ You **MUST** complete these steps in order. Do not skip a step and do not reorde
      - What is explicitly out of scope (from sibling tickets, things that belong to other tickets)
    - **Current codebase state**: relevant observations from step 5
 
-7. **Get explicit user confirmation.** Use `{{ASK_USER_QUESTION_TOOL}}` to confirm scope. Plain-text confirmation is not sufficient.
+7. **Get explicit scope confirmation.** Use `{{ASK_USER_QUESTION_TOOL}}` to confirm that the recovered ticket scope is what the user intends. This confirmation is not design approval and does not skip any workflow phase. Plain-text confirmation is not sufficient.
 
    ```
    {{ASK_USER_QUESTION_TOOL}}:
@@ -60,7 +60,7 @@ You **MUST** complete these steps in order. Do not skip a step and do not reorde
      header: "Scope"
      options:
        - label: "Looks good, proceed"
-         description: "The scope, design context, and acceptance criteria are correct. Start implementation."
+          description: "The recovered scope and acceptance criteria are correct. Route this context to the workflow coordinator."
        - label: "Adjust scope"
          description: "Something needs changing before implementation begins."
        - label: "Need more context"
@@ -70,19 +70,19 @@ You **MUST** complete these steps in order. Do not skip a step and do not reorde
 
    If the user selects "Adjust scope" or "Need more context", address the feedback and re-present with `{{ASK_USER_QUESTION_TOOL}}` again. Only proceed to step 8 after "Looks good, proceed".
 
-8. **Hand off to subagent-driven-development.** Use `{{INVOKE_SKILL_TOOL}}` to invoke the `subagent-driven-development` skill. This **MUST** be an actual skill invocation, not a conceptual handoff; if you skip the invocation, the downstream skill's full instructions will not be loaded and implementation quality will suffer.
+8. **Route to `workflow-coordinator`.** Invoke `workflow-coordinator` with a recovered ticket payload containing the ticket identity and reference, full durable design and its provenance, exact ticket scope, acceptance criteria, dependencies, exclusions, observed codebase state, and the user's explicit scope confirmation. The coordinator validates current baseline assumptions, reuses approval only when its revision and baseline remain valid, and runs all remaining required phases by default. Do not invoke `work-on-ticket` recursively or invoke `subagent-driven-development` directly. If the coordinator has already been entered for this ticket, provide the payload to that active coordinator rather than starting a second one.
 
    ```
    {{INVOKE_SKILL_TOOL}}:
-     skill: "subagent-driven-development"
+      skill: "workflow-coordinator"
    ```
 
-   Before invoking, construct the approved design input by combining:
+    Before invoking, construct the recovered ticket context by combining:
 
-   1. The design context recovered from the epic (the architectural vision)
+    1. The durable design and approval/revision or external specification provenance recovered from the Epic (the architectural context)
    2. The ticket scope (what specifically this ticket delivers)
    3. The acceptance criteria from the ticket (the spec that the spec reviewer will check against)
-   4. Codebase observations from step 5
+    4. Codebase observations from step 5, marked as preliminary baseline evidence
 
 ## Per-System Fetch
 
@@ -132,7 +132,7 @@ If `resolve_epic_context` cannot resolve a parent reference (the ticket is missi
 
 ## Handling Multiple Tickets
 
-If the user wants to work on multiple tickets, work on them one at a time in dependency order per `../../rules/common/workflow.md`. Complete one ticket through the full `subagent-driven-development` cycle (including reviews) before starting the next. If the user wants genuinely parallel work, suggest separate sessions rather than trying to parallelise in one.
+For multiple requested tickets, carry each ticket's identity, scope, and ownership/clean-up boundary separately to the coordinator. It may plan dependencies and waves across the explicitly approved combined scope, and may run independent work concurrently. Do not blanket-serialise tickets, recommend separate sessions as a requirement, or silently expand any ticket scope. Where the user's request does not approve a combined scope, keep the workflows separate.
 
 ## Edge Cases
 

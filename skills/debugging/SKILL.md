@@ -1,6 +1,6 @@
 ---
 name: debugging
-description: "Runs a disciplined, evidence-driven investigation to reproduce a bug, identify its root cause, and deliver a minimal verified fix. Triggered by bugs, errors, failing tests, unexpected behaviour, or anything described as not working. Enforces the hard gate (no fix without reproduction and identified root cause), scope discipline, the investigation budget, and the minimal fix principle."
+description: "Runs a disciplined, evidence-driven investigation to reproduce a bug and identify its root cause, then returns the evidence and bounded correction to workflow-coordinator for approved execution. Triggered by bugs, errors, failing tests, unexpected behaviour, or anything described as not working. Enforces the hard gate, scope discipline, investigation budget and minimal fix principle."
 metadata:
   model: openai/gpt-6.1-sol
   reasoning_effort: high
@@ -8,11 +8,11 @@ metadata:
 
 # Debugging
 
-The iron-law rules (the Hard Gate, Evidence Over Intuition, and the bug-fixes-still-need-tests-and-verification cross-references) live in `../../rules/common/debugging.md` and load on every session. The procedural rules that bind once this skill is running (scope discipline, the re-focus rule, the investigation budget, root cause vs symptom, the minimal fix principle, the rationalisation table) live in `RULES.md` alongside this file. The bug-fix TDD rule lives in `../../rules/common/testing.md`. The post-fix verification gate lives in `../../rules/common/verification.md`. This skill is the 7-phase procedure that produces the evidence and the fix those rules require.
+The iron-law rules (the Hard Gate, Evidence Over Intuition, and the bug-fixes-still-need-tests-and-verification cross-references) live in `../../rules/common/debugging.md` and load on every session. The procedural rules that bind once this skill is running (scope discipline, the re-focus rule, the investigation budget, root cause vs symptom, the minimal fix principle, the rationalisation table) live in `RULES.md` alongside this file. The bug-fix TDD rule lives in `../../rules/common/testing.md`. The post-fix verification gate lives in `../../rules/common/verification.md`. This skill runs the seven investigation phases and returns evidence for coordinator-owned execution.
 
 Before running the procedure below, you **MUST** read `RULES.md` (sibling file in this skill directory) and `../_shared/subagent-dispatch.md` (the debugging skill dispatches an investigator subagent) using the Read tool if you have not already read them in this session. The procedure below assumes those rules are in your context.
 
-**Precondition**: the user has reported something not working, pasted an error, reported a failing test, or described behaviour differing from what was intended. If you are unsure whether the report is a bug or a feature request, clarify during Phase 1.
+**Precondition**: the user has reported something not working, pasted an error, reported a failing test, or described behaviour differing from what was intended. If you are unsure whether the report is a bug or a feature request, clarify during Phase 1. This skill runs within a valid `workflow-coordinator` workflow. If invoked directly with no active workflow, invoke `workflow-coordinator` through `{{INVOKE_SKILL_TOOL}}`, pass through the report and any explicit debugging mode or skip, then stop. The coordinator establishes or resumes workflow state and invokes this investigation; on that re-entry, continue without invoking the coordinator again. Respect only explicitly scoped, coordinator-recorded skips. A skip does not create evidence or waive the hard gate.
 
 ## Mode Selection
 
@@ -26,7 +26,7 @@ At the start of the investigation, select the mode. If the user has not indicate
 
 ## The Seven Phases
 
-Run the phases in order. You **MUST NOT** skip a phase, and you **MUST NOT** reorder them.
+Run the phases in order by default, and do not reorder them. Honour only an explicitly scoped skip recorded by the coordinator. A skipped phase supplies no missing evidence and cannot waive the hard gate or justify a fix, verified, or completion claim.
 
 ### Phase 1: Understand the Problem
 
@@ -67,7 +67,7 @@ Per `../../rules/common/subagents.md`, give each investigator exactly the contex
 
 In **Guided mode**, explain what evidence you are gathering and what you are deliberately not looking at yet.
 
-If you hit the Refocus Rule in `../../rules/common/debugging.md` (five files read without a clear hypothesis), stop and surface what you know to the user before doing anything else.
+If you hit the Refocus Rule in `../../rules/common/debugging.md` (five files read without a clear hypothesis), stop and return what you know to `workflow-coordinator` for user refocusing before doing anything else.
 
 ### Phase 4: Form Hypotheses
 
@@ -92,7 +92,7 @@ Test the most likely hypothesis first:
 
 In **Autonomous mode**, test the top two or three hypotheses in parallel using investigator subagents (see `investigator-prompt.md`), each with a clear scope and a single question to answer. Invoke the `dispatching-parallel-agents` skill if more than one investigator runs at once.
 
-Apply the Investigation Budget from `../../rules/common/debugging.md`: three cycles maximum before you stop and refocus with the user.
+Apply the Investigation Budget from `../../rules/common/debugging.md`: three cycles maximum before you stop and return to `workflow-coordinator` for user refocusing.
 
 ### Phase 6: Identify Root Cause
 
@@ -102,15 +102,16 @@ State the root cause clearly, per the root-cause-not-symptom rule in `../../rule
 - **Why**: the causal chain from the root cause to the observed symptom
 - **Since when**: if determinable, when the bug was introduced (commit reference)
 
-Present the root cause and your proposed fix approach to the user for confirmation. Per `../../rules/common/workflow.md`, this is the approved design for the bug fix. You **MUST** wait for explicit approval before moving to Phase 7.
+Return the evidence, root cause and intended minimal correction to `workflow-coordinator`:
 
-### Phase 7: Fix
+- If a current explicitly approved design covers this reproduced correction, mark it as in-scope and return the evidence and proposed correction for execution under that approval. Do not seek approval again, create a competing design, or implement the correction here.
+- If there is no valid approved design, or the evidence requires a scope or architecture change, return the findings to `workflow-coordinator` for Planning and explicit user approval. Do not proceed to implementation.
 
-Once the user has approved the root cause and the fix approach:
+The investigation's evidence and correction proposal are not themselves approval. The coordinator owns phase transitions, reconciles investigator verdicts and decides whether the existing approval applies. If reproduction was skipped or could not be confirmed, report that accurately and do not claim a confirmed root cause or delegate a fix.
 
-1. **Invoke the `test-driven-development` skill** to write a failing regression test that reproduces the bug. Per `../../rules/common/testing.md`, the test **MUST** fail before the fix and pass after. Watch it fail for the right reason.
-2. **Implement the minimal fix** per the minimal fix principle in `../../rules/common/debugging.md`. Do not refactor, do not add features, do not fix unrelated issues.
-3. **Invoke the `verification-before-completion` skill** to run the full relevant test suite, confirm the regression test passes, confirm no other tests broke, and cite the evidence before claiming the fix complete.
+### Phase 7: Coordinator-Owned Execution
+
+Phase 7 is coordinator-owned execution, not an implementation phase performed by this skill. For an in-scope correction, return a bounded task brief to `workflow-coordinator`. The coordinator uses `subagent-driven-development` to assign the regression test and minimal implementation to a worker under the approved task contract. TDD and worker checks run by default; reviews and final verification remain separate coordinator-owned gates. Honour any explicit scoped skips recorded by the coordinator, but never present a skipped reproduction, test, review or verification as evidence or claim the bug fixed or verified without the required fresh evidence. Do not edit code, manually patch worker output, schedule work, or start another autonomous fix flow here.
 
 ## Autonomous-Mode Subagent Dispatch
 
@@ -118,11 +119,15 @@ Autonomous mode is the only mode in which investigator subagents run. When dispa
 
 - Use the template at `skills/debugging/investigator-prompt.md` as the base prompt
 - Provide each investigator with: the bug description (expected vs actual), the specific hypothesis it is testing, and the scoped list of files or areas it may examine
-- Per `../../rules/common/subagents.md`, pick the most specific subagent type available (for example `debugger`, `python-pro`, `typescript-pro`). Start at the Low-cost default tier, resolved per `../_shared/subagent-dispatch.md`, unless the investigation requires integration reasoning, in which case escalate to Standard escalation
+- Per `../../rules/common/subagents.md` and `../_shared/subagent-dispatch.md`, pick the most specific subagent type and a verified model tier suited to the investigation scope. Integration reasoning may require a capable investigator; do not assume an unconditional low-cost default.
 - Reconcile the returned verdicts yourself in the orchestrator context: CONFIRMED verdicts advance you to Phase 6, ELIMINATED verdicts move you to the next hypothesis, INCONCLUSIVE verdicts either need a better-scoped re-dispatch or a refocusing with the user
 
-Investigators never fix anything. They only gather evidence. The orchestrator holds the fix authority.
+Investigators are evidence-only. A bounded worker owns approved implementation; `workflow-coordinator` owns transitions, dispatch, reviews and verification. The debugging skill and investigator do not patch code or take over execution.
 
 ## When the Bug Cannot Be Found
 
-If you exhaust the Investigation Budget without a confirmed root cause, follow the rule in `../../rules/common/debugging.md`: present everything you investigated, everything you ruled out, and everything that remains uncertain, and ask the user to help refocus. Do not start guessing. Do not apply a speculative fix.
+If you exhaust the Investigation Budget without a confirmed root cause, follow the rule in `../../rules/common/debugging.md`: return everything investigated, ruled out and uncertain to `workflow-coordinator` for user refocusing. Do not start guessing or apply a speculative fix.
+
+## Workflow hand-off
+
+Return a structured investigation result to `workflow-coordinator` with reproduction status and exact evidence, ranked hypotheses and test results, confirmed root cause or remaining uncertainty, and the minimal intended correction. State whether the correction is covered by the current approved plan revision or requires Planning and renewed approval. The coordinator reconciles investigator findings and owns all transitions and execution scheduling. Investigators gather evidence only; the assigned bounded worker implements approved changes, and the coordinator obtains required reviews and fresh verification. An explicit skip is recorded with its scope, reason and consequence, and is never reported as a verdict, evidence or successful outcome.

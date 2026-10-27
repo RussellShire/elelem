@@ -1,32 +1,49 @@
 # Debugging
 
-These rules apply to every debugging activity, regardless of whether the `debugging` skill has been invoked and regardless of how obvious the bug seems.
+Use `workflow-coordinator` as the entry point for debugging and fixes. These
+evidence requirements apply whether or not the `debugging` skill is invoked.
 
-## The Hard Gate
+## The hard gate
 
-You **MUST NOT** attempt any fix until both of the following are true:
+Do not attempt a fix until both conditions are met:
 
-1. You have reproduced the bug against the current state of the code, or you have explicitly noted that it cannot be reproduced and adjusted your confidence accordingly
-2. You have identified the root cause with supporting evidence from actual code or actual program output
+1. Reproduce the bug against the current state, or explicitly record that it
+   could not be reproduced and adjust confidence accordingly.
+2. Identify the root cause with evidence from code read, captured program
+   output or an observed reproduction.
 
-"I can see the problem" is not evidence. "The error message says X" is not evidence. Running code and observing the failure is evidence.
+"I can see the problem" and an error message alone are not evidence. Do not
+waive this gate because the bug looks simple, obvious or quicker to fix than
+investigate. A user may explicitly skip the debugging phase, but that skip is
+not reproduction or root-cause evidence. If required evidence is missing, block
+the fix or qualify the result; never claim the issue is fixed or understood
+without support.
 
-This gate applies to every bug. You **MUST NOT** waive it because the bug "looks simple", "is obviously a typo", or "will take longer to investigate than to fix".
+## Evidence over intuition
 
-## Evidence Over Intuition
+Support every claim about what is wrong with actual code, captured output or
+observations from reproduction. Pattern-matching an error message without
+reproduction is not enough. If evidence is missing, gather it before changing
+code.
 
-Every claim you make about what is wrong **MUST** be supported by actual code you have read, actual output you have captured, or actual observations from a reproduction. Pattern-matching against an error message without reproduction is forbidden. "It looks like" and "I suspect" are not acceptable as the sole basis for a fix.
+## Bug fixes are still changes
 
-If you do not have evidence for a claim, your next action is to gather evidence, not to change code.
+Bug fixes do not waive `workflow.md`, `testing.md` or `verification.md`:
 
-## Bug Fixes Are Still Changes
+- A bug fix requires an explicitly approved design, which records the
+  reproduction approach and intended module or change. Use the active workflow
+  approval; do not send the user through the Planning router again when the
+  current approved design covers the fix.
+- By default, begin with a failing regression test that reproduces the bug.
+  The test goes red, the fix goes in, and the test goes green. A user may
+  explicitly skip TDD for scoped work. Record that skip; it does not waive
+  reproduction, root-cause evidence or truthful verification claims.
+- Report a fix as fixed only after fresh verification and cite its evidence.
+  If verification is explicitly skipped, report the result as unverified.
 
-Bug fixes do not waive the rules in `workflow.md`, `testing.md`, or `verification.md`:
+## Procedural rules
 
-- Per `workflow.md`, a bug fix **MUST** have an approved design, even if the design is a single sentence describing the reproduction approach and the module that will change.
-- Per `testing.md`, a bug fix **MUST** begin with a failing regression test that reproduces the bug. The test goes red, the fix goes in, the test goes green. You **MUST NOT** fix a bug without first writing that test.
-- Per `verification.md`, the fix is not complete until the verification gate has been run against it and the evidence has been cited.
-
-## Procedural Rules
-
-The procedural rules that bind once the `debugging` skill is running, scope discipline, the refocus rule, the investigation budget, root cause vs symptom, the minimal fix principle, and the rationalisation prevention table, live in `skills/debugging/RULES.md` and load when the skill is invoked. The executable procedure (the 7-phase investigation, mode selection, investigator subagent dispatch) lives in `skills/debugging/SKILL.md`.
+When invoked, the `debugging` skill governs investigation scope, reproduction,
+root-cause analysis, evidence, and the minimal fix procedure. Use the approved
+workflow design as the fix approval; do not restart Planning when the active
+approved design already covers the change.

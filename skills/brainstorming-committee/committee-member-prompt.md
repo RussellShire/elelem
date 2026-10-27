@@ -2,13 +2,13 @@
 
 Use this template when dispatching committee members for a deliberation round. Dispatch all 3 in a single message so they run concurrently.
 
-**Purpose:** Get three distinct perspectives on a set of design decisions.
+**Purpose:** Get three distinct perspectives on a set of design decisions for a proposed design.
 
-**Dispatch during:** Phase 4 (Committee Deliberation) of the brainstorming process.
+**Dispatch during:** Committee Planning, only when explicitly selected by the user.
 
 ## Subagent Type Selection
 
-Each committee role maps to a specialised subagent type. The specialisation reinforces the perspective with built-in domain knowledge, so the prompt can focus on decision context rather than teaching a persona.
+Each committee role maps to a specialised subagent type. Resolve the type and a high-capability model tier using `../_shared/subagent-dispatch.md`; model metadata does not switch the active model. Do not silently use a lower-cost tier for Planning.
 
 | Role       | Subagent type                         | Why                                                              |
 |------------|---------------------------------------|------------------------------------------------------------------|
@@ -16,7 +16,7 @@ Each committee role maps to a specialised subagent type. The specialisation rein
 | Architect  | `architect-reviewer`                  | Built for evaluating system design decisions and patterns        |
 | Advocate   | `qa-expert`                           | Naturally focuses on quality, edge cases, and robustness         |
 
-**Selecting the Pragmatist type:** Use the primary language/framework identified during Phase 2:
+**Selecting the Pragmatist type:** Use the primary language/framework identified in the supplied project context:
 
 | Project stack        | Subagent type        |
 |----------------------|----------------------|
@@ -60,9 +60,9 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
 
     [PASTE THE USER'S BRIEF]
 
-    **Relevant codebase context:**
+     **Bounded research evidence and context:**
 
-    [PASTE CODEBASE CONTEXT - file structures, patterns, existing code]
+    [PASTE BOUNDED RESEARCH EVIDENCE, relevant file paths and verified patterns]
 
     **Previous decisions (if any):**
 
@@ -79,7 +79,7 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
     2. Explain your reasoning (2-3 sentences)
     3. Flag any concerns or risks, even with your recommended approach
 
-    Stay within scope. Do not redesign unrelated systems. You may read the codebase to verify assumptions.
+    Stay within scope. Do not rediscover the codebase or redesign unrelated systems. Use only the bounded context supplied. Label assumptions and unresolved questions. Return a recommendation for the synthesiser, not user approval or a final workflow decision.
 
     ## Output Format
 
@@ -88,7 +88,7 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
     ### [Decision 1 name]
     **Recommendation:** [your recommendation]
     **Reasoning:** [why]
-    **Concerns:** [any risks or trade-offs]
+    **Concerns and unresolved questions:** [risks, trade-offs or facts requiring user input]
 
     ### [Decision 2 name]
     ...
@@ -119,9 +119,9 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
 
     [PASTE THE USER'S BRIEF]
 
-    **Relevant codebase context:**
+     **Bounded research evidence and context:**
 
-    [PASTE CODEBASE CONTEXT - file structures, patterns, existing code]
+    [PASTE BOUNDED RESEARCH EVIDENCE, relevant file paths and verified patterns]
 
     **Previous decisions (if any):**
 
@@ -138,7 +138,7 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
     2. Explain your reasoning (2-3 sentences)
     3. Flag any concerns or risks, even with your recommended approach
 
-    Stay within scope. Do not redesign unrelated systems. You may read the codebase to verify assumptions.
+    Stay within scope. Do not rediscover the codebase or redesign unrelated systems. Use only the bounded context supplied. Label assumptions and unresolved questions. Return a recommendation for the synthesiser, not user approval or a final workflow decision.
 
     ## Output Format
 
@@ -147,7 +147,7 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
     ### [Decision 1 name]
     **Recommendation:** [your recommendation]
     **Reasoning:** [why]
-    **Concerns:** [any risks or trade-offs]
+    **Concerns and unresolved questions:** [risks, trade-offs or facts requiring user input]
 
     ### [Decision 2 name]
     ...
@@ -178,9 +178,9 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
 
     [PASTE THE USER'S BRIEF]
 
-    **Relevant codebase context:**
+     **Bounded research evidence and context:**
 
-    [PASTE CODEBASE CONTEXT - file structures, patterns, existing code]
+    [PASTE BOUNDED RESEARCH EVIDENCE, relevant file paths and verified patterns]
 
     **Previous decisions (if any):**
 
@@ -197,7 +197,7 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
     2. Explain your reasoning (2-3 sentences)
     3. Flag any concerns or risks, even with your recommended approach
 
-    Stay within scope. Do not redesign unrelated systems. You may read the codebase to verify assumptions.
+    Stay within scope. Do not rediscover the codebase or redesign unrelated systems. Use only the bounded context supplied. Label assumptions and unresolved questions. Return a recommendation for the synthesiser, not user approval or a final workflow decision.
 
     ## Output Format
 
@@ -206,7 +206,7 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
     ### [Decision 1 name]
     **Recommendation:** [your recommendation]
     **Reasoning:** [why]
-    **Concerns:** [any risks or trade-offs]
+    **Concerns and unresolved questions:** [risks, trade-offs or facts requiring user input]
 
     ### [Decision 2 name]
     ...
@@ -214,7 +214,7 @@ If any specialised type is unavailable at dispatch time, fall back to `general-p
 
 ## Tie-Breaking Round
 
-If a deliberation round produces irreconcilable disagreement (not just preference differences), dispatch a single tiebreaking round where all members see each other's positions. Use `architect-reviewer` for tiebreaking as it is best positioned to weigh competing trade-offs holistically:
+If a deliberation round produces irreconcilable disagreement (not just preference differences), dispatch at most one high-capability tiebreaking round where the reviewer sees each member's positions. Resolve routing with `../_shared/subagent-dispatch.md`. The recommendation goes to the synthesiser and does not constitute user approval:
 
 ```
 {{DISPATCH_AGENT_TOOL}} (architect-reviewer):
@@ -242,15 +242,16 @@ If a deliberation round produces irreconcilable disagreement (not just preferenc
 
     1. Identify the core tension (what are they actually disagreeing about?)
     2. Determine if a compromise exists that addresses the key concerns from each perspective
-    3. If no compromise: pick the recommendation that best serves the project brief, and explain what trade-offs are being accepted
-    4. List any concerns that must be addressed regardless of which approach wins
+    3. If no compromise: recommend the approach that best serves the project brief and explain the accepted trade-offs. Label any unresolved decision that still needs user input.
+    4. List concerns that must be addressed regardless of which approach is recommended
+    5. Return a recommendation to the synthesiser. Do not claim user approval or advance workflow phases.
 
     ## Output Format
 
     ## Tiebreaking Decision
 
     **Core tension:** [what the disagreement is really about]
-    **Decision:** [the chosen approach]
+    **Recommendation:** [the recommended approach]
     **Reasoning:** [why this resolves the tension]
     **Accepted trade-offs:** [what we are giving up]
     **Must-address concerns:** [concerns that need mitigation regardless]

@@ -1,85 +1,100 @@
 # Subagent Dispatch - Procedural Rules
 
-These rules apply to every subagent dispatch made from inside a skill. They are the procedural detail behind the iron laws in `../../rules/common/subagents.md`. The iron laws (context isolation, the git ban, the worktree ban, the privilege ban) live in the always-on rule file and bind whether or not a skill is running. The rules below govern *how* a dispatch is constructed and managed once a skill has decided to dispatch.
+The workflow coordinator owns dispatch and shared state. These procedures
+supplement `../../rules/common/subagents.md`. Read this file before every
+dispatch.
 
-Skills that dispatch subagents (`subagent-driven-development`, `dispatching-parallel-agents`, `fast-path-implementation`, `brainstorming-committee`, `debugging`) **MUST** read this file before performing a dispatch.
+## Subagent type selection
 
-## Subagent Type Selection
+Before each dispatch, select the most specific available subagent type that
+fits the task, including reviewers. Identify the language, framework or domain,
+then choose a specialist that fits. Use a general-purpose agent only when no
+specialist applies. Record the specialist type and rationale in each task
+brief. Default to no nested delegation unless the dispatch explicitly permits
+it and the harness supports it.
 
-Before every dispatch, you **MUST** check the available subagent types and select the most specific one that fits the task. Generic agents produce generic work; specialised agents understand their domain, follow its conventions, and catch domain-specific issues a general-purpose agent will miss.
+## Model selection
 
-The selection process:
+Choose a model tier based on the work, then select and verify an exposed
+concrete model for each dispatch. Preparation phases (Research, Planning and
+Wave Planning) and independent design or readiness reviews require
+high-capability reasoning. Bounded implementers use the lowest-cost capable
+tier. Select reviewers by scope and capability, not by assuming every review
+is tiny. Cross-cutting or design-level review needs a capable reviewer.
 
-1. Identify the language, framework, or domain the task involves
-2. Scan available subagent types for a match (e.g. `typescript-pro` for TypeScript, `react-specialist` for React components, `python-pro` for Python, `code-reviewer` for reviews)
-3. If a specialised type matches, use it via the `subagent_type` parameter
-4. Fall back to `general-purpose` only when no specialised type fits
+### Tier examples
 
-This applies to implementers and reviewers equally. A TypeScript task gets a TypeScript implementer and a code-review specialist, not two general-purpose agents.
+| Tier             | Task signal                                     | Provider-agnostic example |
+|------------------|-------------------------------------------------|---------------------------|
+| Low-cost capable | Bounded implementation with a clear brief       | Fast, lower-cost tier     |
+| Standard         | Multi-file integration or moderate judgement    | Balanced tier             |
+| High-capability  | Preparation, design or broad independent review | High-reasoning tier       |
 
-When decomposing work into tasks, you **MUST** annotate each task with its recommended subagent type during decomposition, not at dispatch time. This makes the choice explicit and reviewable.
+Tier examples are guidance, not an allowlist or availability guarantee. Use
+capability and cost as the criteria, not the example names.
 
-## Model Selection
+### Resolution procedure
 
-You **MUST** use the cheapest model capable of the task. This is cost and speed discipline, not a suggestion. Choose exactly one concrete model per dispatch.
+Before every dispatch:
 
-### Tier Table
+1. Enumerate the model identifiers exposed by the current environment using
+   `{{MODEL_ENUMERATION}}`.
+2. Select a model capable of the required tier and verify that the harness
+   supports routing to it. Use the actual exposed interface; do not invent
+   tool parameters or schema fields.
+3. Never construct an identifier from a pattern or rely on remembered
+   availability. Confirm both identifier and routing support.
+4. Confirm that the active primary-session model has high-capability reasoning
+   before conversational Research or Planning. Skill metadata does not switch
+   it. If it is unsuitable, ask the user to switch; do not replace the
+   user-facing conversation with an unrequested detached agent.
+5. If enumeration, routing or required capability cannot be verified, report
+   a blocker. Do not silently inherit, downgrade or substitute a model. A user
+   may explicitly authorise an alternative; record the decision and its
+   consequence.
 
-| Tier                | Task signal                                    | Anthropic family                                                     | OpenAI family |
-|---------------------|------------------------------------------------|----------------------------------------------------------------------|---------------|
-| Low-cost default    | Clear spec, 1-3 files                          | Haiku                                                                | Luna          |
-| Standard escalation | Multi-file integration, judgement              | Sonnet                                                               | Terra         |
-| High-capability     | Design judgement, broad codebase understanding | Opus (the inherited session model is also an acceptable choice here) | Sol           |
+### Tier changes and blockers
 
-The Anthropic and OpenAI columns are worked examples, not an allowlist. Some harnesses are provider-agnostic: they may expose providers from any vendor in any combination, so no table that enumerates vendors can ever be authoritative on its own. Treat the table as a guide to tiers and use the resolution procedure below to pick a concrete model for any provider the environment exposes, listed here or not.
+Use the tier required by the task from the outset. Do not use a low-cost
+implementer default for preparation or independent design/readiness reviews.
+Do not silently change a selected tier after failure. Stop and report the
+blocker, then wait for explicit resolution. Do not force an unchanged retry or
+escalate without authorisation.
 
-### Resolution Procedure
+| You might think...                              | Reality |
+|-------------------------------------------------|---------|
+| "I know the naming pattern"                    | Enumerate the environment; never invent an identifier. |
+| "This was available before"                     | Confirm current availability and routing for every dispatch. |
+| "The examples list it"                         | Examples are not an availability guarantee. |
+| "The skill metadata selected this model"        | Metadata does not switch the active primary model. |
+| "I can silently use the inherited model instead"| Missing enumeration, routing or capability is a blocker unless the user authorises an alternative. |
 
-Naming a tier is not the same as producing a value the harness will accept. Before every dispatch:
+## Answering subagent questions
 
-1. Always enumerate the models the current environment actually exposes by {{MODEL_ENUMERATION}}.
-2. Map the chosen tier to a concrete value from that enumeration.
-3. Never construct an identifier from a pattern. Recognising the shape of an identifier is not the same as confirming it exists.
-4. If no family listed in the tier table is exposed, order the available models from cheapest to most capable and take the cheapest one that is still capable of the task.
-5. If enumeration is impossible, use the inherited session model and state in your response to the user that you did so. Never fall back silently.
+When a subagent asks a question before or during its task, answer it clearly
+and completely before allowing it to proceed. Do not rush implementation or
+expect a worker to guess missing requirements.
 
-### Escalation Triggers
+## Process discipline
 
-Start at the Low-cost default tier. Escalate exactly one tier at a time, and only on evidence: a failed attempt at the current tier, or a stated complexity signal from the task (multi-file integration, design judgement, broad codebase understanding). You **MUST NOT** pre-escalate on the assumption that a task might be hard. One failed inexpensive attempt costs less than always paying for the expensive model.
+When coordinating a workflow, do not:
 
-### Rationalisation Prevention
+- Skip a review unless the user explicitly skipped that scoped phase; record
+  the skip and never present it as a verdict.
+- Proceed while an applicable review has unresolved in-scope issues.
+- Accept "close enough" where acceptance criteria are unmet.
+- Treat an implementer's report as independent review or verification.
+- Force an unchanged retry after failure.
+- Silently repair worker output in coordinator context; delegate in-scope
+  corrections under the existing task contract.
+- Start the next wave before current writers settle and the integration
+  barrier completes.
 
-Every thought below means **stop and re-run the resolution procedure**:
+## Blockers and recovery
 
-| You might think...                                      | Reality                                                                                                                                                           |
-|---------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| "I know the naming pattern, I can write the identifier" | Recognising the shape of an identifier is not confirming it exists. Constructing an identifier from a pattern is inventing it; enumerate the environment instead. |
-| "This was valid last month"                             | Catalogues change. Re-verify against the current environment before every dispatch, not from memory.                                                              |
-| "The table lists it, so it exists"                      | The tier table is a worked example, not an availability guarantee. Confirm the value against the enumerated list.                                                 |
-| "I will use the session model to be safe"               | That is pre-escalation. Sort by cost first and start at the cheapest tier.                                                                                        |
-
-## Answering Subagent Questions
-
-When a subagent asks a question before or during its task, you **MUST** answer it clearly and completely before allowing the subagent to proceed. You **MUST NOT** rush a subagent into implementation, and you **MUST NOT** ignore a question in the hope the subagent will work it out alone.
-
-## Process Discipline
-
-When orchestrating subagents, you **MUST NOT**:
-
-- Skip reviews, whether combined or separate
-- Proceed to the next task while a review has unfixed issues
-- Accept "close enough" on spec compliance. If the reviewer found issues, the task is not done.
-- Let the implementer's self-review replace the external review. Both are required.
-- Force the same model to retry a failed task without changing anything (more context, different model, smaller scope, or escalation to the human)
-- Attempt to fix a subagent's output manually in the orchestrator context. Re-dispatch with a better context instead. Manual fixes pollute the orchestrator's context and defeat the isolation.
-
-## Escalation
-
-If a subagent reports BLOCKED or fails repeatedly, you **MUST** do one of the following and nothing else:
-
-- Provide more context and re-dispatch
-- Re-dispatch with a more capable model
-- Split the task into smaller pieces
-- Stop and escalate to the human per `../../rules/common/workflow.md`
-
-You **MUST NOT** ignore an escalation. You **MUST NOT** pretend a failed task succeeded.
+If a real blocker occurs, stop new dispatch. Cancel active work only if safe
+cancellation is supported; otherwise let it settle without claiming it
+stopped. Preserve workflow state and report the blocker. Do not silently expand
+scope, change model tier or force an unchanged retry. Resume only after the
+required user or coordinator resolution. Never represent failed or blocked
+work as successful.

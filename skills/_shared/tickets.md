@@ -1,6 +1,6 @@
 # Tickets
 
-**Load model**: this file is **not** always in context. It lives next to the ticket skills and is loaded on demand when `create-tickets`, `work-on-ticket`, or `detect-ticketing-system` is invoked. The rules here apply to any workflow that creates tickets from a design or picks up tickets for implementation, regardless of the ticketing system in use (GitHub Issues, Jira, GitLab, Linear, or a Markdown fallback).
+**Load model**: this file is **not** always in context. It lives next to the ticket skills and is loaded on demand when `create-tickets`, `work-on-ticket`, or `detect-ticketing-system` is invoked. The rules here apply to any workflow that creates tickets from an approved durable design or picks up tickets for implementation, regardless of the ticketing system in use (GitHub Issues, Jira, GitLab, Linear, or a Markdown fallback). `workflow-coordinator` owns workflow phase transitions and temporary artefacts. Ticket creation remains an explicit user-requested action, not an automatic phase side effect.
 
 ## Hierarchy Model
 
@@ -17,6 +17,8 @@ The Story tier is introduced by `create-tickets` only when the decomposition rul
 ## Epic Design Embedding
 
 When a design is broken into multiple tickets, there **MUST** be an epic or parent ticket, and the epic body **MUST** contain the full approved design under a `## Design` heading. The design section is the bridge between the brainstorming session and every future implementation session that picks up a child ticket.
+
+The ticket body **MUST** also preserve the approved plan revision and approval reference, or the approved external specification reference, as provenance. Provenance does not replace the full design. Workflow plans and research files are temporary and may be removed at successful completion, so no permanent ticket may rely on a workflow artefact path as its only design copy.
 
 The epic body **MUST** include, at minimum:
 
@@ -51,7 +53,7 @@ Tier markers are mandatory on every ticket the `create-tickets` skill produces. 
 
 ## Recovery Before Implementation
 
-When picking up a ticket for implementation, you **MUST** run the `resolve_epic_context` procedure to recover the approved design before any implementation step. Implementing a ticket without the epic's design context is forbidden: per `../../rules/common/workflow.md`, implementation requires an approved design, and the epic's design section is the approved design in this workflow.
+When picking up a ticket for implementation, run `resolve_epic_context` to recover durable design context before routing the work through `workflow-coordinator`. The ticket context is not a blanket approval to skip current Research or Planning: evaluate the recovered assumptions against the current repository baseline. Reuse prior approval only when the approved revision and relevant baseline remain valid. Implementation without coordinator validation of the approved design is forbidden. The coordinator owns phases, resumptions, and workflow artefact clean-up; ticket recovery must not directly bypass it.
 
 ### `resolve_epic_context` procedure
 
@@ -123,7 +125,7 @@ The implementation order of tickets follows the sequencing rule in `../../rules/
 ## Procedures
 
 - To detect the ticketing system in use, invoke the `detect-ticketing-system` skill.
-- To turn an approved design into tickets, invoke the `create-tickets` skill.
-- To pick up an existing ticket for implementation, invoke the `work-on-ticket` skill.
+- To turn an approved design into tickets, invoke `create-tickets` only when the user requests ticket creation; it requires an explicit approved plan revision or approved external specification.
+- To pick up an existing ticket for implementation, invoke `work-on-ticket`, which recovers context and routes it through `workflow-coordinator`.
 
 All three skills cite this file. The rules here apply whether or not the skills have been invoked.

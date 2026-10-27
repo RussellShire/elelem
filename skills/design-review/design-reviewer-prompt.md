@@ -2,21 +2,27 @@
 
 Use this template when dispatching a design reviewer subagent.
 
-**Purpose:** Verify the consolidated design is complete, consistent, and ready for implementation planning.
+**Purpose:** Independently assess whether a proposed design is complete, coherent and ready to proceed to later wave planning.
 
-**Dispatch after:** Design summary has been consolidated from the brainstorming conversation.
+**Dispatch after:** Planning returns a consolidated proposed design. It may be supplied from conversation or authorised staging; no approved `plan.md` is required.
 
-**Subagent type selection:** Replace `[REVIEWER_SUBAGENT_TYPE]` with `architect-reviewer` if available (it is built for evaluating system design decisions and patterns). Fall back to `general-purpose` only when `architect-reviewer` is not available. Per `../../rules/common/subagents.md`, do not pre-escalate the model: start at the Low-cost default tier and escalate only on evidence to Standard escalation, resolving each per `../_shared/subagent-dispatch.md`.
+**Subagent and model selection:** Resolve the reviewer type, high-capability tier and routing with `../_shared/subagent-dispatch.md`. Replace `[REVIEWER_SUBAGENT_TYPE]` with the verified type. Never invent a model identifier or silently downgrade. Metadata does not switch models.
 
 ```
 {{DISPATCH_AGENT_TOOL}} ([REVIEWER_SUBAGENT_TYPE]):
   description: "Review design summary"
   prompt: |
-    You are a design reviewer. Verify this design is complete and ready for implementation planning.
+     You are an independent design reviewer. Assess the proposed design for material gaps and readiness to proceed to later wave planning. Your verdict is not user approval.
 
-    **Design to review:**
+     **Proposed design:**
 
-    [PASTE THE FULL DESIGN SUMMARY HERE - never pass session history]
+     [PASTE THE FULL CONSOLIDATED PROPOSED DESIGN HERE]
+
+     **Bounded supporting evidence:**
+
+     [PASTE ONLY RELEVANT RESEARCH FACTS, PATHS, REFERENCES AND ASSUMPTIONS]
+
+     Do not infer missing facts from session history. Distinguish supplied evidence from assumptions. Do not request or assume an approved plan file.
 
     ## What to Check
 
@@ -25,26 +31,36 @@ Use this template when dispatching a design reviewer subagent.
     | Completeness | Gaps, undefined behaviour, missing components, unanswered questions            |
     | Consistency  | Contradictions between sections, conflicting requirements                      |
     | Clarity      | Requirements ambiguous enough to cause someone to build the wrong thing        |
-    | Scope        | Focused enough for a single plan, not covering multiple independent subsystems |
-    | YAGNI        | Unrequested features, over-engineering, unnecessary complexity                 |
+     | Scope        | Cohesive and bounded to the stated goal; no arbitrary subsystem-count limit |
+     | YAGNI        | Unrequested features, over-engineering, unnecessary complexity                 |
+     | Readiness    | Requirements traceable to goal and clear enough for later wave planning; no schedule design |
 
     ## Calibration
 
     **Only flag issues that would cause real problems during implementation planning.**
     A missing component, a contradiction, or a requirement so ambiguous it could be
-    interpreted two different ways are issues. Minor wording improvements,
-    stylistic preferences, and "sections less detailed than others" are not.
+     interpreted two materially different ways are issues. Minor wording,
+     stylistic preferences, and "sections less detailed than others" are not.
+     Do not block only because a cohesive request spans more than three
+     subsystems or may need multiple implementation tasks. Surface scope only
+     when it threatens coherence, requirements or safe implementation.
 
-    Approve unless there are serious gaps that would lead to a flawed plan.
+     Approve unless there are material gaps that would lead to a flawed design
+     or make later planning unsafe. Return substantive design changes to the
+     coordinator for Planning and renewed explicit user approval. Do not claim
+     user approval or advance workflow phases.
 
     ## Output Format
 
     ## Design Review
 
-    **Status:** Approved | Issues Found
+     **Status:** Approved | Issues Found
 
-    **Issues (if any):**
-    - [Section/Area]: [specific issue] - [why it matters for planning]
+     **Issues (if any):**
+     - [Section/Area]: [specific issue] - [why it matters for planning]
+
+     **Evidence:**
+     - [design detail or supplied source supporting each issue]
 
     **Recommendations (advisory, do not block approval):**
     - [suggestions for improvement]

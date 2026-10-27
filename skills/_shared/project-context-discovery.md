@@ -12,9 +12,9 @@ This procedure is intentionally bounded. It is not a request to read every docum
 
 ## Scope
 
-This procedure covers discovery and use of existing project documentation during planning. It **MUST NOT** create temporary files or summaries on disk.
+This procedure covers bounded discovery and use of existing project documentation during planning. The helper itself **MUST NOT** create scratch files, caches, or summaries on disk, and it does not own workflow state or lifecycle. It returns evidence and citations to the calling phase and coordinator. When the active workflow permits repository writes, the coordinator may persist approved findings in its registered `.elelem/workflows/<ticket-or-slug>/research.md`; in plan mode, use only authorised staging until materialisation is permitted.
 
-This file is the single shared project-context procedure for calling skills. Repository-local findings remain the default source of truth. Confluence discovery is optional, bounded, and non-blocking.
+This file is the single shared project-context procedure for calling skills. Repository-local findings remain the default source of truth. Confluence discovery is optional, bounded, and non-blocking. The procedure remains a helper, not a replacement for conversational Research or Planning.
 
 ## When To Run
 
@@ -258,4 +258,4 @@ Harness note copy:
 
 > Confluence context is available but not safely scoped for this run. If this repository has a stable Confluence mapping, add `.opencode/project-context.json` with a `confluence` object such as `{ "enabled": true, "space": "<space>", "rootPages": ["<page title>"], "labels": ["<label>"] }`. `space` is the preferred primary scope, `rootPages` pins exact entry pages, `labels` further narrow candidates, and `enabled: false` disables Confluence for this repository.
 
-This note lives in conversation context only. It **MUST NOT** be written to temporary files or a context cache by this procedure.
+This note is returned in conversation context only and is not written to scratch files or a context cache by this procedure. If relevant to the active workflow, the coordinator may include it in registered `research.md` under the workflow artefact contract.

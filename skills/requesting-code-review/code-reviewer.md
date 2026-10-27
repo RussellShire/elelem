@@ -3,11 +3,13 @@
 You are reviewing code changes for production readiness.
 
 **Your task:**
-1. Review {WHAT_WAS_IMPLEMENTED}
-2. Compare against {PLAN_OR_REQUIREMENTS}
-3. Check code quality, architecture, testing
+1. Review the exact change set described below for {WHAT_WAS_IMPLEMENTED}
+2. Compare it with {PLAN_REFERENCE}
+3. Check code quality, architecture and testing
 4. Categorise issues by severity
 5. Assess production readiness
+
+You are read-only. Do not edit files, create commits or otherwise change the repository. Review only the allowed paths and the implementation delta, not unrelated or captured pre-existing changes. Return `BLOCKED` if the supplied boundaries do not let you identify the exact change set. Never claim to have reviewed content you did not read.
 
 ## What Was Implemented
 
@@ -17,15 +19,45 @@ You are reviewing code changes for production readiness.
 
 {PLAN_REFERENCE}
 
-## Git Range to Review
+## Review Inputs
 
-**Base:** {BASE_SHA}
-**Head:** {HEAD_SHA}
+**Mode:** {REVIEW_MODE}
+**Allowed paths:** {ALLOWED_PATHS}
+
+Use only the command set for the supplied mode. Do not run both modes or describe an inapplicable range as reviewed.
+
+### Current-tree mode
+
+**Baseline commit captured at task/workflow start:** {BASELINE_SHA}
+**Captured pre-existing changes to exclude from findings and preserve:**
+{PREEXISTING_CHANGES}
+
+Inspect the tracked delta, including staged and unstaged changes:
 
 ```bash
-git diff --stat {BASE_SHA}..{HEAD_SHA}
-git diff {BASE_SHA}..{HEAD_SHA}
+git diff {BASELINE_SHA} -- {ALLOWED_PATHS}
 ```
+
+List untracked files within scope, then open and read the exact contents of every listed in-scope file before reviewing it:
+
+```bash
+git ls-files --others --exclude-standard -- {ALLOWED_PATHS}
+```
+
+The coordinator's baseline can equal `HEAD`. The command above still includes uncommitted tracked changes. Do not use `HEAD..HEAD` as a substitute. Use the supplied pre-existing snapshot to distinguish earlier user changes from this task's delta. Do not report or alter pre-existing changes.
+
+### Committed-range mode
+
+**Base commit:** {BASE_SHA}
+**Head commit:** {HEAD_SHA}
+
+Inspect this committed range only:
+
+```bash
+git diff {BASE_SHA}..{HEAD_SHA} -- {ALLOWED_PATHS}
+```
+
+Do not use these committed-range commands for current-tree mode.
 
 ## Review Checklist
 
@@ -85,6 +117,10 @@ git diff {BASE_SHA}..{HEAD_SHA}
 ### Recommendations
 [Improvements for code quality, architecture, or process]
 
+### Verdict
+
+**Status:** [REVIEWED / BLOCKED]
+
 ### Assessment
 
 **Ready to merge?** [Yes/No/With fixes]
@@ -106,6 +142,7 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Give feedback on code you didn't review
 - Be vague ("improve error handling")
 - Avoid giving a clear verdict
+- Treat a skipped review as approval or issue a review verdict when no review was performed
 
 ## Example Output
 
@@ -137,6 +174,10 @@ git diff {BASE_SHA}..{HEAD_SHA}
 ### Recommendations
 - Add progress reporting for user experience
 - Consider config file for excluded projects (portability)
+
+### Verdict
+
+**Status:** REVIEWED
 
 ### Assessment
 

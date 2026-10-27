@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Implements an approved design by decomposing it into sequential tasks, dispatching a fresh subagent per task with a combined review, and checkpointing with the user after each task. Delegates uniformly simple work to fast-path-implementation via complexity-triage.
+description: Executes approved workflow waves using bounded specialist workers, default independent reviews and verification barriers.
 metadata:
   model: openai/gpt-6.1-sol
   reasoning_effort: high
@@ -8,303 +8,170 @@ metadata:
 
 # Subagent-Driven Development
 
-Implement an approved design by decomposing it into ordered tasks, then executing each task with an isolated subagent plus a combined review and a user checkpoint.
-
-The iron-law rules (context isolation, git ownership, worktree ban, privilege ban) live in `../../rules/common/subagents.md`. The procedural rules that bind once this skill is dispatching subagents (subagent type selection, model selection, process discipline, escalation) live in `../_shared/subagent-dispatch.md` and apply throughout this skill. The rule that implementation requires an approved design lives in `../../rules/common/workflow.md`.
-
-Before running the procedure below, you **MUST** read `../_shared/subagent-dispatch.md` using the Read tool if you have not already read it in this session.
-
-## When to Run
-
-You need an approved design (from the `brainstorming` router via any of its modes, from `work-on-ticket`, or from a committed specification) whose tasks are mostly independent of each other. If the work is tightly coupled or the design is incomplete, return to brainstorming instead of running this skill.
-
-## Process Overview
-
-1. Ask the commit preference (once, at the start of the session)
-2. Run `complexity-triage` against the design
-3. If SIMPLE: hand off to `fast-path-implementation` and stop
-4. If COMPLEX: decompose into tasks and execute the per-task pipeline for each
-5. When all tasks are complete, run the final feature-level review and verification, then report completion
-
-## Commit Preference
-
-Before any further work, ask the user how commits should be handled using `{{ASK_USER_QUESTION_TOOL}}`:
-
-- **Auto-commit after each task**: the orchestrator commits automatically after each task passes review. The user sees a summary of the changes but is not asked whether to commit.
-- **Ask me each time**: the orchestrator pauses after each task and asks whether to commit.
-
-Ask this once. The choice applies to every task in the session, including any fast-path handoff. If the user chose auto-commit, per-task checkpoints still show a summary of the changes but skip the commit question.
-
-## Triage and Path Selection
-
-Run `complexity-triage` against the approved design. Present the evidence table to the user.
-
-- If the classification is **SIMPLE**, invoke `fast-path-implementation` and stop. That skill owns the rest of the flow.
-- If the classification is **COMPLEX**, continue with the task decomposition below.
-
-## Task Decomposition
-
-Decompose the design into implementable tasks before dispatching any subagent.
-
-### File Structure
-
-Map out which files will be created or modified and what each file is responsible for. Lock these decisions in before any code is written. Each file should have one clear responsibility with a well-defined interface (see `../../rules/common/code-organisation.md`). In existing codebases, follow established patterns; files that change together should live together.
-
-### Task Granularity
-
-Each task is a self-contained unit of work that produces working, testable code:
-
-- Touches a focused set of files (ideally 1-3)
-- Has clear acceptance criteria derivable from the design
-- Can be verified independently of other tasks
-
-Within each task, implementers follow the TDD cycle in `skills/test-driven-development/`. That detail is communicated in the implementer's dispatch, not tracked by the orchestrator.
-
-### Task Ordering
-
-Order tasks to respect dependencies:
-
-1. Foundation and infrastructure first
-2. Core features next
-3. Integration after dependencies
-4. Polish and clean-up last
-
-Tasks execute sequentially in this order. If two tasks have no dependency between them, their relative order is arbitrary, but they still run one at a time.
-
-### Task Tracker Output
-
-Produce a `{{TASK_TRACKER_TOOL}}` with every task. Each entry includes:
-
-- Task name and description
-- Recommended subagent type (selected per `../../rules/common/subagents.md`)
-- Recommended model (pick one concrete model at the Low-cost default tier, resolved per `../_shared/subagent-dispatch.md`; escalate only with justification)
-- Files to create or modify (exact paths)
-- Acceptance criteria
-- Dependencies on other tasks
-- Scene-setting context describing where this task fits in the overall design
-
-## Per-Task Pipeline
-
-Execute tasks sequentially. Each task follows the same pipeline.
-
-```dot
-digraph per_task_pipeline {
-    rankdir=TB;
-
-    "Select specialised subagent type\nand model (Low-cost default tier)" [shape=box, style=bold];
-    "Dispatch implementer subagent\n(./implementer-prompt.md)" [shape=box];
-    "Implementer subagent asks questions?" [shape=diamond];
-    "Answer questions, provide context" [shape=box];
-    "Implementer subagent implements,\ntests, self-reviews" [shape=box];
-    "Dispatch reviewer subagent\n(./reviewer-prompt.md)" [shape=box];
-    "Reviewer approves?" [shape=diamond];
-    "Implementer subagent fixes issues" [shape=box];
-    "Verification gate (orchestrator):\ngit diff + re-run task verification\n(../../rules/common/verification.md)" [shape=box, style=bold];
-    "Verification passes?" [shape=diamond];
-    "User checkpoint:\npresent changes + verification evidence,\ncommit or ask" [shape=box, style=bold];
-    "Mark task complete in {{TASK_TRACKER_TOOL}}" [style=bold];
-
-    "Select specialised subagent type\nand model (Low-cost default tier)" -> "Dispatch implementer subagent\n(./implementer-prompt.md)";
-    "Dispatch implementer subagent\n(./implementer-prompt.md)" -> "Implementer subagent asks questions?";
-    "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent\n(./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements,\ntests, self-reviews" [label="no"];
-    "Implementer subagent implements,\ntests, self-reviews" -> "Dispatch reviewer subagent\n(./reviewer-prompt.md)";
-    "Dispatch reviewer subagent\n(./reviewer-prompt.md)" -> "Reviewer approves?";
-    "Reviewer approves?" -> "Implementer subagent fixes issues" [label="no"];
-    "Implementer subagent fixes issues" -> "Dispatch reviewer subagent\n(./reviewer-prompt.md)" [label="re-review"];
-    "Reviewer approves?" -> "Verification gate (orchestrator):\ngit diff + re-run task verification\n(../../rules/common/verification.md)" [label="yes"];
-    "Verification gate (orchestrator):\ngit diff + re-run task verification\n(../../rules/common/verification.md)" -> "Verification passes?";
-    "Verification passes?" -> "Implementer subagent fixes issues" [label="no"];
-    "Verification passes?" -> "User checkpoint:\npresent changes + verification evidence,\ncommit or ask" [label="yes"];
-    "User checkpoint:\npresent changes + verification evidence,\ncommit or ask" -> "Mark task complete in {{TASK_TRACKER_TOOL}}";
-}
-```
-
-## Verification Gate
-
-After the reviewer approves and **before** the user checkpoint, the orchestrator **MUST** run the verification gate against the implementer's work. This is the "trust but verify" step that `../../rules/common/verification.md` requires when accepting any subagent's success report. The reviewer reads the code; the orchestrator confirms the artefacts.
-
-The procedure is the gate function from the `verification-before-completion` skill, applied to the per-task scope:
-
-1. **Inspect the diff yourself.** Run `git status` and `git diff` (or `git diff <task-base-sha>..HEAD` if the task has a known base). Confirm the files changed match the files the task spec named, and nothing else changed.
-2. **Confirm the implementer's TDD evidence.** The implementer's report **MUST** contain RED to GREEN evidence per `./implementer-prompt.md`. If it does not, re-dispatch the implementer with a request for the missing evidence, you **MUST NOT** wave it through.
-3. **Re-run the verification commands yourself.** Run the test command, the linter, the build, whatever the task's acceptance criteria require, yourself, in this message, against the current working tree. Do NOT rely on the implementer's claimed test results. If the task spec did not name specific verification commands, run the project's standard test command.
-4. **Read the output.** Capture exit codes and pass/fail counts. The output is the evidence.
-5. **Compare to the spec.** Does the diff match the task spec? Did the verification commands all pass? Does the TDD evidence cover every new behaviour in the diff?
-
-If any check fails, re-dispatch the implementer with the specific failure as fix instructions and re-run the gate after the fix. Do **not** patch the issue manually in the orchestrator context, that pollutes context and defeats the isolation rules in `../../rules/common/subagents.md`.
-
-The gate output (commands run, exit codes, pass/fail counts) is shown to the user as part of the user checkpoint, alongside the diff. "The reviewer said it was fine" is not a substitute for the gate.
-
-## User Checkpoint
-
-After the verification gate passes, present the work to the user:
-
-1. Summarise what was implemented and what the reviewer found
-2. Cite the verification evidence: the commands you ran, their exit codes, the pass/fail counts
-3. Cite the implementer's TDD RED to GREEN evidence
-4. Show a `git diff` of the uncommitted changes
-
-If the user chose "ask me each time":
-
-5. Use `{{ASK_USER_QUESTION_TOOL}}` to ask whether to commit (options: "Commit", "Adjust first", "Skip commit")
-6. Only commit when the user confirms
-7. Proceed to the next task
-
-If the user chose auto-commit:
-
-5. Commit immediately after presenting the summary
-6. Proceed to the next task
-
-The checkpoint summary exists regardless of commit preference. The commit question is the part conditional on the upfront choice. The verification evidence is non-optional, without it, you have not satisfied `../../rules/common/verification.md`.
-
-## Handling Implementer Status
-
-Implementer subagents report one of four statuses:
-
-- **DONE**: proceed to review
-- **DONE_WITH_CONCERNS**: read the concerns. If they are about correctness or scope, address them before review. If they are observations ("this file is getting large"), note them and proceed to review.
-- **NEEDS_CONTEXT**: provide the missing information and re-dispatch
-- **BLOCKED**: assess the blocker. If it is context, re-dispatch with more context. If it is a reasoning-capacity problem, re-dispatch with a more capable model. If the task is too large, break it into smaller pieces. If the plan itself is wrong, stop and surface to the human per `../../rules/common/workflow.md`.
-
-The rules in `../../rules/common/subagents.md` forbid ignoring an escalation or forcing the same model to retry without changing anything.
-
-## Final Feature-Level Review
-
-After the per-task pipeline has been run for every task in the decomposition and every task has been committed or set aside per the user's preference, you **MUST** run a final feature-level review against the cumulative work range before reporting the feature complete. The per-task reviewers see one task at a time; the final review sees the feature as a whole and catches issues that only emerge across task boundaries (inconsistent naming, drifting interfaces, integration gaps, leaked test scaffolding).
-
-The procedure:
-
-1. **Identify the feature range.** Capture the base commit (the parent of the first task's first commit, or the commit at session start) and the head commit (current `HEAD`).
-2. **Invoke `requesting-code-review`** against that range. The skill dispatches a `code-reviewer` subagent (or a more specific reviewer per `../../rules/common/subagents.md`) using `skills/requesting-code-review/code-reviewer.md`. This is the production-readiness review mandated by `../../rules/common/code-review.md`; the per-task reviews do not replace it.
-3. **Process the reviewer output via `receiving-code-review`.** Apply severity discipline per `../../rules/common/code-review.md`:
-   - **Critical** issues: stop, fix before reporting completion. Re-dispatch the implementer for the affected task scope, re-run the per-task pipeline including the verification gate, and re-run the feature-level review.
-   - **Important** issues: same as Critical for orchestrated work, fix before completion.
-   - **Minor** issues: log them in the completion report; the user decides whether to address them in this session or later.
-4. **Run `verification-before-completion`** against the feature range. The per-task verification gates verified each task in isolation; this final pass verifies the feature as a whole. Run the project's full test suite, the linter, the build, and any feature-specific verification the design called out. Cite the output.
-5. **Report completion** with: the list of tasks completed, the feature-level review verdict, the verification commands and their outputs, and any deferred Minor issues.
-
-You **MUST NOT** report the feature complete without steps 2 and 4 having been run in this message. The per-task verification gates do not satisfy `../../rules/common/verification.md` for the feature claim; only a fresh feature-level run does.
-
-## Worked Example
-
-```
-You: I'm using Subagent-Driven Development to implement this design.
-
-[Ask user: commit preference]
-User chose: Ask me each time
-
-[Run complexity-triage]
-Classification: COMPLEX
-[Evidence table shown]
-
-[Decompose design: map file structure, define 5 tasks with acceptance criteria, order by dependencies]
-[Create {{TASK_TRACKER_TOOL}} with all tasks, each annotated with one concrete model at the Low-cost default tier]
-
-Task 1 (Low-cost default tier):
-
-[Dispatch implementer]
-
-Implementer: "Before I begin: should the hook be installed at user or system level?"
-
-You: "User level (~/.config/hooks/)"
-
-Implementer: "Got it. Implementing now."
-[Later] Implementer:
-  - Implemented install-hook command
-  - Added tests, 5/5 passing
-  - Self-review: found I missed the --force flag, added it
-
-[Dispatch reviewer]
-Reviewer: [PASS] Spec compliant, code quality good. Clean implementation, good test coverage.
-
-[Verification gate: orchestrator runs git diff + test command itself]
-$ git diff --stat
- src/install-hook.ts | 47 ++++++++
- src/install-hook.test.ts | 62 ++++++++++++++
- 2 files changed, 109 insertions(+)
-$ npm test src/install-hook.test.ts
-PASS src/install-hook.test.ts (5 tests, 5 passed)
-$ npm run typecheck
-exit 0
-
-[Verification PASSES]
-
-[Present diff + verification evidence to user]
-Task 1 complete: install-hook command with --force flag.
-Tests: 5/5 passing (npm test src/install-hook.test.ts, exit 0)
-Typecheck: exit 0
-TDD evidence (from implementer): "installs hook at user level" RED -> GREEN, "respects --force flag when target exists" RED -> GREEN, ...
-
-[Ask: Commit / Adjust first / Skip commit]
-User: Commit
-
-[Commit, mark Task 1 complete]
-
-Task 2 (Low-cost default tier):
-
-[Dispatch implementer]
-
-Implementer:
-  - Added verify/repair modes
-  - 8/8 tests passing
-  - Self-review: all good
-
-[Dispatch reviewer]
-Reviewer: [FAIL] Issues:
-  - Missing: progress reporting (spec says "report every 100 items")
-  - Extra: added --json flag (not requested)
-  - Magic number (100) should be a named constant
-
-[Re-dispatch implementer with fix instructions (Low-cost default tier)]
-Implementer: Removed --json flag, added progress reporting with PROGRESS_INTERVAL constant
-
-[Reviewer reviews again]
-Reviewer: [PASS] Spec compliant now, quality good.
-
-[Present diff to user]
-Task 2 complete: verify/repair modes with progress reporting. 8 tests passing.
-The reviewer caught a missing requirement and an extra flag on the first pass, both fixed.
-
-[Ask: Commit / Adjust first / Skip commit]
-User: Commit
-
-[Commit, mark Task 2 complete]
-
-Tasks 3-5 follow the same pipeline.
-
-[All 5 tasks complete. Final feature-level review begins.]
-
-[Invoke requesting-code-review against BASE..HEAD for the whole feature]
-Reviewer: [Critical] none. [Important] one issue: error messages from install-hook do not include the path that failed. [Minor] two style issues.
-
-[Important issue must be fixed before completion. Re-dispatch implementer for Task 1 scope to address the error message issue. Re-run per-task pipeline for Task 1 including verification gate. Re-run feature-level review.]
-Reviewer: [Critical] none. [Important] none. [Minor] two style issues (deferred).
-
-[Invoke verification-before-completion against the feature]
-$ npm test
-PASS (78 tests, 78 passed)
-$ npm run lint
-exit 0
-$ npm run build
-exit 0
-
-[Report feature complete with evidence and 2 deferred Minor issues]
-
-Done.
-```
-
-## Prompt Templates
-
-- `./implementer-prompt.md`: dispatch implementer subagent for any task (shared with `fast-path-implementation`)
-- `./reviewer-prompt.md`: dispatch combined reviewer subagent for per-task review
-
-## Integration
-
-- **brainstorming** (and its mode skills `brainstorming-standard`, `brainstorming-guided`, `brainstorming-committee`, `brainstorming-skip`): produces the design this skill implements
-- **work-on-ticket**: recovers design context from tickets in new sessions and feeds it into this skill
-- **complexity-triage**: invoked at the start to classify the work
-- **fast-path-implementation**: receives SIMPLE work handed off from this skill
-- **test-driven-development**: the cycle every implementer subagent follows for each task
-- **requesting-code-review**: for the code review prompt used by reviewer subagents
+Execute an approved plan through complete, safe waves. By default, waves have
+an independent `READY` review before dispatch. This skill is an
+execution phase, not an architecture or decomposition phase. The workflow
+coordinator owns phase transitions and shared workflow state. See
+`../workflow-coordinator/SKILL.md`, `../_shared/workflow-artifacts.md`,
+`../_shared/task-briefs.md`, `../_shared/wave-readiness.md`,
+`../_shared/subagent-dispatch.md`, and `../../rules/common/subagents.md`.
+
+## Entry and prerequisites
+
+If there is no active valid workflow, invoke `workflow-coordinator` through
+`{{INVOKE_SKILL_TOOL}}`; do not start an independent execution pipeline. Require
+an explicitly user-approved plan revision and completed wave planning. By
+default, require an independent `READY` verdict. If the user explicitly
+authorised skipping only the readiness review, accept the recorded scoped skip
+instead, but independently confirm that the persisted schedule and task briefs
+are complete and satisfy the wave ownership, dependency, resource, input and
+capacity constraints in `../_shared/wave-readiness.md`. A skipped review is not
+a `READY` verdict. Confirm approval and the applicable planning record remain
+valid against the recorded baseline. Never infer design approval from a review
+verdict, skip or silence.
+
+If the user explicitly skipped wave planning, accept only one complete,
+fully specified task brief with exact scope and inputs. Do not invent tasks,
+decompose architecture, or improvise concurrency. An explicit skip of any other
+phase must have recorded scope, reason and consequence. A skipped review is not
+approval; skipped checks must never be described as passed or verified. A
+skip-authorised task may be accepted for explicitly authorised downstream work
+without being marked verified, but only after checking that its outputs are
+safe and sufficient for that dependent task. A review, check or wave skip does
+not waive dependent safety requirements automatically; unknown critical inputs
+block dispatch.
+
+All workflow phases run by default. Never infer that a small task authorises
+skipping a phase. Complexity triage may advise task sizing or classification,
+but it never routes execution or bypasses a phase. `fast-path-implementation`
+is only a compatibility entry point for a single task explicitly scheduled by
+the coordinator, and follows this executor's reviews and checks.
+
+Ask once for Git preference only if the coordinator has not recorded it. The
+default is to leave changes uncommitted. Do not ask for routine task or wave
+approvals or commit prompts. If the recorded preference is ask-before-commit,
+defer commits and report that preference rather than interrupting execution.
+Only the coordinator may commit, and only according to the recorded preference
+after the relevant checks; workers do not perform Git operations. Never push.
+
+## Consume approved waves
+
+Use the persisted task briefs and dependency graph as the execution contract;
+do not recreate or broaden them. Each brief defines exact allowed writes,
+stable reads, prohibited concurrent reads, dependencies, resources, acceptance
+criteria, verification commands, specialist type and model tier. Same-wave
+tasks must have disjoint writes and must not consume another task's changing
+files or results. Stable shared reads are allowed. Respect resource constraints
+and verified harness concurrency. Invoke the dispatch procedure in
+`../_shared/subagent-dispatch.md` for each worker, including concrete model
+identifiers confirmed by the harness. Use bounded lower-cost capable specialist
+workers; do not invent model identifiers or infer routing from metadata.
+
+Send each worker only its self-contained brief and required source context. Do
+not pass session history as a substitute. Specify its exact writes, stable
+reads, side effects and resource limits. Workers cannot modify shared workflow
+state, commit, push, create branches, use worktrees or use elevated privileges.
+Workers return structured results using `../_shared/task-briefs.md`.
+
+Dispatch independent tasks in a wave in the same turn, or use only a background
+mechanism whose availability and completion semantics are verified by the
+harness. Do not invent a dispatch tool or assume that sequential calls are
+concurrent. If concurrency is unavailable, report the limitation and follow
+the approved schedule only where serial execution is valid; do not silently
+substitute a different plan.
+
+## Task lifecycle and barriers
+
+For every task, independently review the actual changes against its brief and
+quality requirements by default. Use `./reviewer-prompt.md` and the current
+dispatch procedure. If the user explicitly skipped a task review, do not
+dispatch a reviewer for that scope; record the review as `SKIPPED`, including
+its authorisation, scope and consequence. Do not imply a review verdict or
+approval. Otherwise, review outcomes are not user approval. Critical and
+important issues must be resolved before completion; delegate in-scope
+corrections to a worker within the same boundaries, then re-review. A missing
+requirement, contract or architecture decision is a blocker to return to
+planning, not a prompt to silently redesign.
+
+After review or its recorded skip, the orchestrator reads the actual changed
+paths and evidence, then runs fresh task verification by default. Do not trust
+a worker's report alone. Honour an explicitly authorised verification skip only
+for its recorded scope, and record that verification as `SKIPPED` with its
+authorisation and consequence. Run all other applicable checks; a scoped skip
+does not waive checks outside its scope. Task-local checks may run while other
+tasks are active only when every input is known stable. Freeze the task's scope
+and files while checking them. Do not run broad checks while any relevant
+writer remains active.
+Keep task lifecycle status separate from review and verification results. A task
+with an authorised skipped review or check may be accepted for explicitly
+authorised downstream work, but must not be labelled `verified`; it becomes
+`integrated` only after the required verification and wave integration checks
+actually run and pass. Never record a skipped check as passed.
+
+Report verified task progress as it becomes available, without routine approval
+prompts. If a check requires outputs from other tasks, defer it explicitly until
+the safe wave barrier; do not label it passed early. Complete the wave's
+integration checks after all its writers stop. Do not dispatch a dependent wave
+until its prerequisites and required barrier checks are satisfied. Preserve
+the coordinator's task status and evidence records; workers do not write them.
+
+## TDD and worker evidence
+
+For code that changes observable behaviour, require the TDD cycle and specific
+RED-to-GREEN evidence described in `../test-driven-development/SKILL.md` and
+`./implementer-prompt.md` by default. Require a genuine failing test before
+production code, its expected failure, and a fresh passing run afterward. Do
+not accept "tests pass" as RED evidence. Honour an explicit, scoped user TDD
+skip, record its scope and consequence, and report the TDD evidence as skipped,
+not passed. The TDD skip does not waive other checks outside its scope.
+User-authorised documentation or configuration work may use the
+explicit non-code exception in the task brief; do not invent tests or fabricate
+TDD evidence for it. Pure refactors retain existing checks unless explicitly
+skipped by the user.
+
+## Blockers and scope control
+
+Workers report `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT` or `BLOCKED`. Read
+the actual changes and verify evidence for every returned result. `NEEDS_CONTEXT`
+requires supplying existing, authorised context, not guessing. Any real blocker
+stops all new dispatch globally. Cancel active work only if safe cancellation is
+supported; otherwise allow it to settle and do not claim it was cancelled.
+Preserve workflow state and report the blocker to the user. Do not silently
+retry at a higher-cost model, redesign, expand scope, or patch worker code in
+the orchestrator context. If the plan or architecture is inadequate, return to
+the coordinator and planning for user-authorised resolution.
+
+## Final feature review and verification
+
+After all requested tasks and integration barriers are resolved, invoke
+`requesting-code-review` for the cumulative, current uncommitted changes,
+including tracked and untracked files, by default. If the user explicitly
+skipped final review, record that scoped skip and do not imply a review verdict
+or approval. The review must inspect actual changes; `BASE..HEAD` alone is
+insufficient when work is uncommitted. Resolve critical and important findings
+by delegating within approved task boundaries and repeat the relevant review
+and checks. Record minor findings for the user.
+
+Then invoke `verification-before-completion` against the full current state by
+default. Honour an explicitly authorised final verification skip only for its
+recorded scope, and record it as `SKIPPED`; do not imply that checks passed or
+verification occurred. Run all other applicable checks and report the skipped
+scope as unverified. Do not label the full workflow verified while a required
+final check is skipped. Run the project's required complete checks only after
+relevant writers stop. Keep final review, final verification and any explicitly
+skipped gates distinct. Report task and wave status, actual changed paths,
+review findings, commands and outputs,
+TDD evidence where applicable, deferred checks, and any authorised skips and
+their consequences. Follow the coordinator's clean-up phase separately.
+
+Persisted workflow state is canonical. When the harness supports it, the
+coordinator mirrors task progress through `{{TASK_TRACKER_TOOL}}`; the mirror is
+for user-visible progress only and never becomes a separate source of truth.
+Do not invent tracker parameters or let workers update the tracker.
+
+## Prompt templates
+
+- `./implementer-prompt.md`: bounded worker prompt for approved tasks.
+- `./reviewer-prompt.md`: independent per-task review prompt.
+- `../fast-path-implementation/fast-path-reviewer-prompt.md`: compatibility
+  template for a coordinator-scheduled single task.

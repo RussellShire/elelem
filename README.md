@@ -121,6 +121,32 @@ Cross-references between files use relative paths from the citing file's locatio
 - Each skill folder has a `SKILL.md` that defines the procedure. Skill folders may also contain a `RULES.md`, prompt-template files, or other supporting files.
 - `skills/_shared/` holds files referenced by more than one skill.
 
+## Workflow skills
+
+`workflow-coordinator` is the entry point for new work and resumptions. It owns phase transitions, explicit skips, approvals, state, artefact registration, baseline checks, and clean-up. Research and Planning are conversational by default and use a high-capability primary session. The user alone may skip a phase; complexity does not bypass preparation or review, and a skipped review is not approval. Independent Design Review and explicit user approval precede Wave Planning and readiness review. After approval and readiness, implementation waves can run autonomously through the implementation workflow, using lower-cost capable specialists where routing is available. Skill metadata alone does not switch the active model or verify routing.
+
+`research` gathers bounded evidence and discusses findings. The existing `brainstorming` modes shape Planning. `design-review` independently reviews the design, `wave-planning` decomposes approved work and checks readiness, and `subagent-driven-development` executes approved tasks. `create-tickets` creates durable tickets only when requested, while `work-on-ticket` recovers ticket context and returns it to the coordinator for current-baseline validation. `skills/_shared/project-context-discovery.md` is a bounded, repository-first helper, not a substitute for conversational Research or Planning.
+
+Active workflow state and temporary phase files live under `.elelem/workflows/<ticket-or-slug>/`: `workflow.md`, `research.md`, `plan.md`, and `waves.md`, created as needed. At workflow start, the coordinator adds the exact `/.elelem/workflows/` entry to the consuming project's root `.gitignore` and verifies the path is ignored. These files are local and uncommitted by default. Resumption uses local files, so deleting them or using another checkout loses that temporary state; durable ticket bodies retain the approved design. After successful requested work, the coordinator removes only registered workflow-created files. Paused or blocked workflows retain state for resumption. User-requested deliverables such as Markdown ticket fallback files are permanent and are never workflow cleanup targets. Installers do not modify arbitrary consuming projects to add this ignore rule.
+
+### Workflow verification
+
+Run the automated workflow checks with:
+
+```sh
+bash _tests/run_workflow_tests.sh
+```
+
+The existing automated installer suites can also be run with:
+
+```sh
+bash _tests/run_install_opencode_tests.sh
+bash _tests/run_install_codex_e2e.sh
+bash _tests/run_install_codex_tests.sh
+```
+
+The scenarios in `_tests/workflow_scenarios.md` are manual live-harness checks, not automated checks and not evidence that those scenarios have already been run. Harness-specific routing and actual model capability must be verified in the target harness.
+
 ## Writing a new language pack
 
 Create `rules/<language>/<topic>.md` and start the file with the only frontmatter format that is known to work reliably:

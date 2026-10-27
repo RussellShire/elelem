@@ -1,67 +1,60 @@
-# Fast Path Combined Reviewer Prompt Template
+# Single-Task Reviewer Prompt Template
 
-Use this template when dispatching a combined reviewer for fast-path (SIMPLE) work.
+Use this template for an independent review of a single task that the workflow
+coordinator explicitly scheduled. It is the same substantive task review used
+by the standard executor, not authority to bypass workflow phases or checks.
+Do not invoke this prompt when the coordinator recorded an explicitly
+authorised task-review skip. Record that review as `SKIPPED` without inventing
+a reviewer verdict.
+Follow `../_shared/subagent-dispatch.md` for reviewer type, concrete model
+resolution and routing. Reviews use the high-capability tier specified by the
+workflow design.
 
-**Purpose:** Verify the implementation matches the spec AND meets quality standards in a single pass.
-
-**Only used when complexity triage classified the work as SIMPLE.**
-
-**Subagent type selection:** Replace `[REVIEWER_SUBAGENT_TYPE]` with the most specific reviewer type available for the task per `../../rules/common/subagents.md`. Default to `code-reviewer`. For language- or framework-specific changes, prefer a specialised reviewer if one exists. Use `general-purpose` only when no specialised reviewer fits.
-
-```
+```text
 {{DISPATCH_AGENT_TOOL}} ([REVIEWER_SUBAGENT_TYPE]):
-  description: "Combined review for fast-path implementation"
+  description: "Review [TASK_ID]: [task name]"
   prompt: |
-    You are reviewing a batch of changes that were triaged as SIMPLE using strict
-    complexity criteria. Your job is to verify both spec compliance AND code quality
-    in a single pass.
+    Independently review the actual changes for this approved task. Do not
+    modify files or treat a complexity classification as authority to bypass
+    any workflow phase.
 
-    ## What Was Requested
+    ## Approved task brief
 
-    [FULL TEXT of all requirements]
+    [Paste the full brief, including mapped requirements, exclusions, exact
+    write paths, stable reads, acceptance criteria and relevant contracts.]
 
-    ## Complexity Triage Result
+    ## Worker report and evidence
 
-    [Paste the triage evidence table that justified the fast path]
+    [Paste the structured worker report, verification commands and outputs,
+    and TDD evidence when behaviour changed.]
 
-    ## What Implementer Claims They Built
+    ## Actual changes
 
-    [From implementer's report]
+    [Provide exact changed paths and the available diff or file contents. Read
+    actual files in scope. Do not trust the report as a substitute.]
 
-    ## FIRST: Verify the Triage Was Correct
+    ## Review criteria
 
-    Before reviewing the changes themselves, verify that the fast-path classification
-    was appropriate. Read the actual code changes and check:
+    Check each acceptance criterion and mapped requirement. Identify missing
+    work, out-of-scope changes, unrequested behaviour, contract mismatches,
+    correctness defects, maintainability concerns and relevant test gaps. Check
+    that every changed path is allowed. Assess reported TDD evidence, but do not
+    treat it as fresh independent verification. Do not suggest unrelated
+    refactors or invent requirements.
 
-    - Are the changes genuinely uniform (same kind of edit across files)?
-    - Is there any new logic, control flow, or callable units?
-    - Is there any new public surface area (exports, endpoints, contracts)?
-    - Can each change be understood without reference to other changes?
+    Classify each finding as Critical, Important or Minor. Give a precise path
+    and location, supporting evidence, impact and bounded correction guidance
+    where it fits the approved task. Missing architecture or a contract is a
+    blocker to return to planning, not permission to invent a design.
 
-    If the actual changes are more complex than the triage suggested, stop here.
-    Report TRIAGE_INVALID with a specific explanation of which criterion was wrong
-    and why. The controller will switch to the full path.
+    ## Report
 
-    ## THEN: Review Both Dimensions
+    Return one verdict:
+    - READY: no unresolved Critical or Important findings; list any Minor
+      findings and why they do not block the task.
+    - CHANGES_REQUIRED: list Critical and Important findings with evidence and
+      bounded correction guidance.
+    - BLOCKED: identify missing context or approved contract.
 
-    If the triage is valid, review:
-
-    **Spec Compliance:**
-    - Did they implement everything requested?
-    - Did they add anything not requested?
-    - Did they misinterpret any requirements?
-    - Verify by reading code, not by trusting the report.
-
-    **Code Quality:**
-    - Is the code clean and consistent with the surrounding codebase?
-    - Are there any style, naming, or convention violations?
-    - Is there unnecessary complexity introduced?
-    - For changes that affect tests, do the tests verify the right things?
-    - Did this implementation create new files that are already large or significantly
-      grow existing files?
-
-    Report:
-    - [PASS] Approved (spec compliant and quality acceptable)
-    - [FAIL] Issues found: [list specifically, with file:line references]
-    - [TRIAGE_INVALID] This work is more complex than triaged: [which criterion fails and why]
+    The verdict is not user approval, fresh verification or wave integration.
 ```

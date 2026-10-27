@@ -1,79 +1,65 @@
-# Combined Reviewer Prompt Template
+# Independent Task Reviewer Prompt Template
 
-Use this template when dispatching a reviewer subagent on the full path.
+Use for an independent review of a worker's actual task changes. This is a
+read-only review, separate from worker self-review and orchestrator
+verification. Select a suitable reviewer under
+`../_shared/subagent-dispatch.md`; reviews require the high-capability tier
+specified by the workflow design. Verify the concrete model identifier and
+routing. Do not infer model switching from metadata. The coordinator must
+honour an explicitly authorised task-review skip and not dispatch this prompt
+for the skipped scope. A skip is recorded by the coordinator, not converted by
+the reviewer into a verdict. If the supplied context records that the review
+was skipped, do not issue `READY`, `CHANGES_REQUIRED` or `BLOCKED` as a review
+verdict; report that no review was performed and defer to the coordinator's
+recorded skip.
 
-**Purpose:** Verify the implementation matches the spec AND meets quality standards in a single pass.
-
-**Subagent type selection:** Replace `[REVIEWER_SUBAGENT_TYPE]` with the most specific reviewer type available for the task per `../../rules/common/subagents.md`. Default to `code-reviewer`. For language- or framework-specific changes, prefer a specialised reviewer if one exists. Use `general-purpose` only when no specialised reviewer fits.
-
-```
+```text
 {{DISPATCH_AGENT_TOOL}} ([REVIEWER_SUBAGENT_TYPE]):
-  description: "Review Task N: [task name]"
+  description: "Review [TASK_ID]: [task name]"
   prompt: |
-    You are reviewing an implementation for both spec compliance and code quality.
+    Independently review the actual changes for this approved task. Do not
+    modify files, run competing writers, or trust the worker's report as proof.
 
-    ## What Was Requested
+    ## Approved task brief
 
-    [FULL TEXT of task requirements / acceptance criteria]
+    [Paste the complete task brief, including mapped requirements, exclusions,
+    exact allowed writes, acceptance criteria, stable inputs and relevant
+    contracts.]
 
-    ## What Implementer Claims They Built
+    ## Worker report
 
-    [From implementer's report]
+    [Paste the worker's structured report and verification evidence.]
 
-    ## CRITICAL: Do Not Trust the Report
+    ## Actual change set
 
-    The implementer's report may be incomplete, inaccurate, or optimistic.
-    You MUST verify everything independently by reading the actual code.
+    [Provide the exact changed paths and available diff or file contents. Read
+    the actual files in the review scope. Do not use session history as a
+    substitute for the task brief or changes.]
 
-    **DO NOT:**
-    - Take their word for what they implemented
-    - Trust their claims about completeness
-    - Accept their interpretation of requirements
+    ## Review
 
-    **DO:**
-    - Read the actual code they wrote
-    - Compare actual implementation to requirements line by line
-    - Check for missing pieces they claimed to implement
-    - Look for extra features they didn't mention
+    Check the actual implementation against each acceptance criterion and
+    mapped requirement. Identify omissions, scope violations, unrequested
+    behaviour, contract mismatches, defects, maintainability problems and
+    relevant test gaps. Check that changes are confined to allowed paths.
+    Assess TDD evidence where behaviour changed, but do not treat reported
+    commands as fresh independent verification. Do not expand the approved
+    design or suggest unrelated clean-up.
 
-    ## Your Job
-
-    Read the implementation code and verify both dimensions:
-
-    ### Spec Compliance
-
-    **Missing requirements:**
-    - Did they implement everything that was requested?
-    - Are there requirements they skipped or missed?
-    - Did they claim something works but didn't actually implement it?
-
-    **Extra/unneeded work:**
-    - Did they build things that weren't requested?
-    - Did they over-engineer or add unnecessary features?
-    - Did they add "nice to haves" that weren't in spec?
-
-    **Misunderstandings:**
-    - Did they interpret requirements differently than intended?
-    - Did they solve the wrong problem?
-
-    ### Code Quality
-
-    - Is the code clean and consistent with the surrounding codebase?
-    - Does each file have one clear responsibility with a well-defined interface?
-    - Are units decomposed so they can be understood and tested independently?
-    - Is the implementation following the file structure from the plan?
-    - Are there any style, naming, or convention violations?
-    - Is there unnecessary complexity introduced?
-    - For changes that affect tests, do the tests verify the right things?
-    - Did this implementation create new files that are already large or significantly
-      grow existing files? (Don't flag pre-existing file sizes, focus on what this
-      change contributed.)
-
-    **Verify by reading code, not by trusting the report.**
+    For each finding, provide severity (Critical, Important or Minor), exact
+    path and line or a precise location, evidence, impact, and a bounded
+    correction when one fits the task contract. Missing requirements or
+    architecture are blockers to return to planning, not permission to design
+    or implement a new contract.
 
     ## Report
 
-    - [PASS] Approved (spec compliant and quality acceptable)
-    - [FAIL] Issues found: [list specifically, with file:line references, categorised
-      as spec compliance or code quality issues]
+    Return one verdict:
+    - READY: no unresolved Critical or Important findings; list any Minor
+      findings and why they do not block this task.
+    - CHANGES_REQUIRED: list every Critical and Important finding with evidence
+      and bounded correction guidance.
+    - BLOCKED: explain what required context or approved contract is absent.
+
+    This verdict is not user approval, task verification or wave integration.
 ```

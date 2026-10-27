@@ -1,6 +1,6 @@
 ---
 name: design-review
-description: "Reviews a consolidated design summary for completeness, consistency, clarity, scope, and YAGNI issues by dispatching a reviewer subagent against the summary text and iterating until the design is approved or escalated."
+description: "Independently reviews a proposed design for completeness, consistency, scope and implementation-planning readiness."
 metadata:
   model: openai/gpt-6.1-sol
   reasoning_effort: high
@@ -8,25 +8,22 @@ metadata:
 
 # Design Review
 
-Runs a holistic review, passes over a consolidated design summary, catches issues that incremental approval missed, and either returns an approved design or escalates after the iteration budget is exhausted.
+Runs a holistic review of a consolidated proposed design and bounded supporting evidence. It returns a review verdict to the coordinator, never design approval. The coordinator owns user approval and persistence.
 
-For the rule that no implementation may begin until a design has been approved, see `../../rules/common/workflow.md`. For the rules on dispatching the reviewer subagent (context isolation, type selection, model selection), see `../../rules/common/subagents.md`.
+The `workflow-coordinator` invokes this phase and records its verdict separately from explicit user approval. Follow `../_shared/subagent-dispatch.md` for independent high-capability reviewer selection and verified routing; skill metadata does not switch models. Do not silently downgrade.
 
 ## Preconditions
 
-This skill **MUST NOT** be invoked until the caller has produced a consolidated design summary as a single block of text covering goal, architecture, components, interfaces, data flow, error handling, and testing strategy. Reviewing a design that lives only in conversation history is forbidden because the reviewer must receive the design text directly and **MUST NOT** inherit session context.
+The caller must provide a consolidated proposed design as a single block covering goal, requirements, exclusions, architecture, components, interfaces, data flow, error handling and tests/verification. The coordinator may provide it from conversation or authorised staging; `plan.md` need not exist and approval must not precede review. The reviewer receives the proposal and only bounded supporting evidence, never session history. If the coordinator already recorded an explicit review skip, return `SKIPPED` without dispatching. If the user explicitly skips review here, return `SKIPPED`, never `Approved`, and let the coordinator record scope, reason and consequence.
 
 ## Procedure
 
-1. **Confirm the summary is consolidated.** If the caller has not produced a single design summary block, stop and tell the caller to consolidate before invoking this skill.
-2. **Dispatch the reviewer.** Use `{{DISPATCH_AGENT_TOOL}}` to dispatch a reviewer subagent following `design-reviewer-prompt.md`. Paste the full design summary into the prompt. Do not pass session history. Start at the Low-cost default tier and escalate only on evidence to Standard escalation, resolving each per `../_shared/subagent-dispatch.md`, if the design is architecturally complex enough that the reviewer needs deeper reasoning.
-3. **Read the reviewer's status.**
-   - **Approved**: return the design summary unchanged to the caller. Done.
-   - **Issues Found**: extract each issue, decide whether the fix is a wording change, a missing section, or a substantive design change.
-4. **Apply fixes to the summary.** Edit the design summary text to address each issue. Substantive design changes (not just wording) **MUST** be flagged when the summary is returned to the caller, because the caller may need to surface the change to the user before continuing.
-5. **Re-dispatch.** Run the reviewer again against the updated summary.
-6. **Iteration budget.** Maximum three reviewer dispatches. If the third dispatch still returns issues, **STOP** and surface the remaining issues plus the current summary to the caller. The caller decides whether to escalate to the human partner.
-7. **Return the approved summary.** When a dispatch returns Approved, return the (possibly updated) design summary text to the caller along with a one-line note recording how many iterations the review took and whether any substantive changes were made.
+1. **Validate inputs.** If there is no consolidated proposed design, return a blocker to the coordinator. Pass the full proposal and bounded research evidence, source references and assumptions relevant to its claims. Do not require an approved-plan file or use conversation history as evidence.
+2. **Dispatch independently.** Use `{{DISPATCH_AGENT_TOOL}}` with the reviewer prompt in `design-reviewer-prompt.md`. Follow the shared dispatch procedure and verify high-capability routing. Do not use a low-cost default or invent a model identifier.
+3. **Classify the verdict.** `Approved` means only that no blocking design issue was found; return that verdict and the reviewer's findings. `Issues Found` means the proposal needs correction. Recommendations are advisory.
+4. **Resolve issues within the budget.** Minor wording clarifications or completing a missing non-substantive detail may be corrected against supplied evidence and independently re-reviewed. Any substantive change to goal, requirements, architecture, interfaces, errors or test commitments returns to Planning for user discussion. Do not treat that change as approved; the coordinator must obtain renewed explicit approval and run a fresh review.
+5. **Respect the three-dispatch limit.** Maximum three reviewer dispatches per review cycle. If the third dispatch still finds issues, return the remaining issues and current proposal to the coordinator without approval.
+6. **Return the verdict.** Report `Approved`, `Issues Found`, `SKIPPED` or `BLOCKED`, the review iteration count, findings and whether substantive changes are needed. Do not persist an approved plan, seek final approval or invoke later workflow phases.
 
 ## What the Reviewer Checks
 
@@ -35,32 +32,27 @@ This skill **MUST NOT** be invoked until the caller has produced a consolidated 
 | Completeness | Gaps, undefined behaviour, missing components, unanswered questions            |
 | Consistency  | Contradictions between sections, conflicting requirements                      |
 | Clarity      | Requirements ambiguous enough that someone could build the wrong thing         |
-| Scope        | Focused enough for a single plan, not covering multiple independent subsystems |
+| Scope        | Cohesive and bounded to the stated goal; surface excessive breadth without imposing an arbitrary subsystem-count cutoff |
 | YAGNI        | Unrequested features, over-engineering, unnecessary complexity                 |
+| Readiness    | Requirements and key contracts are clear enough for later Wave Planning, without designing its task schedule here |
 
 ## Calibration
 
-The reviewer **MUST** only flag issues that would cause real problems during implementation planning. A missing component, a contradiction, or a requirement so ambiguous it could be interpreted two different ways are issues. Minor wording improvements, stylistic preferences, and "sections less detailed than others" are not.
+The reviewer **MUST** flag only issues that would cause real problems in planning or implementation. A missing component, contradiction, or ambiguity that could lead to materially different outcomes is an issue. Minor wording and stylistic preferences are not. Do not block solely because the request spans more than three subsystems or would later need multiple implementation tasks. Surface broad scope for Planning discussion only when it threatens coherence, requirements or safe implementation.
 
-The full prompt with calibration language and output format lives in `design-reviewer-prompt.md`.
+The full prompt, bounded evidence fields, calibration and output format live in `design-reviewer-prompt.md`.
 
-## Worked Example
+## Verdict Gate
 
-The caller (a brainstorming skill) consolidates a design summary for a new ingest pipeline and invokes this skill.
-
-- **Iteration 1**: reviewer flags two issues. Issue A: "Error handling section does not say what happens when the upstream feed returns malformed records." Issue B: "Components section lists `IngestWorker` but interfaces section never describes how `IngestWorker` is invoked." Both are real gaps. Caller adds an "Upstream malformed input" subsection to error handling and an interface description for `IngestWorker`. Substantive design change flagged: introducing the malformed-input handling adds a dead-letter queue that was not in the original conversation, so this is surfaced for caller review.
-- **Iteration 2**: reviewer returns Approved with one advisory recommendation about consistent terminology. Approved design summary returned to the caller along with the substantive-change note from iteration 1.
-
-## Completion Gate
-
-You **MUST NOT** return Approved to the caller unless the most recent reviewer dispatch in this invocation returned Approved. A previous Approved from earlier in the session, or your own belief that the issues are minor, does not count.
+Return `Approved` only when the most recent reviewer dispatch for the current proposal returned `Approved`. A skipped review, prior verdict, or your own assessment is not approval. The coordinator separately records user approval.
 
 ## Common Mistakes
 
 | Mistake                                                  | Why it is wrong                                                                                                                   |
 |----------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| Passing session history to the reviewer                  | Violates context isolation. The reviewer must read only the design summary, otherwise it grades the conversation, not the design. |
-| Skipping the dispatch and reviewing the summary yourself | The orchestrator's perspective is not a fresh review. The whole point is the second pair of eyes.                                 |
-| Continuing past three iterations                         | The budget exists to prevent endless polish loops. Past three, the caller and the human need to decide whether to redesign.       |
-| Treating advisory recommendations as blockers            | Recommendations are advisory. Only Issues block.                                                                                  |
-| Returning Approved without re-dispatching after fixes    | The Approved status must come from a reviewer run against the updated summary, not the original.                                  |
+| Passing session history to the reviewer                  | Pass only the proposal and bounded relevant evidence.                                 |
+| Reviewing the design yourself                            | Dispatch an independent high-capability reviewer.                                    |
+| Continuing past three iterations                         | Return unresolved issues to the coordinator.                                         |
+| Treating advisory recommendations as blockers            | Only material issues block.                                                          |
+| Treating a skipped review as approval                    | Return `SKIPPED`, not `Approved`.                                                    |
+| Returning Approved after substantive changes             | Return to Planning and require renewed user approval and review.                     |

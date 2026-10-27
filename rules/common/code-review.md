@@ -1,37 +1,51 @@
 # Code Review
 
-These rules apply to every code review interaction: requesting a review, receiving review feedback, and reacting to it. They apply whether the reviewer is your human partner, a subagent, an external collaborator, or a bot.
+These rules apply to every code review interaction, whether the reviewer is a
+user, subagent, external contributor or bot.
 
-## Mandatory Reviews
+## Review phases
 
-You **MUST** request a code review before any of the following:
+Reviews are required by default for implementation tasks and before a
+completion claim. The workflow distinguishes task review, design review, wave
+readiness review and final cumulative review; one verdict does not substitute
+for another. The user may explicitly skip any review phase for scoped work.
+Record the skip, reason and consequence. A skipped review is not approval, and
+must not be described as a review verdict. Do not skip automatically because
+work is simple, small, obvious or locally tested.
 
-- Handing a task back as complete in orchestrated work (see `subagents.md` and the `subagent-driven-development` skill)
-- Merging to main or opening a pull request
-- Declaring a major feature complete
+Keep design approval distinct from the design-review verdict. A review may
+identify gaps or request changes, but only explicit user approval authorises a
+design. In-scope implementation corrections can be delegated within the
+approved task contract. A real scope or architecture change returns to the
+workflow for renewed approval.
 
-You **MUST NOT** skip a review because the change "is simple", "is small", "is obvious", or "was tested locally". No such exemption exists.
+## Forbidden responses to feedback
 
-## Forbidden Responses to Feedback
+You **MUST NOT** respond to code review feedback with performative, gratitude
+or agreement language, regardless of whether the feedback is correct.
 
-You **MUST NOT** respond to code review feedback with any performative, gratitude, or agreement language. This applies regardless of whether the feedback is correct.
-
-**Banned phrases** (non-exhaustive; paraphrases and synonyms are equally banned):
+Banned phrases include these and their paraphrases:
 
 - "You're absolutely right"
 - "Great point", "Excellent feedback", "Good catch"
-- "Thanks", "Thank you", "Thanks for catching that", or any gratitude expression
-- "Let me implement that now" (before verification has happened)
+- "Thanks", "Thank you", "Thanks for catching that", or any gratitude
+- "Let me implement that now" before verification has happened
 
-**Permitted responses:**
+Permitted responses:
 
 - Restate the technical requirement in your own words
 - Ask a specific clarifying question
-- Push back with technical reasoning (see "When to Push Back" in the procedural rules)
-- State the fix and its location, or just ship the fix and let the diff speak
+- Push back with technical reasoning
+- State the fix and its location, or let the diff speak
 
-Rationale: actions speak. The fix in the code is the acknowledgement. Performative language signals compliance theatre, not understanding, and wastes the reviewer's time. If you catch yourself about to write "thanks" or "you're right", you **MUST** delete it and state the fix instead.
+State the technical requirement and action directly. If you catch yourself
+about to use a banned response or a paraphrase, replace it with the technical
+disposition.
 
-## Procedural Rules
+## Procedural rules
 
-The procedural rules that bind once a code review skill is running, verify-before-acting, clarify-before-partial-implementation, the YAGNI check on "implement properly", when to push back, severity discipline, and the GitHub inline reply procedure, live in `skills/_shared/code-review.md` and load when either `requesting-code-review` or `receiving-code-review` is invoked. To request a review, invoke the `requesting-code-review` skill. To process incoming review feedback, invoke the `receiving-code-review` skill.
+When a review skill is invoked, follow its procedural rules for verification
+before acting, clarification, scope, severity and review responses. Invoke
+`requesting-code-review` for an applicable review unless the user explicitly
+skips that scoped phase. Invoke `receiving-code-review` to process incoming
+review feedback.

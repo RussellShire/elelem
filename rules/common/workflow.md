@@ -1,51 +1,87 @@
 # Workflow
 
-## Design Before Implementation
+## Entry and phase defaults
 
-You **MUST NOT** write production code, scaffold a project, invoke an implementation skill, or take any implementation action until a design has been presented and explicitly approved by your human partner. This applies regardless of perceived simplicity. Every change needs a design. Trivial changes get trivial designs, but they are still presented and still approved.
+The `workflow-coordinator` skill is the entry point before implementation. It
+owns transitions and shared state; phase skills own their detailed procedures.
+The `brainstorming` router is only the Planning method selector within that
+workflow. Do not send the user through it again when an active workflow already
+contains an approved, current design for the requested work.
 
-The design lives in the conversation unless it has been captured in a ticket, an epic body, or a committed specification. You **MUST NOT** rely on a design state that exists only in your own context without the user having seen and approved it.
+Every phase runs by default: Research, Planning, design review, Wave Planning,
+readiness review, implementation, task reviews and checks, final review,
+final verification, and clean-up. Only an explicit, scoped user instruction
+may skip a phase. Record its scope, reason and consequences. Every phase is
+skippable, including reviews, checks and clean-up, but a skipped review is not
+approval and skipped verification is not evidence. Do not imply a skipped gate
+passed. No complexity heuristic may automatically bypass a phase.
 
-### The Brainstorming Router Is the Design Step
+An existing approved research result or design may satisfy its phase only
+after validating its source, scope, revision and current assumptions. A review
+verdict is separate from explicit user design approval. Skipping a producing
+phase does not supply its missing required output: missing inputs block
+downstream work. Approval is required before implementation and is distinct
+from review verdicts and phase skips.
 
-The procedural entry point for the design step is the `brainstorming` skill (the router). You **MUST** invoke it before any code edit, regardless of how obvious the change feels. The router enters plan mode and asks the user to pick one of four modes (standard, guided, committee, or skip). The skip option exists for cases where structured brainstorming would be overkill, it captures a brief design statement and proceeds, so the router being mandatory does not mean every change goes through a long dialogue.
+## Research, planning and approval
 
-You **MUST NOT** bypass the router by:
+Research and Planning are conversational by default. Confirm that the active
+primary-session model has high-capability reasoning before conversational
+preparation; skill metadata does not switch models. If it is insufficient, ask
+the user to switch rather than silently replacing the user-facing conversation
+with a detached agent. Design review and wave readiness review are independent
+high-capability reviews. Substantive design changes return to Planning and
+require renewed explicit user approval.
 
-- Designing in your own context and considering it "presented" because you typed it in the conversation
-- Entering plan mode manually instead of through the router
-- Picking `brainstorming-skip` on the user's behalf, the user picks the mode, the router asks
-- Deciding the work is "too small" or "obvious" to need the router, that judgement is the user's, not yours, and the skip option exists for exactly this case
+The coordinator records an approved design, its revision and approval source
+before implementation. For bug fixes, the design includes the reproduction
+approach and intended change. Preserve project test requirements, including a
+failing regression test before a fix, unless the user explicitly scopes a TDD
+skip. A skip does not create missing evidence or permit a false completion
+claim.
 
-### What Counts as an Approved Design
+## Workflow artefacts and permissions
 
-- A design produced by the `brainstorming` router (any of its modes: standard, guided, committee, or skip) that the user has explicitly approved
-- An epic or ticket containing a design that the user has written or previously approved
-- A specification committed to the repository that the user has pointed to as the source of truth for the current change
+Store approved workflow state and artefacts under
+`.elelem/workflows/<ticket-or-slug>/`, creating only what the task needs:
+`workflow.md`, `research.md`, `plan.md` and `waves.md`. Before creating any
+repository artefact, ensure the root `.gitignore` contains the exact
+`/.elelem/workflows/` entry and verify the path is ignored. Record exact files
+created and preserve pre-existing or unrelated files. Keep artefacts
+uncommitted. Do not retain a persistent plan archive; clean up registered
+workflow-created files after successful ticket completion, unless the user
+explicitly skips clean-up. Apply the safe clean-up procedure in
+`skills/_shared/workflow-artifacts.md`.
 
-### What Does Not Count
+Respect plan-mode write permissions. Write only to authorised locations; when
+repository writes are prohibited, use authorised staging and do not instruct
+workers to write in the repository. Failure to materialise required workflow
+files blocks execution. Preserve the user's Git preference, defaulting to
+leaving changes uncommitted. Never push.
 
-- A design you proposed but the user has not responded to
-- A design the user said "it looks fine" to without reviewing specifics
-- Your own interpretation of the user's request that you have not surfaced and confirmed through the router
-- "Obvious" implementations where you skipped the router because the work felt small
-- A plan you put in the conversation without entering plan mode through the router
+## Wave execution
 
-### Bug Fixes
+Implementation starts only after explicit design approval and a `READY` wave
+schedule, unless the user explicitly skips a phase. If Wave Planning is
+skipped, require one complete, bounded task brief and do not improvise parallel
+work. Task briefs specify exact disjoint write paths, stable reads, interfaces,
+dependencies, acceptance criteria and verification. Account for side effects
+from tests, formatters, generators, fixtures, tools and shared resources. Same-
+wave tasks must not read one another's changing files.
 
-Bug fixes also require an approved design, even if the design is a single sentence. At minimum, present the failing-test reproduction approach and which function or module will change, and get explicit approval before writing the fix. The router (with skip mode if appropriate) is the way to do this. The rules in `testing.md` still apply: the failing test comes before the fix.
+Run independent tasks concurrently when harness routing and concurrency are
+verified. Each task receives independent review and fresh task-local checks.
+After all writers in a wave stop, run its integration barrier before starting
+the next wave. Final review and fresh verification follow all waves. Do not ask
+for routine task or wave approvals. Keep the coordinator thin: invoke phase
+skills and track state, rather than rereading or substituting for their
+procedures.
 
-## Sequencing Work
+## Blockers and recovery
 
-When a task involves multiple changes, you **MUST** complete them in the order the design specifies. If the design does not specify an order, foundations and dependencies come first, features next, integration after dependencies, polish last. You **MUST NOT** reorder tasks to make progress look faster or to avoid a harder task.
-
-## Stopping Conditions
-
-You **MUST** stop and consult your human partner when:
-
-- The design turns out to be wrong once implementation begins
-- A subagent reports it is blocked in a way that changes the scope of the work
-- Verification fails in a way that suggests the design, not just the implementation, is at fault
-- You find yourself about to bypass any rule in these instructions
-
-"I will just do this small thing first and tell them after" is not an acceptable response to any of the above. Stop, report, wait for instructions.
+A real blocker stops new dispatch. Cancel running work only when safe
+cancellation is supported; otherwise let it settle without claiming it
+stopped. Preserve workflow state and report the blocker. Do not silently
+redesign, expand approved scope, or change model tier. In-scope review
+corrections may be delegated under the approved task contract. Resume only
+after required authorisation is resolved.
