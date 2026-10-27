@@ -16,6 +16,12 @@ persists shared workflow files.
 
 ## Entry and transitions
 
+Apply `../_shared/phase-evidence.md` at entry, transitions, handover, resume,
+reuse and execution. Validate ordered upstream evidence before advancing;
+recover unsupported phases through that contract, not retrospective labels.
+Enter before implementation-oriented proposals; Research hypotheses and
+options are permitted without treating them as a proposed implementation plan.
+
 Start a workflow from a direct request or resume an existing workflow. Use
 `{{ASK_USER_QUESTION_TOOL}}` to resolve the task identity and any user choices.
 Before dispatching an agent, read `../_shared/subagent-dispatch.md` and verify

@@ -29,7 +29,10 @@ refine the investigation with their input. Do not silently produce an
 autonomous research report as a substitute for this dialogue.
 
 Committee mode is available only when the user explicitly chooses the
-less-conversational approach. In either mode, separate verified facts,
+less-conversational approach for Research, independently of any later Planning
+choice. Return procedure and user-choice provenance under
+`../_shared/phase-evidence.md`; invocation or code reading alone is insufficient.
+In either mode, separate verified facts,
 assumptions and user decisions. Cite repository paths and external sources;
 distinguish evidence from interpretation. Investigate only what can affect
 requirements, architecture, interfaces, risks or verification.

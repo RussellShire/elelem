@@ -21,6 +21,10 @@ here. Skipping wave planning is distinct and permits only its single complete
 task. If no active valid workflow exists, invoke `workflow-coordinator` through
 `{{INVOKE_SKILL_TOOL}}`.
 
+Before execution, apply `../_shared/phase-evidence.md` to ordered upstream
+evidence. Return upstream gaps to the coordinator; do not reconstruct missing
+procedures inline or treat a request to implement as a phase skip.
+
 Complexity triage is advisory. A SIMPLE classification does not authorise this
 skill, skip a phase, change the approved schedule or reduce review and
 verification requirements. The user must explicitly authorise any scoped phase

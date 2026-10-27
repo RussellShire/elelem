@@ -17,7 +17,11 @@ failed=0
 workflow_files=(
   "skills/workflow-coordinator/SKILL.md"
   "skills/research/SKILL.md"
+  "skills/brainstorming/SKILL.md"
+  "skills/work-on-ticket/SKILL.md"
+  "skills/fast-path-implementation/SKILL.md"
   "skills/wave-planning/SKILL.md"
+  "skills/_shared/phase-evidence.md"
   "skills/_shared/workflow-artifacts.md"
   "skills/_shared/task-briefs.md"
   "skills/_shared/wave-readiness.md"
@@ -460,11 +464,103 @@ test_fast_path_readiness_contract_reference() {
   _check_readiness_contract_reference "skills/fast-path-implementation/SKILL.md" "fast_path_readiness_contract_reference"
 }
 
+test_phase_evidence_contract() {
+  local relative="skills/_shared/phase-evidence.md"
+  local content="" requirement pattern
+  local requirements=(
+    'boundary validation|entry, transitions, handover, resume, reuse and execution'
+    'ordered upstream gate|validate applicable upstream phases in order'
+    'scope identity|scope, revision and current assumptions'
+    'procedure provenance|actual procedure provenance'
+    'required outputs|outputs and required user choices'
+    'invocation is insufficient|Loading a skill.*cannot establish procedural work'
+    'later approval is insufficient|later review or approval cannot establish omitted procedures'
+    'Research dialogue|Research:.*dialogue.*separately user-selected alternative'
+    'Planning method|Planning:.*explicit method selection.*selected-mode invocation.*proposal'
+    'separate committee choice|Planning committee.*cannot retrospectively authorise autonomous Research'
+    'skip provenance|exact-source user instruction.*scope, reason and consequence'
+    'implement is not skip|implement.*mode switch.*not.*skip'
+    'lightweight method is not skip|brainstorming-skip.*not a phase skip'
+    'missing dependent inputs|Missing dependent inputs still block'
+    'valid delayed recording|Record legitimate prior evidence later only with accessible provenance'
+    'unsupported recovery|earliest unsupported phase'
+    'no fabricated history|Do not invent history or backfill unsupported claims'
+    'preserve valid work|Preserve useful findings, code, user work and genuinely valid evidence'
+    'affected downstream revalidation|revalidate affected downstream reviews, approval and readiness'
+    'bounded persistence|existing.*workflow.md.*no separate report'
+    'not per tool call|not.*per-tool-call.*checks'
+    'procedural limitation|procedural gate, not runtime enforcement'
+  )
+  if [[ -f "$REPO_ROOT/$relative" ]]; then
+    content="$(tr '\n' ' ' < "$REPO_ROOT/$relative" | tr -s '[:space:]' ' ')"
+  fi
+  for requirement in "${requirements[@]}"; do
+    pattern="${requirement#*|}"
+    if grep -Eiq "$pattern" <<< "$content"; then
+      _pass "phase_evidence_${requirement%%|*}"
+    else
+      _fail "phase_evidence_${requirement%%|*}" "expected $relative to protect this phase evidence requirement"
+    fi
+  done
+}
+
+test_phase_evidence_boundary_references() {
+  local requirement file token content
+  local requirements=(
+    'rules/common/workflow.md|skills/_shared/phase-evidence.md'
+    'rules/common/workflow.md|before implementation-oriented proposals'
+    'rules/common/skills-policy.md|skills/_shared/phase-evidence.md'
+    'skills/workflow-coordinator/SKILL.md|../_shared/phase-evidence.md'
+    'skills/workflow-coordinator/SKILL.md|entry, transitions, handover, resume, reuse and execution'
+    'skills/_shared/workflow-artifacts.md|./phase-evidence.md'
+    'skills/research/SKILL.md|../_shared/phase-evidence.md'
+    'skills/brainstorming/SKILL.md|../_shared/phase-evidence.md'
+    'skills/work-on-ticket/SKILL.md|upstream gaps to the coordinator'
+    'skills/fast-path-implementation/SKILL.md|upstream gaps to the coordinator'
+    'skills/subagent-driven-development/SKILL.md|upstream gaps to the coordinator'
+    'README.md|procedural gate, not runtime enforcement'
+  )
+  for requirement in "${requirements[@]}"; do
+    file="${requirement%%|*}"
+    token="${requirement#*|}"
+    content="$(tr '\n' ' ' < "$REPO_ROOT/$file" | tr -s '[:space:]' ' ')"
+    if grep -Fqi "$token" <<< "$content"; then
+      _pass "phase_evidence_boundary_${file//\//_}_${token//[^[:alnum:]]/_}"
+    else
+      _fail "phase_evidence_boundary_${file//\//_}_${token//[^[:alnum:]]/_}" "expected boundary contract: $token"
+    fi
+  done
+}
+
+test_phase_evidence_installed_links_resolve() {
+  local harness root relative link
+  local harnesses=(claude opencode codex)
+  local files=(
+    'workflow-coordinator/SKILL.md' 'research/SKILL.md' 'brainstorming/SKILL.md'
+    'work-on-ticket/SKILL.md' 'fast-path-implementation/SKILL.md'
+    'subagent-driven-development/SKILL.md' '_shared/workflow-artifacts.md'
+  )
+  for harness in "${harnesses[@]}"; do
+    root="$TEST_TMP/$harness/skills"
+    for relative in "${files[@]}"; do
+      link='../_shared/phase-evidence.md'
+      [[ "$relative" == '_shared/workflow-artifacts.md' ]] && link='./phase-evidence.md'
+      if [[ -f "$root/$relative" ]] && grep -Fq "$link" "$root/$relative" && [[ -f "$root/$(dirname "$relative")/$link" ]]; then
+        _pass "${harness}_phase_evidence_link_${relative//\//_}"
+      else
+        _fail "${harness}_phase_evidence_link_${relative//\//_}" "expected installed boundary reference to resolve to the canonical helper"
+      fi
+    done
+  done
+}
+
 test_required_files_exist() {
   _check_required_files || true
 }
 
 _check_skill_frontmatter
+test_phase_evidence_contract
+test_phase_evidence_boundary_references
 test_claude_installer_copy_and_substitution
 test_opencode_installer_copy_and_substitution
 test_codex_installer_copy_and_substitution
@@ -480,6 +576,7 @@ test_new_markdown_links_resolve
 test_new_backticked_source_references_resolve
 test_parallel_agent_readiness_contract_reference
 test_fast_path_readiness_contract_reference
+test_phase_evidence_installed_links_resolve
 
 total=$(( passed + failed ))
 printf '\n%s/%s tests passed\n' "$passed" "$total"

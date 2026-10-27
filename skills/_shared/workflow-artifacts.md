@@ -40,6 +40,10 @@ required file cannot be materialised, block before execution.
   each checkpoint is verified or explicitly accepted-unverified.
 - Current artefact revisions and links or references to evidence.
 
+Keep the concise phase evidence required by `./phase-evidence.md` in these
+existing `workflow.md` records. Preserve procedure and user-choice provenance,
+exact-source scoped skips and current validity; do not create another report.
+
 Task statuses use `queued`, `running`, `review`, `verified`, `integrated`,
 `accepted-unverified`, `blocked` or `skipped`. `integrated` requires task review,
 task verification and the appropriate wave integration check. A task with an

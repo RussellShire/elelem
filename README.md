@@ -131,6 +131,16 @@ Active workflow state and temporary phase files live under `.elelem/workflows/<t
 
 ### Workflow verification
 
+The shared phase-evidence contract is a procedural gate, not runtime enforcement.
+At workflow boundaries the coordinator checks concise provenance in existing
+`workflow.md` records, not a separate report or per-tool-call checklist. Loading
+a skill or obtaining later approval does not prove omitted procedures ran.
+Exact-source scoped user skips and currently valid prior evidence are supported;
+gaps return to the earliest unsupported phase while preserving useful work.
+Research dialogue or its separately chosen alternative remains distinct from
+the Planning method. Structural tests check policy wiring and all three harness
+copy/substitution paths, not live agent compliance or runtime prevention.
+
 Run the automated workflow checks with:
 
 ```sh

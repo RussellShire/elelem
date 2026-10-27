@@ -2,11 +2,15 @@
 
 ## Entry and phase defaults
 
-The `workflow-coordinator` skill is the entry point before implementation. It
+The `workflow-coordinator` skill is the entry point before implementation-oriented
+proposals and implementation. Research hypotheses and options remain permitted. It
 owns transitions and shared state; phase skills own their detailed procedures.
 The `brainstorming` router is only the Planning method selector within that
 workflow. Do not send the user through it again when an active workflow already
 contains an approved, current design for the requested work.
+
+Apply `skills/_shared/phase-evidence.md` at workflow boundaries. Phase status,
+skill loading and later approval do not prove required procedures occurred.
 
 Every phase runs by default: Research, Planning, design review, Wave Planning,
 readiness review, implementation, task reviews and checks, final review,

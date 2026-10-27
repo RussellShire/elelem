@@ -18,6 +18,10 @@ coordinator owns phase transitions and shared workflow state. See
 
 ## Entry and prerequisites
 
+Before dispatch or reuse, apply `../_shared/phase-evidence.md` to ordered
+upstream evidence. Return upstream gaps to the coordinator; approval and a
+readiness label cannot repair omitted procedures or authorise fake backfill.
+
 If there is no active valid workflow, invoke `workflow-coordinator` through
 `{{INVOKE_SKILL_TOOL}}`; do not start an independent execution pipeline. Require
 an explicitly user-approved plan revision and completed wave planning. By

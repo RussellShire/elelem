@@ -14,6 +14,10 @@ This skill depends on the rules in `skills/_shared/tickets.md`. Those rules are 
 
 The detection of which ticketing system is in use lives in the `detect-ticketing-system` skill. The `workflow-coordinator` owns phase transitions and routes eligible work to the downstream implementation workflow. This skill bridges the gap across session boundaries without bypassing current workflow validation.
 
+Apply `../_shared/phase-evidence.md` to recovered context. Return upstream gaps
+to the coordinator, not an inferred phase completion from a ticket, approval or
+scope confirmation. Preserve accessible provenance for legitimate prior work.
+
 **Precondition**: the user has referenced a specific ticket to work on (for example, "work on #42", "pick up PROJ-123", "implement issue 7"). Without a specific reference, this skill does not apply; if the user is asking what to work on next, that is a triage question, not this skill.
 
 ## Procedure

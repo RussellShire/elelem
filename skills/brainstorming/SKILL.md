@@ -17,6 +17,10 @@ This skill selects a Planning method within the lifecycle owned by `../workflow-
 
 All workflow phases remain on by default. Choosing a Planning method, including skip, does not skip Research, Design Review, explicit final approval or Wave Planning. The coordinator owns these phases and all state transitions.
 
+Use `../_shared/phase-evidence.md`: return explicit method-selection,
+selected-mode invocation and proposal provenance to the coordinator. Router
+loading alone is not Planning evidence and cannot repair missing Research.
+
 ## When to Run
 
 The coordinator invokes this router when the workflow reaches Planning and no Planning method has been selected. Do not choose a method based on task size or complexity. The user chooses explicitly.

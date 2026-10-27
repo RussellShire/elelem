@@ -8,6 +8,10 @@ Within an active workflow, `brainstorming` is only the Planning method
 selector. Do not invoke its router again before an edit when the active
 workflow already has a validated approved design.
 
+Use `skills/_shared/phase-evidence.md` for procedural evidence, exact-source
+scoped skips, valid reuse and recovery at workflow boundaries. Invocation alone
+does not satisfy a phase; perform its required procedure and retain provenance.
+
 Skills are required workflow procedures. Invoke relevant skills through
 `{{INVOKE_SKILL_TOOL}}`; do not substitute reading their files for invocation.
 Each workflow phase runs by default. Only an explicit user instruction scoped
