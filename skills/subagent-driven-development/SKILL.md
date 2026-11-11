@@ -63,13 +63,27 @@ after the relevant checks; workers do not perform Git operations. Never push.
 Use the persisted task briefs and dependency graph as the execution contract;
 do not recreate or broaden them. Each brief defines exact allowed writes,
 stable reads, prohibited concurrent reads, dependencies, resources, acceptance
-criteria, verification commands, specialist type and model tier. Same-wave
-tasks must have disjoint writes and must not consume another task's changing
+criteria, verification commands, independent specialist type and rationale, and
+lowest-capable implementation tier (`low`, `medium` or `high`) with rationale.
+Same-wave tasks must have disjoint writes and must not consume another task's changing
 files or results. Stable shared reads are allowed. Respect resource constraints
-and verified harness concurrency. Invoke the dispatch procedure in
-`../_shared/subagent-dispatch.md` for each worker, including concrete model
-identifiers confirmed by the harness. Use bounded lower-cost capable specialist
-workers; do not invent model identifiers or infer routing from metadata.
+and verified harness concurrency. Use native resolution under
+`../_shared/subagent-dispatch.md` for first implementation dispatch, with only its
+warned, checked current-model configuration fallback. The coordinator records
+the actual task pin and complete `../_shared/task-briefs.md` provenance before
+dispatch. Do not independently choose another concrete model or change specialist
+to obtain a model. Preparation and reviewer model policies are unchanged.
+
+For in-scope corrections, consume the retained actual task pin, including fallback,
+with fresh enumeration, availability, capability, routing and configuration-drift
+checks under the shared procedure. Do not reselect the then-current-session model.
+Relevant drift or any workflow model change requires explicit authorisation and
+a revised recorded pin. Use the actual native schema to route the independent
+specialist and retained selection explicitly, not omitted-model inheritance or
+invented fields. Runtime retries and model switches by external plugins remain
+outside this workflow-selection policy; do not disable or block solely because
+of them or claim pins prevent runtime changes. Requested selection is not
+observed execution evidence; worker self-report is not routing proof.
 
 Send each worker only its self-contained brief and required source context. Do
 not pass session history as a substitute. Specify its exact writes, stable
@@ -88,22 +102,14 @@ Before the first RED step, the coordinator records or validates the immutable
 task-start HEAD and relevant dirty or untracked contents in `workflow.md`.
 Preserve that baseline separately from later task and audit snapshots.
 
-## Test pruning audit and application
+## Touched-path history
 
-For each task that actually changes a test-bearing file, complete the
-coordinator-owned procedure in `../_shared/test-pruning.md` before independent
-task review. That helper owns scope, safety gates, source retrieval, audit
-evidence, recovery, and invalidation. An empty test-bearing scope is recorded as
-`NOT APPLICABLE`.
-
-The stage order is fixed: after the implementation worker stops, the coordinator
-freezes inputs and runs pre-prune checks, then alone dispatches the independent
-read-only auditor. After its verdict, the coordinator records exact source and
-recovery context and assigns any supported removal or restoration to the
-implementation worker. Once that worker stops, the coordinator inspects the
-diff, runs post-prune checks, and records the accepted snapshot. No nested audit
-dispatch or worker self-audit is allowed. A TDD-only skip does not skip the
-audit.
+Ordinary implementation tasks return changed paths and rename mappings, not
+whole-file test inventories. The coordinator accumulates actual touched-path
+history across tasks and reviewer corrections, including reverted edits and
+renames, against the immutable workflow baseline and task checkpoints. Task
+review and task verification have no pruning-audit prerequisite. Defer the one
+whole-file inventory and audit to the final task below.
 
 ## Task lifecycle and barriers
 
@@ -117,6 +123,11 @@ important issues must be resolved before completion; delegate in-scope
 corrections to a worker within the same boundaries, then re-review. A missing
 requirement, contract or architecture decision is a blocker to return to
 planning, not a prompt to silently redesign.
+
+Batch related in-scope review corrections within the approved task boundaries;
+retain independent re-review and fresh task checks after the batch. Correction
+dispatch reuses the retained implementation pin above, including fallback; it
+does not restart model selection.
 
 After review or its recorded skip, the orchestrator reads the actual changed
 paths and evidence, then runs fresh task verification by default. Do not trust
@@ -158,17 +169,26 @@ skipped by the user.
 
 Workers report `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT` or `BLOCKED`. Read
 the actual changes and verify evidence for every returned result. `NEEDS_CONTEXT`
-requires supplying existing, authorised context, not guessing. Any real blocker
-stops all new dispatch globally. Cancel active work only if safe cancellation is
-supported; otherwise allow it to settle and do not claim it was cancelled.
-Preserve workflow state and report the blocker to the user. Do not silently
-retry at a higher-cost model, redesign, expand scope, or patch worker code in
-the orchestrator context. If the plan or architecture is inadequate, return to
-the coordinator and planning for user-authorised resolution.
+requires supplying existing, authorised context, not guessing. Apply blocker
+scopes in `../_shared/subagent-dispatch.md`: pause the affected task and
+transitive dependants, affected shared-contract/resource consumers and
+downstream dependants. A proven global safety failure stops all new dispatch.
+Unknown impact pauses potentially affected work. If no safe boundary can be
+demonstrated, provisionally pause all new dispatch until scope is established.
+Do not classify that uncertainty as a proven global safety failure. Continue
+only already-authorised work whose independence and eligibility are demonstrated.
+A review finding blocks acceptance and completion of its affected task, not
+eligible independent progress. Cancel affected active work only if safe cancellation is supported;
+otherwise allow it to settle without claiming it was cancelled or accepting
+stale outputs. Preserve workflow state and report the blocker to the user. Do
+not silently retry at a higher-cost model, redesign, expand scope, or patch
+worker code in the orchestrator context. If the plan or architecture is
+inadequate, return to the coordinator and planning for user-authorised
+resolution.
 
 ## Final feature review and verification
 
-After all requested tasks and integration barriers are resolved, invoke
+After all requested tasks, task reviews/checks and integration barriers are resolved, invoke
 `requesting-code-review` for the cumulative, current uncommitted changes,
 including tracked and untracked files, by default. If the user explicitly
 skipped final review, record that scoped skip and do not imply a review verdict
@@ -177,7 +197,36 @@ insufficient when work is uncommitted. Resolve critical and important findings
 by delegating within approved task boundaries and repeat the relevant review
 and checks. Record minor findings for the user.
 
-Then invoke `verification-before-completion` against the full current state by
+At this consumer boundary, map to `PASS` only an actually performed favourable
+cumulative review with Status `REVIEWED` and Ready to merge `Yes`, no unresolved
+Critical or Important findings, and evidence for the exact current cumulative
+revision. Retain the raw reviewer result and reviewer provenance, including
+reviewer identity, session/source reference and reviewed revision. `REVIEWED`
+alone is not sufficient. Adverse results, `With fixes`, `No`, `BLOCKED` and
+`SKIPPED`, plus stale or missing results, never map to `PASS`. Missing provenance
+or revision evidence also blocks that mapping. A skipped cumulative review needs
+explicit sequencing authorisation to enter pruning without inventing `PASS`.
+
+After the cumulative final reviewer result is validated as `PASS`, invoke `test-pruning`
+through `{{INVOKE_SKILL_TOOL}}` as one separate final review-phase task. User
+approval is not this trigger. Follow `../test-pruning/SKILL.md` and
+`../_shared/test-pruning.md`; the coordinator alone owns audit dispatch and
+state, with no nested audit dispatch. Freeze the union inventory once, run
+stable pre-prune checks, obtain the independent audit, assign supported edits
+to a bounded worker, and run post-prune checks. Empty scope is `NOT APPLICABLE`.
+If final review was skipped, require explicit sequencing authorisation under
+the helper before pruning; a skip is not a `PASS`. A pruning skip permits no
+pruning edits and waives neither review nor verification.
+
+Only actual pruning edits require an independent bounded pruning-delta review
+of those edits and affected coverage. A no-change audit needs none. Resolve
+in-scope findings within that delta; substantive corrections return to the
+proper implementation/review boundary. Do not automatically repeat cumulative
+review or restart pruning. Use targeted invalidation and evidence recovery
+under the helper when necessary, not a review-prune loop.
+
+Run final verification after the last pruning edit and review correction.
+Invoke `verification-before-completion` against the full current state by
 default. Honour an explicitly authorised final verification skip only for its
 recorded scope, and record it as `SKIPPED`; do not imply that checks passed or
 verification occurred. Run all other applicable checks and report the skipped

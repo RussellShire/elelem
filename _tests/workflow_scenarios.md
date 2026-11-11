@@ -2,6 +2,42 @@
 
 These are manual harness smoke tests. They exercise conversational behaviour and are not covered by the executable structural test runner. They were not run as part of the automated suite, and no live agent tests are claimed.
 
+## Implementation model selection
+
+These are optional future manual checks, not a completion gate for this change.
+Live runtime acceptance was explicitly waived and remains unverified, not passed.
+Run only in separately authorised disposable native configurations, recording
+harness version, actual schema, active instruction sources and redacted selection
+evidence. Catalogue availability and structural checks are not live routing proof.
+
+1. Supply explicit user-chosen low/medium/high native mappings and dispatch a
+   bounded task at the lowest capable tier with an independent specialist.
+   - Expected evidence: source/precedence, tier rationale, explicit selector and
+     actual provider/API target plus effort/variant are recorded. Check OpenCode
+     alias-owned metadata, Claude effective family resolution, and Codex native
+     independent fields with source-only profiles in the relevant harness.
+   - Failure: tier is treated as effort, provider target slashes redirect across
+     providers, a child profile is invented, or specialist selection changes.
+2. Separately supply missing, malformed, ambiguous, disabled/inactive and
+   unavailable selected mappings, then withhold inspection/enumeration evidence.
+   - Expected evidence: confirmed configuration faults warn with source/tier and
+     exact current-model fallback, retaining effort/variant after capability and
+     explicit same-specialist routing checks, without routine prompts. Missing
+     evidence blocks instead of being relabelled as a configuration fault.
+   - Failure: an arbitrary default is used, an incapable valid mapping triggers
+     fallback, or an unusable current model is dispatched without a decision.
+3. After a current-model fallback, request an in-scope correction while the
+   parent uses another model; separately introduce relevant configuration drift.
+   - Expected evidence: the retained actual task pin is reused after fresh checks;
+     relevant drift or requested workflow model change requires authorisation.
+   - Failure: corrections silently reselect the then-current parent model.
+4. Observe an existing external runtime recovery plugin without modifying it.
+   - Expected evidence: external plugins' runtime retries and model switches stay
+     outside this policy. Distinguish requested selection from observed runtime
+     execution using available native evidence, retaining uncertainty where absent.
+   - Failure: workflow pins are claimed to prevent external recovery, plugin
+     existence alone blocks dispatch, or worker self-report proves routing.
+
 ## Coordinator-managed handoff continuation
 
 These manual scenarios must be run separately in Claude Code, OpenCode and
@@ -55,6 +91,107 @@ compliance. These scenarios were not run unless explicitly reported otherwise.
    - Failure: the entire workflow stops without reason or a recursive
      coordinator is created.
 
+## Context boundaries and native maintenance
+
+Run these acceptance scenarios separately in each available Claude Code,
+OpenCode and Codex runtime. They were not run as part of the automated suite.
+Policy delivery through installer fixtures is not observed context reduction or
+runtime enforcement. Record the active harness version, interface/schema,
+installed instruction sources and configuration for each observation; do not
+treat an uninstalled checkout as active policy. Unavailable runtimes remain
+unverified. Do not add runtime wrappers or configuration to make a test possible.
+
+1. Hand off from Research to conversational Planning, then from approved
+   Planning to a broad independent review.
+   - Expected evidence: inspect the next phase's actual input. It contains the
+     objective/method, scope/revision, constraints, required outputs, unresolved
+     decisions, precise artefact sections and accessible approval, exact-source
+     skip, baseline/checkpoint and evidence references as applicable, without a
+     whole ledger or transcript. Broad review retains the full approved design
+     and cumulative changes; implementation still receives its complete brief.
+     Inspect the return for matching scope/revision, outcome, concise findings,
+     original evidence provenance, questions/blockers and next-action advice.
+   - Failure: a size target removes necessary inputs, a missing fact is guessed
+     instead of `NEEDS_CONTEXT`, or dialogue is silently moved into a child.
+2. Put a unique parent-only marker in earlier conversational history, then
+   dispatch bounded work through the actual documented fresh-child interface.
+   - Expected evidence: inspect the child creation request and initial input
+     capture, including supplied messages and inheritance semantics. The parent
+     transcript and parent-only marker are absent while necessary task inputs
+     and fixed applicable instructions, tools and managed policy remain present.
+     Record the actual interface/schema/version evidence. A documented fresh
+     creation API needs no invented inheritance flag. Reusing a child with
+     accumulated history or a history fork is not a fresh start.
+   - Failure: freshness is inferred only from a failed sentinel recall probe,
+     an omitted undocumented field or skill invocation. A child's inability to
+     recall the marker alone is not proof of isolation.
+3. At a settled boundary with disposable completed-phase detail, inspect live
+   native compaction capability before automatic maintenance.
+   - Expected evidence: the control targets the known current session, access
+     is authorised and completion is observable. Capture a recoverable checkpoint
+     before the request, then the request and native completion signal. Request
+     acceptance alone is not completion. Reload only relevant state and validate
+     ownership, revision, approval, baseline/checkpoints and original evidence
+     before the same coordinator continues without a routine prompt.
+   - Failure: external SDK/API documentation substitutes for live capability,
+     session identity is guessed, shell/API self-calls are improvised, or a
+     second owner is created. Do not attempt those actions to test failure.
+4. If usage metrics are exposed, capture comparable before/after readings with
+   their source, session, units and timing around the completion signal.
+   - Expected evidence: report measured differences only from actual readings;
+     retain distinct evidence for policy delivery, completed compaction and
+     measured context reduction. Without metrics, record completion if observed
+     but leave token reduction unverified. Do not invent a universal threshold.
+   - Failure: a state-file write, successful install, smaller report, recall
+     failure or accepted request is presented as measured reduction.
+5. Exercise a native-control error and, separately, an unavailable control using
+   existing safe harness facilities only.
+   - Expected evidence: preserve the checkpoint, record the cause, pause the
+     dependent transition and offer native manual compaction without blind
+     retries or silent downgrade. After manual action, inspect its completion
+     evidence where available and revalidate normal workflow state. If reduction
+     cannot be established, label it unverified and obtain explicit permission
+     before unreduced continuation; that permission skips no other gate.
+   - Failure: an error is relabelled as no-op, a manual offer implies completion,
+     or dependent execution resumes without required recovery/authorisation.
+6. Test an active task or callback, an uncertain external side effect and
+   unsettled input separately, then test a boundary with no meaningful history.
+   - Expected evidence: unsafe cases record `deferred`, resolve safety conditions
+     before maintenance or dependent actions, and permit only safe independent
+     work. No meaningful history records `no-op`, not failure or manual fallback.
+     Maintenance is not requested after every tool call, question or small return.
+   - Failure: callbacks are lost, an uncertain side effect is repeated, or
+     deferred, no-op, unavailable and error outcomes are conflated.
+7. Withhold recoverable decision content, a draft proposal, original permission
+   evidence or an accessible procedure source separately; also supply stale
+   provenance and a Plan-mode restriction that prevents recovery writes.
+   - Expected evidence: destructive reduction or the affected transition blocks
+     until authorised recoverability and current evidence exist. Drafts are
+     recovered from original accessible sources or authorised staging, never
+     persisted as an approved `plan.md`. Exact-source skips retain their scope,
+     reason and consequence. No unauthorised recovery writes are requested.
+   - Failure: a summary replaces exact permission/procedure provenance, a draft
+     is approved by persistence, or a reduction request precedes its checkpoint.
+8. Change the harness/schema/configuration after a valid isolation/maintenance
+   check, then repeat with those inputs unchanged.
+   - Expected evidence: changed capability inputs require rechecking actual
+     semantics. Only still-valid capability evidence is reused when unchanged;
+     model enumeration and routing are checked for every dispatch. Missing
+     required isolation blocks until explicit alternative authorisation exists,
+     rather than silently inheriting parent history.
+   - Failure: capability reuse waives model checks or an unavailable fresh-child
+     interface is silently replaced with an inherited-history fork.
+9. Resume after native or manual maintenance with valid completed phases, then
+   introduce a changed approval revision or inaccessible evidence reference.
+   - Expected evidence: valid work is reused without repeated dialogue or
+     approval. A stale revision or provenance gap blocks affected work under
+     the existing recovery contract. Existing `workflow.md` phase entries hold
+     the mechanism, phases/revision, capability/inheritance evidence, completion
+     reference or distinct error/unavailable/deferred/no-op outcome and next move.
+   - Failure: a new maintenance ledger or transcript dump is created, satisfied
+     labels substitute for evidence, or approval, review, TDD, debugging,
+     verification, wave barriers, ownership or clean-up gates are bypassed.
+
 ## Conversational research and planning
 
 1. Start a new request that requires research before the work plan can be trusted. Provide only the initial goal and the relevant uncertainty.
@@ -96,6 +233,12 @@ compliance. These scenarios were not run unless explicitly reported otherwise.
 4. Explicitly skip the readiness review for a wave.
    - Expected evidence: the skip is recorded only after explicit user authorisation, and the workflow does not claim the skipped readiness review produced a READY verdict.
    - Failure: readiness is marked READY without the review, or the review is skipped without authorisation.
+5. Provide several ready independent tasks, then constrain a shared fixture, stable read or capacity to require concurrency one.
+   - Expected evidence: the planner uses the earliest safe wave up to verified capacity and records the concrete reason for serialisation; it does not manufacture task splits.
+   - Failure: safe work is unnecessarily serialised, or conflicting work is scheduled together.
+6. Give a worker one cohesive task requiring multiple genuine sequential RED/GREEN cycles and several related in-scope review corrections.
+   - Expected evidence: each cycle records its expected failure and fresh green; corrections are batched within scope, independently re-reviewed and freshly checked before the wave barrier.
+   - Failure: test-first evidence is fabricated, or batching bypasses re-review and checks.
 
 ## Blockers, cancellation, and plan drift
 
@@ -117,16 +260,76 @@ compliance. These scenarios were not run unless explicitly reported otherwise.
 2. Skip an optional verification step explicitly, then complete the remaining work.
    - Expected evidence: the final report discloses that verification was skipped and the result is unverified; it does not imply the check passed.
    - Failure: skipped verification is omitted or represented as successful.
-3. Complete all tasks and request cleanup before final review and fresh final verification have run.
-   - Expected evidence: cleanup waits for final review and fresh final verification; task completion alone does not trigger cleanup or a completion claim.
-   - Failure: workflow artefacts are cleaned up before the final review and verification barrier.
-4. Complete final review and fresh verification, then inspect the final report and workspace.
-   - Expected evidence: the report summarises task outcomes, reviews, checks, unresolved risks, and cleanup; only owned transient artefacts are cleaned up after the final gates.
-   - Failure: completion is claimed with outstanding work hidden, or cleanup deletes user-owned or unregistered files.
+3. Complete all tasks and request cleanup before final review and final verification evidence has been validated against settled inputs.
+    - Expected evidence: cleanup waits for final review and final verification evidence validated against settled inputs; task completion alone does not trigger cleanup or a completion claim.
+    - Failure: workflow artefacts are cleaned up before the final review and verification barrier.
+4. Complete final review and validate final verification evidence against the final inputs, then inspect the final report and workspace.
+    - Expected evidence: the report summarises task outcomes, reviews, checks, unresolved risks, and cleanup; only owned transient artefacts are cleaned up after the final gates.
+    - Failure: completion is claimed with outstanding work hidden, or cleanup deletes user-owned or unregistered files.
+
+## Verification evidence validity
+
+These scenarios document expected policy judgement. They were not run as live
+agent tests and do not establish runtime enforcement.
+
+1. Capture a successful check with its exact command and arguments, working
+   directory, checked scope, source/test/configuration/dependency/fixture and
+   generated input identities, dirty and untracked contents, environment and
+   mutable resource assumptions, actual output, exit status, provenance and
+   verifier identity. Continue in a later message and a resumed session without
+   changing any relevant input.
+   - Expected evidence: the gate locates and revalidates the actual execution,
+     then cites the earlier output as reused, not newly run. A message or
+     session change alone does not invalidate it.
+   - Failure: earlier evidence is rejected solely due to a new turn/session, or
+     a summary or self-report is passed off as captured output.
+2. Change one relevant source, test, configuration, dependency, fixture,
+   generated input, dirty/untracked file, environment assumption or mutable
+   resource state. Separately make a demonstrably unrelated change, then leave
+   a relevant input's scope uncertain.
+   - Expected evidence: only affected checks are invalidated; unrelated changes
+     preserve evidence whose independence is demonstrated. Missing or uncertain
+     relevant equivalence triggers an affected rerun, conservatively when scope
+     cannot be established. A commit identity alone does not identify dirty
+     inputs.
+   - Failure: all checks are rerun after every unrelated change, or potentially
+     stale evidence is accepted without input comparison.
+3. Withhold actual captured output, exit status, accessible provenance or
+   verifier identity, and separately make a worker report the only evidence.
+   - Expected evidence: the gate runs the missing check when possible; a worker
+     report never substitutes for independent diff inspection or verification.
+     An inaccessible or unavailable execution cannot support a success claim.
+   - Failure: a report, review verdict, status label or assertion of a prior run
+     is treated as execution evidence.
+4. Preserve an observed intended RED from the original implementation and a
+   current GREEN from the corrected implementation using a materially
+   equivalent test. Then repeat with a syntax/import failure as the purported
+   RED, and with no accessible RED evidence.
+   - Expected evidence: supported original RED and current GREEN outputs are
+     considered together, with their distinct production revisions and the
+     correction relationship. A questionable or missing RED prompts an
+     authorised safe isolated counterfactual or equivalent demonstration; if
+     unavailable or unsafe, the regression coverage claim is blocked. No
+     universal revert/restore procedure is assumed.
+   - Failure: syntax/import failures count as RED, GREEN alone proves the
+     regression, or unrelated work is reverted to manufacture evidence.
+5. Complete worker checks, all relevant writers, test pruning and review
+   corrections, then inspect final integrated verification evidence. Separately
+   change a combined input after that check.
+   - Expected evidence: final checks cover settled combined inputs after all
+     writers, pruning edits and corrections. Matching final evidence can be
+     revalidated and reused; task-local checks and worker self-reports cannot
+     substitute. A later relevant change invalidates only affected evidence.
+   - Failure: task-local output is presented as final integration evidence, or
+     the final result is claimed against changed inputs.
 
 ## Test pruning audit and recovery
 
 These adversarial test-pruning scenarios are manual. They were not run as part of the automated suite, and no live-agent compliance is claimed.
+
+0. Inspect the separate final test-pruning task after task reviews/checks, wave barriers and cumulative final reviewer PASS, before final verification, across multiple tasks and corrections.
+   - Expected evidence: one audit covers the union of actually touched test-bearing files, including older and parameterised cases; ordinary workers and task reviews require no whole-file inventory or pruning evidence. Actual pruning edits receive bounded independent pruning-delta review, then final verification follows the last edit and review correction. Later affected changes refresh inventory and trigger targeted independent rechecks, including full audits of newly touched files; unaffected decisions retain stable evidence.
+   - Failure: pruning precedes cumulative final reviewer PASS, a correction file is omitted, ordinary task review waits for pruning evidence, or cumulative review and pruning automatically repeat.
 
 1. In a task-touched file, create two cases that share one failure but also detect different defects. Ask whether one is a duplicate.
    - Expected evidence: the auditor may propose duplicate removal when one retained survivor detects the shared defect, and explicitly records that other source defects are not preserved. It does not claim full defect coverage.
@@ -138,7 +341,7 @@ These adversarial test-pruning scenarios are manual. They were not run as part o
    - Expected evidence: a blocked category guard does not stop a later removal decision; project rules may override generic category guards but not higher-priority instructions or the canonical rule; wrong-layer is used only when project rules define it.
    - Failure: the category guard permanently blocks later criteria, or a project rule overrides the canonical rule.
 4. Touch a file containing older tests and parameterised cases, then propose pruning only a new case.
-   - Expected evidence: the initial and final inventories include every case in each touched file, older cases, stable identifiers, and the source context.
+    - Expected evidence: after cumulative final reviewer PASS, one final union inventory includes every live case in each touched file, older cases, stable identifiers and source context. Ordinary implementation reports contain changed paths, not whole-file inventories.
    - Failure: the inventory is limited to newly added cases.
 5. Change active instruction sources between preparation and dispatch. Exercise Claude Code user and project rules with applicable globs and the user-scope caveat, OpenCode configured globs and project instructions with Claude fallback both enabled and disabled, and Codex user/project `AGENTS.md` including selected managed packs.
    - Expected evidence: each harness's complete active source set, applicability, authority, and identities are frozen and rechecked; a source-set change blocks or invalidates the audit. `none` is supplied only when the complete applicable project-rule set is established empty.
@@ -171,8 +374,21 @@ These adversarial test-pruning scenarios are manual. They were not run as part o
     - Expected evidence: the first change blocks or defers review until inputs are stable; the later change invalidates affected evidence and triggers a fresh targeted audit and checks.
     - Failure: stale audit evidence is accepted against changed inputs.
 15. Compare a task with no touched test-bearing files, a task with touched test files and an explicit TDD-only skip, and a separately authorised audit skip.
-    - Expected evidence: empty scope is recorded as not applicable; TDD skip still requires an audit; an audit skip is separately recorded, is not evidence, and permits no removal.
+    - Expected evidence: aggregate the workflow union first; empty live scope is NOT APPLICABLE with no audit or delta review, but final verification remains. TDD skip still requires the separate final task; an audit skip is separately recorded, is not evidence, and permits no removal. A cumulative-review skip is not PASS and requires explicit sequencing authorisation before pruning.
     - Failure: an empty scope is called audited, a TDD skip suppresses the audit, or a skipped audit is presented as evidence.
+
+16. Implement two tasks touching different test files, then correct one in task review and another in cumulative final review. Withhold a passing cumulative reviewer verdict despite user design approval.
+    - Expected evidence: task reviews/checks and integration barriers proceed without pruning evidence. No audit or whole-file inventory is required from ordinary workers. Only cumulative final reviewer PASS schedules one separate final pruning task over the union, including the corrections, not two per-task audits.
+    - Failure: user approval triggers pruning, pruning precedes cumulative PASS, or task review waits for an audit.
+17. Touch an older test file and revert that edit, then rename a different touched test file twice. Leave unrelated user changes elsewhere and a separately unexplained deleted path.
+    - Expected evidence: actual history retains the reverted path, maps rename chains to deduplicated live destinations and preserves task/workflow baselines. The final inventory includes older tests and independent parameterised cases in that union only. The unexplained missing path blocks until reconciled; a broad final diff is insufficient.
+    - Failure: reverted edits disappear from scope, rename sources are silently omitted, unrelated user work enters scope, or missing files authorise pruning.
+18. Return an audit with no applied changes, then separately apply authorised pruning edits and introduce a bounded delta-review correction.
+    - Expected evidence: only actual edits trigger independent pruning-delta review, limited to the pruning diff and affected coverage. Final verification runs after the last edit and review correction. Neither branch automatically repeats cumulative review or restarts pruning.
+    - Failure: no-change audits trigger unnecessary delta review, verification precedes the last edit, or an automatic review-prune loop starts.
+19. Fail a precheck, return incomplete audit evidence, fail application/postchecks, and introduce unexpected frozen-input drift separately.
+    - Expected evidence: each failure blocks completion; no production fixes or scope expansion occur inside pruning. Use worker-only safe recovery and targeted invalidation/reassessment within the one scheduled final task. Substantive corrections return to implementation/review, with renewed approval when required.
+    - Failure: a failure is recorded as success, recovery overwrites later work, or every issue restarts a whole-workflow audit.
 
 ## Phase evidence boundary and recovery
 
@@ -204,3 +420,117 @@ existing `workflow.md` records, not a new report or copied transcript.
 8. Choose a less-conversational alternative explicitly for Research, then separately choose standard Planning; repeat with conversational Research and later committee Planning.
    - Expected evidence: Research and Planning each retain their own procedure and choice provenance. Planning committee never retrospectively authorises autonomous Research.
    - Failure: one mode choice is silently applied to both phases.
+
+## Blocker containment
+
+Run each scenario separately in every available Claude Code, OpenCode and Codex
+harness. These manual scenarios were not run as part of the automated suite;
+structural checks and installed-fixture checks do not establish runtime
+enforcement. Record the harness version, active policy sources and observed
+evidence for each run. Do not claim an unavailable harness was exercised.
+
+1. A missing task-local fixture blocks only the affected dependency chain.
+    - Setup: Schedule task A with its required local fixture, task C dependent
+      on A, task D dependent on C, and independent eligible task B with separate
+      valid inputs and ownership.
+    - Action: Make A's required fixture unavailable and have A report the
+      blocker before another dispatch.
+    - Expected evidence: A and both dependency levels, C and D, pause with the
+      missing fixture recorded. B remains eligible and progresses within the
+      approved schedule because its inputs, ownership, resources and evidence
+      remain valid.
+    - Failure: B is held solely because A is blocked, or C or D starts before
+      its blocked prerequisite is resolved.
+2. An invalid shared contract contains affected work without holding a valid
+   unaffected producer.
+    - Setup: Have producers P1 and P2 create parts of shared contract K,
+      consumed by C1 and C2, with downstream task D depending on an affected
+      consumer. Producer P2 and resource user R use shared temporary fixture F
+      in separate, non-overlapping scheduled tasks, as required by the approved
+      resource constraints. Include producer U whose authorised output uses
+      neither K nor F.
+    - Action: Establish evidence that K is invalid and F is unusable, then
+      assess affected contracts, resource users and downstream work before
+      further dispatch.
+    - Expected evidence: Affected production of K by P1 and P2, consumption by
+      C1 and C2, use of F by P2 and R, and affected downstream D are paused and
+      recorded. U remains eligible only when its independence and valid
+      authorised work are demonstrable.
+    - Failure: Affected contract production, consumption, resource use or
+      downstream work proceeds, or U is held without an identified impact on
+      its work.
+3. A workflow-wide safety failure stops all new dispatch.
+    - Setup: Schedule multiple otherwise eligible tasks and make a
+      workflow-wide authorisation, ownership, isolation or safe-operation
+      condition invalid.
+    - Action: Present the safety failure to the coordinator before any further
+      dispatch.
+    - Expected evidence: The invalid workflow-wide condition and its evidence
+      are recorded, and no new task is dispatched while it remains unresolved.
+    - Failure: Any new dispatch proceeds during the workflow-wide safety
+      failure.
+4. Unknown impact permits continuation only across a demonstrated safe
+   boundary.
+    - Setup: Prepare two independent cases with an otherwise eligible task B:
+      one where available dependency, resource and ownership evidence proves B
+      is outside the potentially affected boundary, and one where no such
+      boundary can be demonstrated.
+    - Action: Introduce a blocker whose impact is initially unknown and assess
+      each case before dispatching more work.
+    - Expected evidence: In the first case, record the evidence for the
+      unaffected boundary and allow only eligible B to continue. In the second,
+      provisionally hold all new dispatch until scope is established. Record
+      uncertainty as unresolved, not as a proven global safety failure.
+    - Failure: Work proceeds without a demonstrated boundary, a proven global
+      failure is claimed from uncertainty alone, or the provisional hold is
+      omitted when no safe boundary can be established.
+5. Unsupported safe cancellation allows an affected worker to settle without
+   accepting its output automatically.
+    - Setup: Have an affected worker active and establish that the harness does
+      not support safe cancellation.
+    - Action: Request cancellation after the blocker is assessed, then observe
+      the worker settle through the available safe process.
+    - Expected evidence: The worker is allowed to settle; no report claims that
+      it stopped or was cancelled. Its output is retained for assessment and is
+      not automatically accepted while its validity may be affected.
+    - Failure: The report claims cancellation without confirmation, the output
+      is automatically accepted, or unsafe cancellation is attempted.
+6. Recovery renews only affected evidence and revalidates dependent eligibility.
+    - Setup: Record valid work and evidence for unaffected task B, plus affected
+      task A and its dependent tasks with current assumptions, approval,
+      readiness, review, verification and evidence references.
+    - Action: Resolve A's recorded blocking condition and assess the validity of
+      affected assumptions and downstream eligibility.
+    - Expected evidence: The resolution is recorded. Only affected assumptions,
+      approval, readiness, review, verification and evidence are renewed as
+      required; valid unaffected work and evidence for B are preserved. A and
+      its dependants resume only after their eligibility is revalidated.
+    - Failure: Unaffected work is discarded or needlessly repeated, affected
+      evidence is reused without validation, or work resumes before resolution
+      and dependent eligibility are recorded.
+7. Independent progress cannot bypass later-wave or integration prerequisites.
+    - Setup: Schedule independent task B in the current wave and task C in a
+      later wave behind a prerequisite and the current wave's integration
+      barrier. Keep applicable task review, verification and acceptance gates
+      in place.
+    - Action: Let B progress while the prerequisite or integration check needed
+      for C remains incomplete.
+    - Expected evidence: B's progress is recorded separately. C does not start
+      until its prerequisites and integration barrier are satisfied; review,
+      verification and acceptance gates remain required.
+    - Failure: C starts early, independent progress is used to bypass an
+      integration prerequisite, or any review, verification or acceptance gate
+      is skipped or represented as satisfied without evidence.
+8. Unresolved review findings on task A do not prevent independent task B from
+   progressing or permit A to be accepted.
+    - Setup: Give task A an applicable review with unresolved findings that
+      affect A, and identify task B as demonstrably independent and otherwise
+      eligible under the approved schedule.
+    - Action: Keep A's review findings unresolved while the coordinator
+      considers whether B can continue.
+    - Expected evidence: B may progress if its independent eligibility is
+      demonstrated. A remains unaccepted and incomplete until its applicable
+      review findings are resolved and its existing acceptance gates are met.
+    - Failure: A is accepted or completed with unresolved findings, a required
+      review gate is silently skipped, or B is held solely for findings that do
+      not affect it.

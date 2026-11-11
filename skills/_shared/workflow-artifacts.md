@@ -36,9 +36,31 @@ required file cannot be materialised, block before execution.
   the original starting baseline, including contents of relevant dirty paths,
   immutable throughout the workflow.
 - Task status, owner, review result, verification result, evidence and blockers.
+- In each existing task record, pin actual implementation selection before first
+  dispatch: configured source/revision, requested tier and rationale, independent
+  specialist, native selector, provider, API target/resolved model, reasoning
+  effort or variant, fallback flag, reason, warning and evidence. Retain source
+  precedence, catalogue/capability and actual schema/routing evidence without
+  secrets. Mark absent/inapplicable values explicitly. This is the requested
+  workflow selection, not proof of observed execution; record observed execution
+  evidence and uncertainty separately. External runtime retries/model switches
+  remain outside workflow-selection policy and are not prevented by this pin.
+  Corrections reuse the actual pin, including fallback; preserve drift checks
+  and explicit authorisation for any workflow model change. Never reselect a
+  changed current-session model or overwrite original selection provenance.
 - Accepted-change checkpoints and wave integration results, including whether
   each checkpoint is verified or explicitly accepted-unverified.
 - Current artefact revisions and links or references to evidence.
+- Actual touched-path history across all implementation tasks and reviewer
+  corrections, including reverted edits and rename mappings. Record paths even
+  when their final contents match a baseline; a final diff is not that history.
+  Preserve task-start baselines and pre-existing dirty/untracked contents, not
+  only the immutable workflow baseline and accepted checkpoints.
+- Final cumulative reviewer `PASS` and its revision, separate final pruning
+  task scope and status, final union live inventory and frozen source/input
+  identities, prechecks/postchecks and discovery, decision/recovery evidence,
+  conditional pruning-delta review and targeted invalidation. Record empty
+  scope as `NOT APPLICABLE`; skipped or failed gates are not passing evidence.
 
 Keep the concise phase evidence required by `./phase-evidence.md` in these
 existing `workflow.md` records. Preserve procedure and user-choice provenance,
@@ -53,6 +75,27 @@ validate provenance and current validity of evidence, then continue from the
 next required action without repeating valid completed phases or routine
 prompts. A phase's
 "stop after handoff" ends that phase procedure, not the overall workflow.
+
+### Context-reduction checkpoint
+
+Before requesting native compaction, persist the authorised current revision,
+original evidence and permission references, next action and ownership in the
+existing workflow state. Retain the immutable baseline, accepted checkpoints,
+exact-source skips, pending questions, blockers and unaccepted task status.
+This recoverability checkpoint is not task acceptance or a new approval.
+
+Missing recoverable decisions, draft proposals or evidence blocks destructive
+reduction. Preserve draft content through accessible original sources or
+authorised staging before it can be lost. Never persist an unapproved design
+into `plan.md`. A summary is not a substitute for exact permission or procedure
+provenance. Follow `./phase-evidence.md` for the concise maintenance record;
+do not create another ledger, transcript dump or per-phase artefact family.
+
+Respect Plan-mode restrictions and authorised staging permissions. Do not
+trigger reduction requiring unauthorised recovery writes. After native or
+manual completion, reload only the state needed for the next action and apply
+the normal resume validation below, including ownership, revision, approval,
+baseline/checkpoints and evidence validity. Do not repeat valid completed work.
 
 Task statuses use `queued`, `running`, `review`, `verified`, `integrated`,
 `accepted-unverified`, `blocked` or `skipped`. `integrated` requires task review,

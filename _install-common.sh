@@ -627,7 +627,7 @@ install_agent_bundle_files() {
       return 1
     fi
     if [[ -e "$destination" || -L "$destination" ]]; then
-      printf "Replace existing agent '${destination##*/}'? [y/Y] " >&2
+      printf "Replace existing agent '${destination##*/}'? [y/n] " >&2
       if ! IFS= read -r response; then
         response=""
       fi
@@ -663,7 +663,7 @@ install_agent_bundle_notice() {
 
   if [[ -e "$destination_file" || -L "$destination_file" ]]; then
     local response
-    if ! IFS= read -r -p "Replace existing notice '${destination_file##*/}'? [y/Y] " response; then
+    if ! IFS= read -r -p "Replace existing notice '${destination_file##*/}'? [y/n] " response; then
       response=""
     fi
     if [[ "$response" != "y" && "$response" != "Y" ]]; then

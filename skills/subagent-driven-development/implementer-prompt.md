@@ -10,9 +10,22 @@ schedule, ownership, dependency, resource, input or capacity checks. Follow
 `../_shared/task-briefs.md`, `../_shared/subagent-dispatch.md`, and
 `../../rules/common/subagents.md`.
 
-Select the most specific capable specialist type for the task. Resolve a
-concrete, harness-verified lower-cost capable model using the current shared
-dispatch procedure. Do not rely on skill metadata to switch models.
+Select the most specific capable specialist independently of its model. Before
+first dispatch, apply native resolution and only the warned, checked current-model
+configuration fallback in the shared dispatch procedure. Have the coordinator
+retain the actual task pin with complete provenance before invoking the worker.
+For in-scope corrections, consume the retained actual task pin, including fallback.
+Do not reselect the then-current-session model. Recheck availability, capability,
+explicit routing and configuration drift; relevant drift or workflow model changes
+require explicit authorisation. Preparation and reviewer policies are unchanged.
+
+Bind the independent specialist and retained selection through the actual exposed
+native dispatch fields, not guessed parameters or omitted-model inheritance. The
+selection record below is prompt context, not a portable tool argument schema.
+Do not rely on skill metadata to switch models. External runtime plugin recovery
+is outside workflow-selection policy; do not block solely because of it or claim
+task pins control runtime switches. Requested selection and observed execution
+evidence are distinct; a worker self-report is not routing proof.
 
 ```text
 {{DISPATCH_AGENT_TOOL}} ([SPECIALISED_SUBAGENT_TYPE]):
@@ -26,6 +39,17 @@ dispatch procedure. Do not rely on skill metadata to switch models.
     objective, acceptance criteria, interfaces, dependencies, exclusions,
     exact allowed writes, stable reads, prohibited concurrent reads, resources,
     verification commands and expected evidence.]
+
+    ## Retained implementation selection
+
+    [Paste the coordinator's retained actual task pin: configured source/revision,
+    requested tier (low, medium or high) and lowest-capable rationale; independent
+    specialist and rationale; native selector, provider, API target/resolved model,
+    reasoning effort or variant; fallback flag, reason, warning and evidence;
+    source precedence, actual schema, catalogue/capability and routing evidence.
+    Mark absent or inapplicable values explicitly. Include fresh drift checks and
+    any explicit authorisation for a revised pin. Corrections reuse this actual
+    selection, including fallback, rather than a changed current model.]
 
     ## Required context
 
@@ -67,30 +91,18 @@ dispatch procedure. Do not rely on skill metadata to switch models.
     do not claim RED-to-GREEN evidence. Report the skip and its consequence.
     Otherwise report the test name, RED output, GREEN output and commands with
     exit codes. Do not claim TDD from tests written after implementation.
+    A cohesive task may contain multiple genuine sequential RED/GREEN cycles;
+    report each cycle separately.
 
-    For a coordinator-managed task that touches test-bearing files, use
-    `../_shared/test-pruning.md`. Report the exact actual changed paths, every
-    test and parameterised case in each test-bearing file actually changed by
-    the task, including older cases, the approved behaviours covered, and
-    relevant RED/GREEN evidence. Do not use a broad HEAD diff to invent the
-    audit scope. Stop writing after this implementation handoff. Do not prune
-    tests, audit your own work, or dispatch an auditor. A TDD-only skip does not
-    waive the independent audit.
-
-    If the coordinator later assigns a bounded REMOVE or MERGE after an
-    independent audit, require the exact audited cases, decision evidence,
-    source context, and scoped recovery patch or snapshot recorded by the
-    coordinator in workflow.md. For MERGE, require the named current-audit KEEP
-    survivor and the exact assertion, production line, reachable path, and
-    failure reason. Apply a merge only when that survivor is in the permitted
-    write paths; otherwise report and withhold it. Apply only assigned changes.
-    Do not change production code, add tests, clean up unrelated helpers, delete
-    a test file, or remove its last test. Report every applied and withheld
-    decision. If application or its check fails, restore only pruning-owned
-    changes from recorded recovery material when the coordinator assigns that
-    restoration to you. The coordinator must not edit files or apply restoration
-    directly. If the source or recovery context is incomplete or cannot be
-    applied without overwriting later work, stop and report NEEDS_CONTEXT.
+    Report changed paths and rename mappings, not a whole-file test/case inventory.
+    Include actual intermediate and reverted edits and reviewer corrections,
+    the supplied baseline reference, approved behaviours covered and relevant
+    RED/GREEN evidence. Do not infer touched history from a broad HEAD diff.
+    Stop writing after this implementation handoff. Do not prune tests,
+    audit your own work, or dispatch an auditor. The separate final task under
+    `../_shared/test-pruning.md` runs only after cumulative final reviewer PASS.
+    Its bounded application worker receives a separate brief with audited
+    decisions and scoped recovery; ordinary implementation has no audit gate.
 
     Apply only exceptions explicitly authorised by the user and recorded by the
     coordinator, including a scoped TDD or check skip, or a non-code exception

@@ -40,8 +40,11 @@ Do not improvise batch scope or parallel dispatch.
 
 By default, run the same independent task review using
 `./fast-path-reviewer-prompt.md`, fresh orchestrator verification, any required
-integration barrier, and final cumulative review and verification as the
-standard executor. Honour only explicitly authorised, scoped review or check
+integration barrier, then final cumulative review. Only after cumulative final
+reviewer `PASS`, run the coordinator-owned separate final test-pruning task,
+bounded independent pruning-delta review only for actual pruning edits, and
+final verification after the last edit and review correction, as the standard
+executor. Honour only explicitly authorised, scoped review or check
 skips recorded by the coordinator. For a skipped task review, do not invoke the
 reviewer prompt or fabricate a verdict. Record skipped reviews and checks as
 `SKIPPED`, with their authorisation and consequence; a skipped review is not
@@ -56,9 +59,17 @@ The coordinator owns progress, workflow state, Git preference and phase
 transitions. Do not ask for routine task or commit approvals. The default is to
 leave changes uncommitted. If the user's recorded preference is ask-before-
 commit, defer commits and report them rather than interrupting the task flow.
-Never push. Follow the standard blocker policy: stop new dispatch globally,
-cancel active work only when safe cancellation is supported, otherwise let it
-settle, preserve state and report the blocker.
+Never push. Follow `../_shared/subagent-dispatch.md` to classify blockers and
+pause only affected work and its dependency closure. A proven global safety
+failure stops all new dispatch. Unknown impact pauses potentially affected work.
+If no safe boundary can be demonstrated, provisionally pause all new dispatch
+until scope is established. Do not classify that uncertainty as a proven global
+safety failure. Continue already-authorised independent work only when
+its safe boundary and eligibility are demonstrated. Cancel affected work
+only when safe cancellation is supported, otherwise let it settle without
+claiming it stopped or accepting stale outputs. Preserve state and report the
+blocker. A review finding blocks acceptance of its affected task, not eligible
+independent progress.
 
 ## Reviewer prompt
 
