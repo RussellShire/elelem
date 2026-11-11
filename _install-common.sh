@@ -236,6 +236,23 @@ singleselect() {
   unset -f _singleselect_draw
 }
 
+resolve_relative_project_path() {
+  local requested_path="$1"
+  local result_var="$2"
+  local physical_path
+
+  if ! physical_path="$(CDPATH= cd -P -- "./$requested_path" && printf '%sX' "$PWD")"; then
+    say_err "cannot resolve project directory '$requested_path'; ensure it exists and is searchable."
+    return 1
+  fi
+  physical_path="${physical_path%X}"
+  if [[ "$physical_path" == *..* || "$physical_path" == *$'\n'* ]]; then
+    say_err "project directory '$requested_path' resolves to an unsafe path containing '..' or a newline; choose another directory."
+    return 1
+  fi
+  printf -v "$result_var" '%s' "$physical_path"
+}
+
 # Prompts the user to select an install scope and resolves the base install path.
 # Usage: resolve_install_base RESULT_VAR USER_BASE PROJECT_SUFFIX
 #   RESULT_VAR      - name of a global variable to populate with the resolved base path
@@ -269,6 +286,9 @@ resolve_install_base() {
       if [[ ! -d "$project_path" ]]; then
         say_err "$project_path does not exist"
         return 1
+      fi
+      if [[ "$project_path" != /* ]]; then
+        resolve_relative_project_path "$project_path" project_path || return 1
       fi
       resolved_base="$project_path/$project_suffix"
       ;;

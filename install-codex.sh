@@ -276,6 +276,9 @@ codex_resolve_targets() {
       say_err "$project_path does not exist"
       return 1
     fi
+    if [[ "$project_path" != /* ]]; then
+      resolve_relative_project_path "$project_path" project_path || return 1
+    fi
     if [[ "$(cd "$project_path" && pwd -P)" == "$(cd "$HOME" && pwd -P)" ]]; then
       say_err "project path resolves to HOME; refusing to install at this scope."
       return 1
