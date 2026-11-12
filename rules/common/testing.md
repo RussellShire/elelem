@@ -106,7 +106,7 @@ You **MUST** apply TDD to:
 - Refactors that change observable behaviour
 - Any change to code whose behaviour is externally visible
 
-You **MAY** skip TDD only for throwaway prototypes that will be deleted, generated code, or configuration files. These exceptions require explicit approval from your human partner.
+The user may explicitly authorise a scoped TDD skip, including for throwaway prototypes that will be deleted, generated code, or configuration files. Record its exact source, scope, reason and consequence. A skip does not supply RED or GREEN evidence and does not waive other gates.
 
 ### Verification is Mandatory
 

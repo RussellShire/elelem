@@ -10,7 +10,7 @@ metadata:
 
 The iron-law rules (when reviews are mandatory, forbidden response phrases) live in `../../rules/common/code-review.md`. The procedural rules that bind once a review skill is running (verify before acting, severity discipline, when to push back, GitHub inline reply procedure) live in `../_shared/code-review.md`. Subagent iron-law rules live in `../../rules/common/subagents.md` and the dispatch procedure rules live in `../_shared/subagent-dispatch.md`. This skill is the procedure that dispatches a reviewer.
 
-Before running the procedure below, you **MUST** read `../_shared/code-review.md` and `../_shared/subagent-dispatch.md` using the Read tool if you have not already read them in this session.
+Before running the procedure below, you **MUST** read `../_shared/code-review.md` and `../_shared/subagent-dispatch.md` using the Read tool if you have not already read them in this session. Before dispatch, load `../_shared/worker-contract.md` and deliver its All workers and Read-only workers sections verbatim with source identity as required by the dispatch procedure.
 
 ## Procedure
 
@@ -27,6 +27,7 @@ Before running the procedure below, you **MUST** read `../_shared/code-review.md
 
 4. **Fill the template.** Open `code-reviewer.md` in this skill directory and populate:
 
+    - `{PASTE_ALL_WORKERS_AND_READ_ONLY_WORKERS_SECTIONS_VERBATIM_WITH_SOURCE_PATH_AND_IDENTITY}`: the applicable source-derived worker obligations and identity
     - `{WHAT_WAS_IMPLEMENTED}`: a one-line description of what the change builds
     - `{DESCRIPTION}`: a short paragraph of what the change builds and the design decisions that matter for review
     - `{PLAN_REFERENCE}`: a pointer to the approved design, ticket, or plan the work is delivering against
@@ -37,7 +38,7 @@ Before running the procedure below, you **MUST** read `../_shared/code-review.md
 
 5. **Dispatch.** Send the filled template to the reviewer subagent using the verified routing and model selected in step 3. The reviewer is read-only and must not edit files or create commits.
 
-6. **Act on the output.** Process the reviewer's findings through `receiving-code-review` and apply the severity discipline in `../_shared/code-review.md`: fix Critical before anything else, fix Important before the next task or merge, log Minor for later. Report `REVIEWED` only when the scoped review was actually performed; report `SKIPPED` for an explicit user skip and `BLOCKED` when required inputs or routing are unavailable.
+6. **Act on the output.** Invoke `receiving-code-review` to process findings and apply severity and affected-scope discipline in `../_shared/code-review.md`. Resolve Critical and Important findings before accepting affected work; eligible independent work may continue under the shared dispatch procedure. Report `REVIEWED` only when the scoped review was actually performed; report `SKIPPED` for an explicit user skip and `BLOCKED` when required inputs or routing are unavailable.
 
 ## Worked Example
 
@@ -65,7 +66,7 @@ The reviewer returns `REVIEWED` with:
 - Minor: magic number (100) for the reporting interval
 - Assessment: ready to proceed with Important fixed
 
-Fix the Important issue, leave the Minor one logged, then move to Task 3. Do not proceed while the Important issue is unfixed (see `../_shared/code-review.md`).
+Fix the Important issue before accepting the affected task, and log the Minor finding. Continue only eligible independent work while the issue remains unresolved, applying `../_shared/code-review.md` and the dispatch procedure.
 
 ## Template
 

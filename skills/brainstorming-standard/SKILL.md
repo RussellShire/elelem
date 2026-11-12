@@ -14,6 +14,7 @@ The `workflow-coordinator` owns Research, Design Review, explicit final approval
 
 ## Preconditions
 
+- Before developing a proposal, read `../_shared/task-briefs.md` using `{{READ_FILE_TOOL}}` relative to the directory of the actually loaded skill. If it is missing or inaccessible, return a blocker to the coordinator; do not use a checkout, history or link-only fallback.
 - This skill runs only in the coordinator's active Planning phase. If no workflow is active, invoke `workflow-coordinator` and preserve standard mode as the requested Planning method. Do not start a second workflow or invoke the router recursively.
 - If a coordinator is active but Planning is not the current phase, return control to it without continuing this skill.
 - The coordinator verifies active-model capability and actual plan-mode restrictions. Do not silently switch models, repeatedly force a plan-mode toggle, or assume plan mode permits repository writes. Keep drafts in conversation or coordinator-authorised staging.
@@ -23,16 +24,11 @@ The `workflow-coordinator` owns Research, Design Review, explicit final approval
 
 1. **Orient from research.** Summarise relevant verified findings, assumptions, user decisions and open questions already recorded by Research. Ask one question per message when clarification is needed; use `{{ASK_USER_QUESTION_TOOL}}` for discrete choices and concise prose for discussion.
 2. **Explore alternatives.** For each consequential open decision, discuss two or three feasible approaches and their trade-offs. Lead with a reasoned recommendation without presenting it as settled until the user decides. Keep dialogue efficient and within the brief.
-3. **Refine sections progressively.** Present and refine the design in coherent sections, seeking the user's agreement on each before proceeding. Cover goal and requirements, exclusions, architecture, components, interfaces, data flow, errors and failure behaviour, and tests/verification. Capture unresolved assumptions explicitly. Do not invent requirements or force unrelated work into the design.
-4. **Consolidate a proposed design.** Return one self-contained block covering goal, requirements, exclusions, architecture, components, interfaces, data flow, errors and tests/verification, with relevant assumptions or evidence references. This is a proposal for independent review, not final approval.
-5. **Return to the coordinator.** Return the proposed design and unresolved points to `workflow-coordinator`. Do not invoke design review, ask for final approval, persist an approved plan, create tickets or begin implementation.
+3. **Refine the proposal.** Present and refine it in coherent sections, seeking the user's agreement on each before proceeding. Use the complete proposal schema in `../_shared/task-briefs.md`. Capture unresolved assumptions explicitly. Do not invent requirements or force unrelated work into the design.
+4. **Consolidate and return.** Return one self-contained proposal and unresolved points to `workflow-coordinator` for independent review. Do not invoke design review, ask for final approval, persist an approved plan, create tickets or begin implementation.
 
-Returning the proposal ends this Planning procedure, not the overall workflow.
-This procedure does not advance the workflow itself.
-The coordinator validates and records the result and next action in existing
-`workflow.md`, then invokes the next required phase without routine prompting.
-Pause only when a user choice or approval, missing input, unsafe state or other
-real blocker requires resolution.
+This ends the Planning procedure only. The proposal does not approve or advance
+the workflow.
 
 ## Working in Existing Codebases
 

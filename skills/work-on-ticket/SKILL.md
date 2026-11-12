@@ -10,9 +10,19 @@ metadata:
 
 ## Load the Ticketing Rules First
 
-This skill depends on the rules in `skills/_shared/tickets.md`. Those rules are **not** always in context; they live next to the ticket skills and are loaded only when a ticket skill is invoked. Before running the procedure below, you **MUST** read `skills/_shared/tickets.md` using the {{READ_FILE_TOOL}} tool if you have not already read it in this session.
+Before fetching or recovering ticket context, read `../_shared/tickets.md`
+relative to the directory of the actually loaded skill using
+`{{READ_FILE_TOOL}}`. If it is missing or inaccessible, block recovery; do not
+use a checkout, history or link-only fallback.
 
-The detection of which ticketing system is in use lives in the `detect-ticketing-system` skill. The `workflow-coordinator` owns phase transitions and routes eligible work to the downstream implementation workflow. This skill bridges the gap across session boundaries without bypassing current workflow validation.
+The `detect-ticketing-system` skill identifies the system. The
+`workflow-coordinator` owns phase transitions. This skill bridges session
+boundaries without bypassing current workflow validation.
+
+Before applying the phase-evidence gate, read `../_shared/phase-evidence.md`
+relative to the directory of the actually loaded skill using
+`{{READ_FILE_TOOL}}`. If it is missing or inaccessible, block recovery; do not
+use a checkout, history or link-only fallback.
 
 Apply `../_shared/phase-evidence.md` to recovered context. Return upstream gaps
 to the coordinator, not an inferred phase completion from a ticket, approval or
@@ -28,20 +38,9 @@ You **MUST** complete these steps in order. Do not skip a step and do not reorde
 
 2. **Fetch the ticket.** Retrieve its full content: title, description, labels, status, parent or epic relationship, child or sub-issue references, and linked tickets. See "Per-system fetch" below for the specific API calls.
 
-3. **Run `resolve_epic_context`.** Per `skills/_shared/tickets.md`, this named procedure walks from the fetched ticket up to its Epic and recovers the durable design. The procedure is tier-marker-driven: it reads each node's tier marker (Jira issue type, `tier:epic`/`tier:story`/`tier:task` label, or markdown heading level depending on the system), walks at most 2 hops, and terminates at the Epic. See `skills/_shared/tickets.md` "Recovery Before Implementation" for the full procedure, the termination rule, the legacy fallback boundary, and the decision tree.
+3. **Run `resolve_epic_context`.** Apply the complete tier-marker, parent-walk, fallback and recovery safeguards in `../_shared/tickets.md`. If a required parent cannot be resolved or any guard fails, use `{{ASK_USER_QUESTION_TOOL}}` to ask the user to resolve the specific reference, then stop without partial context.
 
-   The walker **MUST**:
-   - Identify the ticket's tier marker.
-   - Walk to the Epic in at most 2 hops (Task -> Story -> Epic, or Task -> Epic for the legacy two-tier path).
-   - Treat any `## Design` heading found in a Story body as a single-source-of-truth violation (an error, not preferred content).
-   - Surface the **specific reference that could not be resolved** on any failure (missing parent, no Epic found, cycle, depth exceeded). Do not silently continue with partial context.
-   - Apply the legacy fallback only when a node has no tier marker AND no further parent reference, per `skills/_shared/tickets.md`.
-
-4. **Extract and qualify the design.** `resolve_epic_context` returns the Epic and (if walked through one) the Story's theme statement. Extract the Epic body's `## Design` section and any approval/revision or external specification provenance. This durable ticket content is recovered context, not automatic proof that its assumptions remain valid or that current implementation is approved. Carry the entire explicit ticket scope, acceptance criteria, exclusions, and provenance forward without broadening it.
-
-   If `resolve_epic_context` succeeds but the resolved Epic has **no** `## Design` section at all (tickets created manually or by an older workflow predating the rule), follow the manual fallback documented in `skills/_shared/tickets.md` under "Recovery Before Implementation". You **MUST NOT** guess the design and proceed.
-
-   If `resolve_epic_context` fails (any error condition above), surface the specific failure to the user and stop. You **MUST NOT** proceed to implementation with partial context.
+4. **Extract and qualify the design.** Extract the full Epic `## Design`, provenance and any Story theme returned by the shared procedure. Carry the entire ticket scope, acceptance criteria, dependencies and exclusions forward without broadening it. If the Epic has no `## Design`, follow the shared manual fallback and ask for context; do not guess or proceed. Recovered ticket content is not automatic proof that assumptions remain valid or that implementation is approved.
 
 5. **Explore the codebase.** Read the current state of files relevant to the ticket. Note anything that has changed since the design was written, anything already partially implemented, and anything the design assumes but does not actually exist yet. This is a preliminary baseline for coordinator validation, not a substitute for the coordinator's recorded baseline and resume checks. Evaluate recovered prior context for current validity; do not blindly skip Research or Planning because a ticket or approval exists.
 
@@ -90,11 +89,13 @@ You **MUST** complete these steps in order. Do not skip a step and do not reorde
 
 ## Per-System Fetch
 
-The fetch step is per-system, but the tier marker is read uniformly per `skills/_shared/tickets.md`'s Tier Markers section. For each system, fetching the ticket also retrieves enough metadata (issue type, labels, or heading level) for `resolve_epic_context` to identify the tier without an extra round trip.
+Fetch each system's ticket data and marker/parent fields needed by
+`resolve_epic_context`. Interpret those fields using the canonical marker and
+recovery rules in `../_shared/tickets.md`.
 
 ### GitHub Issues
 
-With GitHub MCP tools: `issue_read` with the issue number. Response includes body, labels, and parent or sub-issue relationship fields. The tier marker is the `tier:epic` / `tier:story` / `tier:task` label.
+With GitHub MCP tools: `issue_read` with the issue number. Response includes body, labels, and parent or sub-issue relationship fields for the shared resolver.
 
 With `gh` CLI:
 
@@ -102,11 +103,11 @@ With `gh` CLI:
 gh issue view <number> --json title,body,labels,milestone,projectItems
 ```
 
-Read the `tier:*` label from the labels array.
+Retrieve the `labels` array for shared tier-marker resolution.
 
 ### Jira
 
-With Atlassian MCP tools: `getJiraIssue` with the issue key. Response includes the `parent` and `epic` fields natively. The tier marker is the native issue type (Epic, Story, Task, or Sub-task) returned in the issue payload.
+With Atlassian MCP tools: `getJiraIssue` with the issue key. Response includes the `parent`, `epic` and issue type fields natively for the shared resolver.
 
 ### GitLab Issues
 
@@ -116,23 +117,11 @@ With GitLab MCP tools if available; otherwise:
 glab issue view <number>
 ```
 
-The tier marker is either the native group Epic association (top tier on premium GitLab) or the `tier:*` label.
+Retrieve the native group-Epic association and labels where available for the shared resolver.
 
 ### Linear
 
-With Linear MCP tools. Response includes the `parent` field. The tier marker is the `tier:epic` / `tier:story` / `tier:task` label. In a workspace where Linear nesting is degraded to two-tier (per `create-tickets/SKILL.md`), the Story tier is recorded only as a `story:<slug>` label on the Task and reconstructed from the epic body during `resolve_epic_context`; the walker treats such Tasks as direct children of the Epic.
-
-## Finding the Parent
-
-`resolve_epic_context` finds parents using the system's native parent mechanism, not by inspecting body text where a native mechanism exists. The mechanisms by system are:
-
-- **GitHub Issues**: use the native parent field on `issue_read` first; if absent, scan the body for `Part of #N` and `Epic: #N` references (used by the `gh` CLI fallback and by legacy tickets).
-- **Jira**: the `parent` or `epic` field on `getJiraIssue`. Jira natively supports Epic-Story and Story-Sub-task relationships.
-- **Linear**: the `parent` field on the issue.
-- **GitLab**: epic associations (where group Epics are available) or `Part of #N` references in the body (where they are not).
-- **Markdown fallback**: heading nesting in the single epic file. A Task's parent is the nearest preceding `### Story:` heading, or the file itself (the Epic) when there is no enclosing Story.
-
-If `resolve_epic_context` cannot resolve a parent reference (the ticket is missing, deleted, or permission is denied), this is an **error**. Surface the unresolved reference to the user via `{{ASK_USER_QUESTION_TOOL}}` and stop. The legacy fallback documented in `skills/_shared/tickets.md` applies only when a node has no parent reference at all, not when a parent reference exists but cannot be fetched.
+With Linear MCP tools. The response includes the `parent` and labels fields required by the shared resolver.
 
 ## Handling Multiple Tickets
 
@@ -143,13 +132,8 @@ For multiple requested tickets, carry each ticket's identity, scope, and ownersh
 - **Ticket already partially implemented**: read git history and current code state, present what exists to the user, and adjust the scope to cover only the remaining work before step 7.
 - **Ticket depends on unfinished work**: flag the dependency. Ask the user whether to work on the dependency first or to proceed with stubs or interfaces for the missing pieces.
 - **Ticket description is vague**: use the epic's design context to fill in gaps. If still unclear after that, ask the user targeted questions before proceeding. You **MUST NOT** guess at requirements.
-- **No ticketing system detected**: if the user provides a ticket reference but `detect-ticketing-system` returns "none", ask the user to paste the ticket content (and the parent epic content if applicable) directly, then run `resolve_epic_context` against the pasted content using markdown heading levels as the tier marker.
+- **No ticketing system detected**: if the user provides a ticket reference but `detect-ticketing-system` returns "none", ask the user to paste the ticket content (and the parent epic content if applicable) directly, then run `resolve_epic_context` against the pasted content using the Markdown fallback rules in `../_shared/tickets.md`.
 
-The ticket handoff routes the recovered ticket context to the coordinator and
-ends this ticket procedure, not the overall workflow. The
-active coordinator validates recovered scope, provenance, outcome, dependencies
-and questions against the current baseline and state, records the result and
-next action in existing `workflow.md`, and invokes the next required phase
-without routine prompting when its inputs are sufficient. Ticket approval or
-scope confirmation does not satisfy upstream phases. Pause for
-missing evidence, user choice or approval, unsafe state, or a real blocker.
+Return the recovered ticket context to the active coordinator. Ticket approval
+or scope confirmation does not satisfy upstream phases. Pause for missing
+evidence, user choice or approval, unsafe state, or a real blocker.

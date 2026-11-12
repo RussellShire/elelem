@@ -17,7 +17,7 @@ dispatch, persistence and evidence contracts below, not assumed isolation.
 
 ## Entry and transitions
 
-Apply `../_shared/phase-evidence.md` at entry, transitions, handover, resume,
+Load and apply `../_shared/phase-evidence.md` at entry, transitions, handover, resume,
 reuse and execution. Validate ordered upstream evidence before advancing;
 recover unsupported phases through that contract, not retrospective labels.
 Enter before implementation-oriented proposals; Research hypotheses and
@@ -48,20 +48,15 @@ harness:
 5. Wave planning with the `wave-planning` skill (`../wave-planning/SKILL.md`).
 6. Execute approved tasks using the `subagent-driven-development` skill
    (`../subagent-driven-development/SKILL.md`).
-7. After the cumulative final reviewer result is validated as `PASS` under the
-    shared helper's consumer adaptation, the executor invokes
-    `test-pruning` as one separate final review-phase task, following
-    `../test-pruning/SKILL.md` and `../_shared/test-pruning.md`. Only actual
-    pruning edits require an independent bounded pruning-delta review. Final
-    verification follows the last edit and review correction, then clean-up.
-     The executor returns final review, pruning and verification evidence. The
-     coordinator validates the evidence's command, scope, input identities,
-     provenance, assumptions and independence against the settled combined
-     inputs. Matching final-gate evidence is revalidated and reused rather than
-     invoking the same gate again; cite its original output as reused, not newly
-     executed. Rerun affected checks when relevant inputs change, evidence is
-     missing or inaccessible, or equivalence is uncertain. Then clean up under
-     the shared artefact contract.
+7. Before validating a cumulative final reviewer result, load and apply
+    `../_shared/code-review.md`. After that result is validated as `PASS`, the
+    executor invokes `test-pruning` as one separate final review-phase task. Only actual pruning edits require
+    an independent bounded pruning-delta review. Final verification follows the
+    last edit and review correction, then clean-up. The executor returns final
+    review, pruning and verification evidence. Before accepting that evidence,
+    invoke `verification-before-completion` through `{{INVOKE_SKILL_TOOL}}` to
+    apply the evidence gate to the settled combined inputs, including valid
+    reuse where applicable. Then clean up under the shared artefact contract.
 
 Do not use user approval as the pruning trigger or require pruning evidence
 before ordinary task review. Accumulate actual touched-path history from every
@@ -88,8 +83,8 @@ scope or architecture.
 
 ## State and ownership
 
-Use `../_shared/workflow-artifacts.md` for paths, state fields, baseline,
-resumption, ignore setup and safe clean-up. Only the coordinator creates or
+Before recording or using state, load and apply `../_shared/workflow-artifacts.md`
+for paths, state fields, baseline, resumption, ignore setup and safe clean-up. Only the coordinator creates or
 changes shared state. Create files only when needed and preserve existing work.
 Do not overwrite an existing active workflow: ask whether to resume it or use a
 unique identity. A second coordinator must not own the same active task.
@@ -106,8 +101,8 @@ design change requires renewed explicit user approval; schedule-only replanning
 requires a fresh readiness review unless the user explicitly skips it.
 
 Before any repository artefact is created, ensure the root `.gitignore` has
-the exact `.elelem/` entry. Preserve all existing content, add no
-broad ignore, and verify with `git check-ignore`. In plan mode, write only to
+the exact `.elelem/` entry. Preserve all existing content and verify with
+`git check-ignore`. In plan mode, write only to
 authorised locations. If repository writes are prohibited, use authorised
 staging; never instruct a phase or worker to write to the repository. Failure
 to materialise required workflow files is a blocker before execution.
@@ -125,9 +120,10 @@ questions and blockers against user instructions, approval, the current phase,
 approved revision and relevant workflow state. Record the result and next
 action in existing `workflow.md`, in the applicable phase or task entry.
 
-After recording the validated result, construct only the next phase's necessary
-inputs under `../_shared/task-briefs.md`, then assess safe native context
-maintenance below before invoking that phase. Complete implementation briefs
+After recording the validated result, load and apply
+`../_shared/task-briefs.md` before constructing only the next phase's necessary
+inputs, then assess safe native context maintenance below before invoking that
+phase. Complete implementation briefs
 and required broad-review inputs remain intact.
 
 If the return is sufficient and the next required phase has no outstanding
@@ -139,9 +135,8 @@ explicit-skip gate. A status label or returned report is not evidence by itself.
 Pause only the affected transition or work when a user choice or approval,
 actual Plan-mode restrictions, a real blocker or interruption, missing evidence,
 unsafe state, unavailable capability or an outstanding dependency prevents it.
-Classify blocker scope and unknown-impact holds under
-`../_shared/subagent-dispatch.md`; continue eligible independent work only with a
-demonstrable safe boundary. An outstanding dependency pauses that transition
+Before classifying blocker scope or continuing work, load and apply
+`../_shared/subagent-dispatch.md` for containment and recovery. An outstanding dependency pauses that transition
 when it leaves no safe independent work. Record the blocker and next action.
 Do not repeatedly retry unchanged work or dispatch dependants. Stable task-local
 checks may continue while other workers run, but only against stable inputs and within
@@ -206,8 +201,9 @@ authorisation for unreduced continuation. Fallback permission does not skip
 other gates. Record the outcome and provenance in the existing phase entry as
 specified by `../_shared/phase-evidence.md`.
 
-Wave planning finishes before dispatch. By default, its independent readiness
-review must return `READY`. If the user explicitly authorised skipping only
+Before consuming a wave schedule or readiness-review skip, load and apply
+`../_shared/wave-readiness.md`. Wave planning finishes before dispatch. By
+default, its independent readiness review must return `READY`. If the user explicitly authorised skipping only
 that review, record its status as `SKIPPED` and require the executor to confirm
 the complete planner-checked schedule and all ownership, dependency, resource,
 input and capacity constraints from `../_shared/wave-readiness.md`; a skipped
@@ -216,28 +212,11 @@ capability. If required routing or capability is unavailable, report a blocker,
 do not silently substitute. A skipped wave-planning phase permits one fully
 specified bounded task only, not improvised parallel execution.
 
-Track each task as queued, running, review, verified, integrated,
-accepted-unverified, blocked or skipped. Implementation return alone is not
-verified completion or an accepted change. Record task review, verification
-and wave integration results separately. An explicitly authorised review or
-check skip may be recorded as accepted-unverified, but must not be represented
-as verified or integrated. Checkpoint only reviewed and verified work, or work
-explicitly accepted-unverified under the user's recorded skip. On resume,
-compare active or returned unaccepted task changes separately; do not
-automatically accept them. Apply `../_shared/subagent-dispatch.md`: pause the
-affected task and transitive dependants, and affected shared-contract/resource
-consumers and downstream dependants. A proven global safety failure stops all
-new dispatch. Unknown impact pauses potentially affected work. If no safe
-boundary can be demonstrated, provisionally pause all new dispatch until scope
-is established. Do not classify that uncertainty as a proven global safety
-failure. Continue only already-authorised work whose independence and eligibility
-are demonstrated. A review finding blocks acceptance and completion of the
-affected task, not eligible independent progress. Cancel affected active work
-only if safe cancellation is supported; otherwise let it settle without claiming it stopped
-or accepting stale outputs.
-Preserve state, report the blocker, and resume affected work only after its
-authorisation and eligibility are revalidated. Do not silently retry with a
-different model or expand approved scope.
+Load and apply `../_shared/workflow-artifacts.md` for task and wave state,
+accepted checkpoints and resume. An implementation return is not independently
+verified. Before continuing after a blocker, load and apply
+`../_shared/subagent-dispatch.md` for containment and eligible independent work.
+Preserve state; do not silently change models or expand approved scope.
 
 Final review, the final pruning task, final verification and clean-up are
 separate phases. Default behaviour is to run each. Clean-up is allowed after requested work has passed

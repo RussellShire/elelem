@@ -4,9 +4,9 @@ By default, an independent reviewer assesses the complete proposed task set and
 wave schedule before implementation dispatch. This is distinct from design review:
 it checks decomposition, ownership, dependency order and execution safety, not
 whether the approved design itself should change. The review uses high-capability
-reasoning and the current `subagent-dispatch.md` procedure. Model metadata does
-not switch the active model; verify model enumeration and routing before
-dispatch. Missing capability is a blocker, not grounds for silent fallback.
+reasoning. Before dispatch, load and apply `subagent-dispatch.md` for model
+selection and routing. Model metadata does not switch the active model; verify
+model enumeration and routing before dispatch. Missing capability is a blocker, not grounds for silent fallback.
 
 ## Review inputs
 
@@ -14,7 +14,9 @@ Provide the reviewer with the approved plan revision and its explicit user
 approval reference, full requirement-to-task map, every task brief, dependency
 graph, wave assignment, concurrency limit, resource model and verification
 barriers. Include relevant baseline and known repository constraints. Do not
-pass session history as a substitute for these inputs.
+pass session history as a substitute for these inputs. Before dispatch, load
+`worker-contract.md` and paste its All workers and Read-only workers sections
+verbatim with source path and identity, following `subagent-dispatch.md`.
 
 ## Readiness checks
 

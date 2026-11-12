@@ -14,13 +14,19 @@ The coordinator verifies active-model capability and owns lifecycle. Committee p
 
 ## Load Required Files First
 
-This skill depends on two sibling/shared files that are **not** always in context:
+Before using their contracts, read these files using `{{READ_FILE_TOOL}}`
+relative to the directory of the actually loaded Committee skill:
 
-- `committee-member-prompt.md` (sibling) - prompt templates paste-filled in step 4
-- `../_shared/subagent-dispatch.md` - procedural rules for dispatching the committee members
-- `../_shared/project-context-discovery.md` - only when the coordinator identifies a consequential research gap
+- Read `../_shared/task-briefs.md` for the proposed-design schema
+- Read `committee-member-prompt.md` for the sole role and type mapping and prompt templates
+- Read `../_shared/subagent-dispatch.md` for dispatch procedure
 
-Before dispatching, read `committee-member-prompt.md` and `../_shared/subagent-dispatch.md` using `{{READ_FILE_TOOL}}` if not already available. Do not repeat Research. Use the coordinator's recorded findings and approved external inputs. Read the context-discovery helper only for a bounded gap not covered by Research.
+If a required file is missing or inaccessible, return a blocker to the
+coordinator. Do not use a checkout, history or link-only fallback. Do not repeat
+Research. Use coordinator-supplied findings and approved external inputs. For a
+bounded consequential gap not covered by Research, read
+`../_shared/project-context-discovery.md` from this skill installation and
+follow its repository-first procedure and conditional Confluence activation.
 
 ## Preconditions
 
@@ -32,46 +38,21 @@ Before dispatching, read `committee-member-prompt.md` and `../_shared/subagent-d
 
 1. **Orient to the confirmed brief.** Use the user-confirmed goal, coordinator-supplied research record, approved external inputs, assumptions and unresolved questions. If a material gap blocks committee work, return it to the coordinator; do not repeat broad discovery.
 2. **Identify decisions.** Group consequential choices such as architecture, interfaces, data flow, errors and verification. Do not impose a subsystem-count limit or automatically split a cohesive request into unrelated tickets. If breadth creates genuine uncertainty, flag it to the coordinator for user discussion.
-3. **Deliberate.** For each decision group, dispatch all three members concurrently in one message using `{{DISPATCH_AGENT_TOOL}}` and the templates in `committee-member-prompt.md`. Use specialised types and verify high-capability dispatch through the shared procedure. When a specialised type is unavailable, inspect the dispatch tool's currently exposed type options and select an available type whose description indicates broad general-purpose capability. Do not assume a type identifier. If no suitable available type exists, return a blocker to the coordinator and do not dispatch. Each member receives the same bounded brief, relevant stable evidence, decisions and prior consensus, never full session history. Members return proposals, reasoning, concerns and unresolved questions, not user approval.
+3. **Deliberate.** For each decision group, dispatch all three members concurrently in one message using `{{DISPATCH_AGENT_TOOL}}` and the templates in `committee-member-prompt.md`. Use the types in its canonical role mapping and verify high-capability dispatch through the shared procedure. When a specialised type is unavailable, inspect the dispatch tool's currently exposed type options and select an available type whose description indicates broad general-purpose capability. Do not assume a type identifier. If no suitable available type exists, return a blocker to the coordinator and do not dispatch. Each member receives the same bounded brief, relevant stable evidence, decisions and prior consensus, never full session history. Members return proposals, reasoning, concerns and unresolved questions, not user approval.
 4. **Synthesise consensus.** Apply the rules below, retaining material dissent and concerns. Use at most one tiebreaking round per decision. If it does not resolve the issue, return the unresolved choice to the coordinator for the user's decision.
-5. **Assemble a proposed design.** Cover goal, requirements, exclusions, architecture, components, interfaces, data flow, errors/failure behaviour, tests/verification and evidence references. Summarise material splits and risks without exposing deliberation transcripts.
+5. **Assemble a proposed design.** Use the complete proposal schema in `../_shared/task-briefs.md`. Summarise material splits and risks without exposing deliberation transcripts.
 6. **Return to the coordinator.** Return the consolidated proposal, unresolved decisions and substantive uncertainty. Do not invoke design review, seek final user approval, persist an approved plan, create tickets or begin implementation.
 
-Committee members and any tiebreaker return their results to the committee
-skill's Planning procedure for reconciliation. Return the proposed design to
-the coordinator after reconciliation. This ends the committee procedure, not the overall workflow; the
-coordinator records the result and next action in existing `workflow.md` and
-invokes the next required phase without routine prompting. User choices,
-approval and unresolved blockers remain pauses.
+Committee members and any tiebreaker return their results to this Planning
+procedure for reconciliation. Return the proposal to the coordinator after
+reconciliation. This ends the committee procedure only; the proposal does not
+approve or advance the workflow.
 
-## The Three Perspectives
+## Committee Roles
 
-Each committee member uses a perspective-specific subagent type. The full prompt templates live in `committee-member-prompt.md`.
-
-| Role        | What it prioritises                                                                  | Subagent type           |
-|-------------|--------------------------------------------------------------------------------------|-------------------------|
-| Pragmatist  | Simplicity, maintenance cost, shipping quickly, reusing what already exists          | Stack-specific (below)  |
-| Architect   | Patterns, separation of concerns, well-defined interfaces, testability               | `architect-reviewer`    |
-| Advocate    | Correctness, edge cases, robustness under failure, hard-to-misuse interfaces         | `qa-expert`             |
-
-Resolve and verify available subagent types and model routing through `../_shared/subagent-dispatch.md` before dispatch.
-
-### Pragmatist Type Mapping
-
-Map the project's primary language or framework, as supplied by the coordinator, to an available type:
-
-| Project stack          | Subagent type        |
-|------------------------|----------------------|
-| TypeScript             | `typescript-pro`     |
-| Python                 | `python-pro`         |
-| Go                     | `golang-pro`         |
-| Rust                   | `rust-engineer`      |
-| React frontend         | `react-specialist`   |
-| PHP / Laravel          | `laravel-specialist` |
-| Java / Spring          | `java-architect`     |
-| C# / .NET              | `csharp-developer`   |
-| Ruby / Rails           | `rails-expert`       |
-| Multi-language / other | An available generalist type, resolved at dispatch time |
+Dispatch the Pragmatist, Architect and Advocate using the sole role and type
+mapping in `committee-member-prompt.md`. Resolve model routing through
+`../_shared/subagent-dispatch.md` before dispatch.
 
 ## Synthesising Consensus
 

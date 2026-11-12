@@ -145,7 +145,7 @@ serialisation, including concurrency one. Cohesive bounded tasks may contain
 multiple genuine sequential RED/GREEN cycles; related in-scope corrections may
 be batched without skipping independent re-review or checks.
 
-Active workflow state and temporary phase files live under `.elelem/workflows/<ticket-or-slug>/`: `workflow.md`, `research.md`, `plan.md`, and `waves.md`, created as needed. At workflow start, the coordinator adds the exact `/.elelem/workflows/` entry to the consuming project's root `.gitignore` and verifies the path is ignored. These files are local and uncommitted by default. Resumption uses local files, so deleting them or using another checkout loses that temporary state; durable ticket bodies retain the approved design. After successful requested work, the coordinator removes only registered workflow-created files. Paused or blocked workflows retain state for resumption. User-requested deliverables such as Markdown ticket fallback files are permanent and are never workflow cleanup targets. Installers do not modify arbitrary consuming projects to add this ignore rule.
+Active workflow state and temporary phase files live under `.elelem/workflows/<ticket-or-slug>/`: `workflow.md`, `research.md`, `plan.md`, and `waves.md`, created as needed. At workflow start, the coordinator adds the exact `.elelem/` entry to the consuming project's root `.gitignore` and verifies the path is ignored. These files are local and uncommitted by default. Resumption uses local files, so deleting them or using another checkout loses that temporary state; durable ticket bodies retain the approved design. After successful requested work, the coordinator removes only registered workflow-created files. Paused or blocked workflows retain state for resumption. User-requested deliverables such as Markdown ticket fallback files are permanent and are never workflow cleanup targets. Installers do not modify arbitrary consuming projects to add this ignore rule.
 
 ### Implementation model selection
 
@@ -436,6 +436,29 @@ inside pruning. An explicit pruning skip permits no pruning removals and skips
 neither review nor verification. A cumulative-review skip is not `PASS` and
 requires explicit sequencing authorisation before pruning. Source edits alone
 do not activate installed policy or establish live compliance.
+
+### Policy ownership and loading
+
+Policy has three layers: always-on rules in `rules/common/`, procedures in each
+skill's `SKILL.md`, and shared contracts in `skills/_shared/`. Common workflow
+rules retain standing constraints and invoke `workflow-coordinator`, which owns
+phase transitions. Planning and workflow skills keep their phase-specific
+procedures and load required shared contracts before acting.
+
+The shared owner map is `phase-evidence.md` for procedure provenance and reuse,
+`workflow-artifacts.md` for state and baselines, `task-briefs.md` for schemas and
+returns, `subagent-dispatch.md` for routing and blocker containment,
+`code-review.md` for cumulative review normalisation, and `test-pruning.md` for
+the final test audit. `verification-before-completion` owns the verification
+gate.
+
+A link documents where a source lives, but does not load it. Read required
+sources from the active installed skill or rule tree, and invoke skills through
+the harness skill mechanism. Worker briefs carry applicable source-derived
+contracts and method instructions with source identities; dispatch routing stays
+with the dispatcher. Resolve active rules from the harness's configured scope,
+including Codex's managed `AGENTS.md` block. Do not substitute an adjacent
+checkout file when the active installed source is missing or ambiguous.
 
 ## Writing a new language pack
 

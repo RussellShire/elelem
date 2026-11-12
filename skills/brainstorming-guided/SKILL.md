@@ -14,6 +14,7 @@ The `workflow-coordinator` owns lifecycle and verifies the active model and actu
 
 ## Preconditions
 
+- Before developing a proposal, read `../_shared/task-briefs.md` using `{{READ_FILE_TOOL}}` relative to the directory of the actually loaded skill. If it is missing or inaccessible, return a blocker to the coordinator; do not use a checkout, history or link-only fallback.
 - This skill runs only in the coordinator's active Planning phase. If directly invoked without an active workflow, invoke `workflow-coordinator`, preserve guided mode as the requested method and stop. Do not start another workflow or invoke the router recursively.
 - If a coordinator is active but Planning is not the current phase, return control to it without continuing this skill.
 - Keep drafts in conversation or coordinator-authorised staging. Use research.md and relevant approved inputs supplied by the coordinator; investigate only a consequential gap. Respect actual harness plan-mode controls without repeatedly forcing toggles.
@@ -32,15 +33,12 @@ These principles apply at every step of the procedure. They are what makes this 
 1. **Walk through relevant research.** Explain verified findings from Research, their sources, relevant patterns and why each matters to the design. Distinguish facts, assumptions and user decisions. Do not repeat broad codebase discovery already done in Research.
 2. **Invite exploration.** After each short explanatory section, ask whether the user wants more detail before proceeding. Ask one contextualised design question per message when needed. Explain unfamiliar terminology and anchor questions to evidence.
 3. **Compare approaches.** For consequential open decisions, present two or three feasible approaches grounded in research, their trade-offs and a recommendation. Let the user decide.
-4. **Refine sections progressively.** Explain and refine goal and requirements, exclusions, architecture, components, interfaces, data flow, errors/failure behaviour, and tests/verification. Seek agreement on each section before proceeding. Teaching is not permission to add features.
-5. **Consolidate and return.** Provide a self-contained proposed design covering these sections, assumptions and evidence references. Return it to `workflow-coordinator` for independent review. It is not final approval.
+4. **Refine the proposal.** Explain unfamiliar sections from the complete schema in `../_shared/task-briefs.md` and seek agreement on each as you proceed. Teaching is not permission to add features.
+5. **Consolidate and return.** Provide one self-contained proposal and unresolved points to `workflow-coordinator` for independent review. It is not final approval.
 6. **Stop at the Planning boundary.** Do not invoke design review, ask for final approval, persist an approved plan, create tickets or begin implementation.
 
-Stop at the Planning boundary ends this guided procedure, not the overall
-workflow. This procedure does not advance the workflow itself. The coordinator validates and records the proposal and next action in
-existing `workflow.md`, then invokes the next required phase without routine
-prompting. A user choice or approval and any genuine missing input remain
-required pauses.
+This ends the guided procedure only. The proposal does not approve or advance
+the workflow.
 
 ## What Guided Mode Does Not Change
 

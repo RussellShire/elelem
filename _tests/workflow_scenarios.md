@@ -255,7 +255,7 @@ unverified. Do not add runtime wrappers or configuration to make a test possible
 ## Artefact safety and completion
 
 1. Create a user-owned file and a symlink inside the workspace, and leave an unregistered file alongside workflow artefacts. Run workflow setup and cleanup.
-   - Expected evidence: `.gitignore` preserves the `/.elelem/workflows/` ignore rule; cleanup removes only workflow artefacts registered as owned and leaves symlinks, unregistered files, and unrelated user data safe.
+   - Expected evidence: root `.gitignore` contains the exact `.elelem/` entry; cleanup removes only workflow artefacts registered as owned and leaves symlinks, unregistered files, and unrelated user data safe.
    - Failure: cleanup follows a symlink, removes unregistered content, or drops the ignore rule.
 2. Skip an optional verification step explicitly, then complete the remaining work.
    - Expected evidence: the final report discloses that verification was skipped and the result is unverified; it does not imply the check passed.
@@ -534,3 +534,27 @@ evidence for each run. Do not claim an unavailable harness was exercised.
     - Failure: A is accepted or completed with unresolved findings, a required
       review gate is silently skipped, or B is held solely for findings that do
       not affect it.
+
+## Fixed effective-content measurements
+
+Run `bash _tests/measure_policy_load.sh "$E"` against the retained baseline and
+current source. It validates the frozen baseline trace and source identities,
+then writes explicit baseline/final read and delivery traces and word-count
+tables to `$E/T4-measurements/`.
+
+The five scenarios are fixed by S1: conversational standard Planning with prior
+Research and repository context complete and no Atlassian branch; one-task
+executor with normal implementation, task review and checks; the corresponding
+implementer packet with method delivery; a standard independent task reviewer
+packet without a pruning prerequisite; and pruning plus final verification after
+favourable cumulative review, with one touched Bash test file, the unchanged
+active testing source and no pruning edits. The supplied task/change payload is
+the same and excluded. Trace only mandatory reads and source-derived deliveries
+at their actual invocation point, not every link. Include repeated contract
+sections delivered to worker packets.
+
+Counts use LC_ALL=C whitespace-delimited source words. Report always-on common
+rules, unique procedural source words, total procedural words delivered and
+exact duplicated paragraph spans separately. Include increases and decreases.
+These are source-content measurements, not runtime tokens, harness compliance
+or context-window savings.

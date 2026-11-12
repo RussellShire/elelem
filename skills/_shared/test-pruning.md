@@ -85,15 +85,9 @@ skip is not a passing verdict and requires explicit sequencing authorisation
 from the user before pruning; missing authorisation blocks this transition.
 Do not infer it from the review skip itself. Failures block completion.
 
-At this consumer boundary, map to `PASS` only an actually performed favourable
-cumulative review with Status `REVIEWED` and Ready to merge `Yes`, no unresolved
-Critical or Important findings, and evidence for the exact current cumulative
-revision. Retain the raw reviewer result and reviewer provenance, including
-reviewer identity, session/source reference and reviewed revision. `REVIEWED`
-alone is not sufficient. Adverse results, `With fixes`, `No`, `BLOCKED` and
-`SKIPPED`, plus stale or missing results, never map to `PASS`. Missing provenance
-or revision evidence also blocks that mapping. A skipped cumulative review needs
-explicit sequencing authorisation to enter pruning without inventing `PASS`.
+Before accepting the cumulative review result, load and apply `./code-review.md`
+for the cumulative review adapter to its raw result and current revision. Retain
+the raw result and provenance; do not substitute another phase's verdict.
 
 Before the first RED step, the coordinator records in `workflow.md` the
 immutable task-start HEAD and relevant working-tree state, including exact
@@ -197,8 +191,10 @@ discovered zero tests as a passing pre-prune baseline.
 
 ## Independent audit
 
-The coordinator selects a suitable independent test or quality specialist and
-uses the current `subagent-dispatch.md` procedure to verify the concrete
+Before dispatch, load `worker-contract.md` and paste its All workers and
+Read-only workers sections verbatim into the auditor packet with source path
+and identity. Load and apply `subagent-dispatch.md` before the coordinator
+selects an independent test or quality specialist and verifies the concrete
 high-capability model and harness routing. The coordinator alone dispatches
 the auditor. The auditor is read-only: it must not edit files, run tests or
 other mutating checks, change workflow state, dispatch another agent, or
@@ -416,6 +412,10 @@ missing context from session history.
     apply removals. Do not infer missing inputs. Return BLOCKED if the supplied
     scope or evidence is incomplete, unstable, or inconsistent. Do not infer
     missing authority or write scope from inherited session history.
+
+    ## Worker obligations and source identity
+
+    [PASTE THE COMPLETE ALL WORKERS AND READ-ONLY WORKERS SECTIONS OF WORKER-CONTRACT.MD VERBATIM WITH SOURCE PATH AND IDENTITY]
 
     ## Final task and approved workflow behaviours
 

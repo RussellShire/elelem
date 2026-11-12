@@ -68,23 +68,11 @@ and assumptions against the baseline and accepted checkpoints. An absent local
 record alone does not invalidate real evidence; an inaccessible or unsupported
 claim cannot satisfy the gate.
 
-Verification validity follows the exact command, working directory, checked
-scope and input identities, not conversational turns. Apply
-`../../rules/common/verification.md` and the `verification-before-completion`
-gate. Preserve accessible references to actual captured output, exit status,
-execution provenance, verifier identity and independence, and the relevant
-environment or mutable resource assumptions. A new message or resumed session
-alone does not invalidate matching evidence. Revalidate evidence against the
-current scope and inputs before reusing it; report reused output as prior
-execution, not newly run.
-
-Relevant changes invalidate affected evidence. Demonstrably unrelated changes
-preserve unaffected evidence. If input equivalence, mutable resource state or
-dependency scope is missing or uncertain, rerun the affected check, conservatively
-when scope is unknown. A task report or self-report is not execution or
-independent verification evidence. Final integrated checks cover combined
-settled inputs after relevant writers, pruning edits and review corrections;
-matching evidence for those exact inputs can be revalidated and reused.
+Before accepting or reusing verification evidence, invoke
+`verification-before-completion` through `{{INVOKE_SKILL_TOOL}}` and apply its
+gate to the current claim and inputs. Preserve its accessible output and
+provenance in the existing record. A task report is not independent verification;
+final integrated checks cover settled combined inputs.
 
 On a gap, stop the affected transition or dispatch and return to the earliest
 unsupported phase. Preserve useful findings, code, user work and genuinely

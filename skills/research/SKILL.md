@@ -21,11 +21,14 @@ than silently using a lower capability.
 
 ## Conversation
 
-Research is collaborative by default. Start from the user's goal, use
-`../_shared/project-context-discovery.md` as the bounded repository discovery
-helper, and surface findings, uncertainty, options and consequential
-questions. Ask the user which uncertainty or option to investigate next, then
-refine the investigation with their input. Do not silently produce an
+Before repository discovery, read `../_shared/project-context-discovery.md`
+using `{{READ_FILE_TOOL}}`, relative to the directory of the actually loaded
+Research skill. If it is missing or inaccessible, stop and report the blocker;
+do not use a checkout, history or link-only fallback. Follow its repository-first procedure and its
+conditional Confluence activation. Research is collaborative by default. Start
+from the user's goal and surface findings, uncertainty, options and
+consequential questions. Ask the user which uncertainty or option to investigate
+next, then refine the investigation with their input. Do not silently produce an
 autonomous research report as a substitute for this dialogue.
 
 Committee mode is available only when the user explicitly chooses the
@@ -63,8 +66,5 @@ filling the gap with an assumption.
 ## Handoff
 
 Return findings, evidence references, user direction, remaining questions and
-blockers to the active coordinator. This ends the Research procedure; it does
-not stop the overall workflow. The coordinator validates the result against the
-current scope and state, records the next action in existing `workflow.md`, and
-invokes the next required phase when its inputs are sufficient. Do not invoke a
-second coordinator or treat an unanswered question or missing input as resolved.
+blockers to the active coordinator. Do not invoke a second coordinator or treat
+an unanswered question or missing input as resolved.

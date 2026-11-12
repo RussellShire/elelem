@@ -49,13 +49,13 @@ Run the failing scenario and observe the actual output:
 - Capture the exact error output, stack trace, or incorrect behaviour
 - Confirm the bug exists in the current state of the code
 
-If reproduction fails, check whether the environment matches (dependencies, config, data), ask the user for reproduction steps, and apply the non-reproducibility rule in `../../rules/common/debugging.md` if the bug is truly non-reproducible.
+If reproduction fails, check whether the environment matches (dependencies, config, data), ask the user for reproduction steps, and apply the non-reproducibility rule in `RULES.md` if the bug is truly non-reproducible.
 
 In **Guided mode**, explain why reproduction matters: without it, you cannot verify that any fix works.
 
 ### Phase 3: Gather Scoped Evidence
 
-Apply the scope discipline in `../../rules/common/debugging.md`. The initial-scope allowlist and the explicit prohibitions on wider reading are the rules; this phase is where they bite.
+Apply the scope discipline in `RULES.md`. The initial-scope allowlist and the explicit prohibitions on wider reading are the rules; this phase is where they bite.
 
 In **Autonomous mode**, dispatch two or three investigator subagents in parallel via `{{DISPATCH_AGENT_TOOL}}` using the template at `investigator-prompt.md` in this skill directory:
 
@@ -67,7 +67,7 @@ Per `../../rules/common/subagents.md`, give each investigator exactly the contex
 
 In **Guided mode**, explain what evidence you are gathering and what you are deliberately not looking at yet.
 
-If you hit the Refocus Rule in `../../rules/common/debugging.md` (five files read without a clear hypothesis), stop and return what you know to `workflow-coordinator` for user refocusing before doing anything else.
+If you hit the Refocus Rule in `RULES.md` (five files read without a clear hypothesis), stop and return what you know to `workflow-coordinator` for user refocusing before doing anything else.
 
 ### Phase 4: Form Hypotheses
 
@@ -92,11 +92,11 @@ Test the most likely hypothesis first:
 
 In **Autonomous mode**, test the top two or three hypotheses in parallel using investigator subagents (see `investigator-prompt.md`), each with a clear scope and a single question to answer. Invoke the `dispatching-parallel-agents` skill if more than one investigator runs at once.
 
-Apply the Investigation Budget from `../../rules/common/debugging.md`: three cycles maximum before you stop and return to `workflow-coordinator` for user refocusing.
+Apply the Investigation Budget from `RULES.md`: three cycles maximum before you stop and return to `workflow-coordinator` for user refocusing.
 
 ### Phase 6: Identify Root Cause
 
-State the root cause clearly, per the root-cause-not-symptom rule in `../../rules/common/debugging.md`:
+State the root cause clearly, per the root-cause-not-symptom rule in `RULES.md`:
 
 - **What**: the specific code, configuration, or data causing the issue
 - **Why**: the causal chain from the root cause to the observed symptom
@@ -117,6 +117,7 @@ Phase 7 is coordinator-owned execution, not an implementation phase performed by
 
 Autonomous mode is the only mode in which investigator subagents run. When dispatching:
 
+- Load `../_shared/worker-contract.md` and paste the All workers and Read-only workers sections verbatim into each investigator packet with source path and identity, following `../_shared/subagent-dispatch.md`
 - Use the template at `skills/debugging/investigator-prompt.md` as the base prompt
 - Provide each investigator with: the bug description (expected vs actual), the specific hypothesis it is testing, and the scoped list of files or areas it may examine
 - Per `../../rules/common/subagents.md` and `../_shared/subagent-dispatch.md`, pick the most specific subagent type and a verified model tier suited to the investigation scope. Integration reasoning may require a capable investigator; do not assume an unconditional low-cost default.
@@ -126,17 +127,13 @@ Investigators are evidence-only. A bounded worker owns approved implementation; 
 
 ## When the Bug Cannot Be Found
 
-If you exhaust the Investigation Budget without a confirmed root cause, follow the rule in `../../rules/common/debugging.md`: return everything investigated, ruled out and uncertain to `workflow-coordinator` for user refocusing. Do not start guessing or apply a speculative fix.
+If you exhaust the Investigation Budget without a confirmed root cause, follow the rule in `RULES.md`: return everything investigated, ruled out and uncertain to `workflow-coordinator` for user refocusing. Do not start guessing or apply a speculative fix.
 
 ## Workflow hand-off
 
-Return a structured investigation result to `workflow-coordinator` with reproduction status and exact evidence, ranked hypotheses and test results, confirmed root cause or remaining uncertainty, and the minimal intended correction. State whether the correction is covered by the current approved plan revision or requires Planning and renewed approval. The coordinator reconciles investigator findings and owns all transitions and execution scheduling. Investigators gather evidence only; the assigned bounded worker implements approved changes, and the coordinator obtains required reviews and fresh verification. An explicit skip is recorded with its scope, reason and consequence, and is never reported as a verdict, evidence or successful outcome.
-
-Investigators return their results to the debugging phase for reconciliation before
-the debugging phase returns the reconciled evidence, questions, blockers and
-proposed correction to the coordinator. The Phase 7 task brief also returns to the coordinator, not to a
-second debugging or autonomous fix flow. A debugging handoff ends this
-investigation procedure only; the coordinator records the result and next
-action in existing `workflow.md` and continues when the approved design and
-required evidence permit it. Missing reproduction evidence, user approval,
-capability or safe execution remains a pause.
+Reconcile investigator results in this phase. Return to `workflow-coordinator`
+the reproduction status and exact evidence, ranked hypotheses and results,
+confirmed root cause or uncertainty, minimal intended correction, questions and
+blockers. State whether the approved plan covers the correction or renewed
+Planning and approval are required. Return the Phase 7 brief to the same
+coordinator; do not start another fix flow.

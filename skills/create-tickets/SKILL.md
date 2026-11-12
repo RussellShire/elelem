@@ -10,9 +10,14 @@ metadata:
 
 ## Load the Ticketing Rules First
 
-This skill depends on the rules in `skills/_shared/tickets.md`. Those rules are **not** always in context; they live next to the ticket skills and are loaded only when a ticket skill is invoked. Before running the procedure below, you **MUST** read `skills/_shared/tickets.md` using the {{READ_FILE_TOOL}} tool if you have not already read it in this session.
+Before any ticket decomposition or creation, read `../_shared/tickets.md`
+relative to the directory of the actually loaded skill using
+`{{READ_FILE_TOOL}}`. If it is missing or inaccessible, block ticket creation;
+do not use a checkout, history or link-only fallback.
 
-The detection of which ticketing system is in use lives in the `detect-ticketing-system` skill. This skill is the procedure that decomposes an approved design into tickets and creates them.
+The `detect-ticketing-system` skill identifies the system. This skill creates
+tickets from an approved design while applying the canonical hierarchy,
+grouping, marker and sizing rules in `../_shared/tickets.md`.
 
 **Precondition**: the user has explicitly requested ticket creation, and an approved design is available from an explicit workflow approval tied to a plan revision, or from an approved external specification. Conversation context alone is not a durable approved input. If the current workflow has no approved plan revision or approval reference, do not create tickets: return to `workflow-coordinator` to resume the required phases. If there is no active workflow, invoke `workflow-coordinator` to establish one. Missing inputs block creation; do not infer approval from a skipped review or from an earlier ticket context.
 
@@ -20,84 +25,17 @@ This skill creates tickets only when requested. Ticket creation is not an automa
 
 ## Procedure
 
-1. **Validate the durable approved input.** Confirm the approved plan revision and its explicit approval reference, or the approved external specification. Preserve the source reference in the Epic or fallback document, but copy the complete approved design into its durable `## Design` section. Do not rely on a temporary workflow path as the only copy: successful workflow clean-up removes temporary files. If no valid input is available, stop and route to `workflow-coordinator`.
+1. **Validate the durable approved input.** Confirm the approved plan revision and its explicit approval reference, or the approved external specification. Preserve that provenance and copy the complete approved design into its durable Epic `## Design` section or Markdown fallback. Do not rely on a temporary workflow path as the only copy. If no valid input is available, stop and route to `workflow-coordinator`.
 
 2. **Detect the ticketing system.** Invoke the `detect-ticketing-system` skill. Confirm the result with the user before creating anything.
 
-3. **Decompose the design into ticket shapes.** Map design elements to ticket types using this table:
+3. **Decompose the design.** Apply the tier mapping, grouping, D2 and sizing rules in `../_shared/tickets.md`. Preserve the approved scope, dependencies and ownership boundaries; do not broaden multiple requested tickets.
 
-   | Design Element                                | Ticket Type                                       |
-   |-----------------------------------------------|---------------------------------------------------|
-   | Overall goal plus full design                 | Epic                                              |
-   | Coherent named theme grouping related Tasks   | Story (only if D2 rule below is satisfied)        |
-   | Independent component                         | Task                                              |
-   | Cross-cutting concern (auth, logging, config) | Task                                              |
-   | Integration between components                | Task, depends on component Tasks                  |
+4. **Draft the Epic.** Follow the Epic content and provenance requirements in `../_shared/tickets.md`. For a real ticketing system, the `## Tickets` section is a human-readable index; native parent-child relationships are created through the selected system's API. Use the Markdown fallback format from the shared rules when no system is available.
 
-   Per `skills/_shared/tickets.md`, each Task **MUST** fit in a single focused session with acceptance criteria in three to five bullets. If a component does not fit, split it before creation. Stories **MUST** contain between 2 and 6 child Tasks per `skills/_shared/tickets.md`'s Sizing and Validation sections.
+5. **Draft child tickets.** Follow the canonical Story and Task content requirements in `../_shared/tickets.md`. Validate each Story before creation and refuse any Story that contains `## Design` or design content.
 
-   **Decide whether to introduce a Story tier (D2 rule).** A Story is introduced **only when all** of the following hold:
-
-   1. The design contains **2 or more coherent named themes** (e.g. "authentication flow", "data export pipeline"), AND
-   2. **At least 2 of those themes** decompose into **2 or more Tasks** each, AND
-   3. The total Task count is **at least 4**.
-
-   Single-theme epics **always** stay flat regardless of Task count, even if the count exceeds 6. Single-Story epics (one Story wrapping every Task) are forbidden because a single Story adds a grouping layer with no sibling. If a single theme grows large (more than 6 Tasks), the skill **SHOULD** escalate to the user via {{ASK_USER_QUESTION_TOOL}} and ask whether the epic should be split into multiple epics rather than introducing a vestigial Story.
-
-   When the rule is satisfied, group children under named Stories and record a **one-sentence rationale per Story** for inclusion in the epic body's `## Design` section under a `### Story: <name>` sub-heading.
-
-   **Single-Story check.** Before drafting any Stories, verify that the grouping produces **at least 2 Stories**. If the proposed grouping yields exactly one Story (one Story wrapping every Task), this is the forbidden single-Story epic shape per `skills/_shared/tickets.md`'s Validation section. Discard the grouping and stay flat (Epic + Tasks). Do not draft Stories in this case.
-
-4. **Draft the epic body.** Per `skills/_shared/tickets.md`, the epic body is the single source of truth and **MUST** contain the full approved design under a `## Design` heading. Include the approved plan revision and approval reference, or the external specification reference, as provenance in the body. The reference supplements, and never replaces, the complete design. Use this structure:
-
-   ```markdown
-   ## Goal
-
-   [One-paragraph summary of what this epic delivers]
-
-   ## Design
-
-    [The full approved design, including architecture, key components,
-     interfaces, data flow, technical decisions and trade-offs, error handling,
-     testing strategy, and anything else that emerged from the design
-     conversation]
-
-    **Approved source:** [plan revision and approval reference, or external specification]
-
-   ### Story: <name>            <!-- nested under ## Design; only if Stories are introduced -->
-
-   [one-sentence rationale for this grouping. This sub-heading is part of the
-    epic's `## Design` block, not a peer section.]
-
-   ## Tickets
-
-   - [Story or Task title] - [reference once created]
-   ```
-
-   The `## Tickets` block above is the human-readable index used inside an epic body in a real ticketing system (GitHub, Jira, Linear, GitLab); the actual parent-child relationships live in the system's native links, not in this list. The Markdown fallback uses a different shape where heading structure carries the tier markers, see "Markdown Fallback" below.
-
-   Do not link to external files, conversation transcripts, or commits in place of the `## Design` section. See `skills/_shared/tickets.md` on a single source of truth.
-
-5. **Draft each child ticket.** Split this into drafting Stories (when introduced) and Tasks.
-
-    **5a. Draft each Story (only when Stories are introduced).** Each Story body **MUST** contain only:
-
-   - **Title**: action-oriented, names the theme (e.g. "Authentication flow")
-   - **Theme statement**: one sentence describing the coherent theme
-   - **Parent reference**: pointer to the parent Epic (e.g. "Part of EPIC-N")
-   - **Child Task references**: filled in during back-fill
-
-   Stories **MUST NOT** carry a `## Design` heading or any design content. The skill **MUST** validate this before creating each Story per the Validation section in `skills/_shared/tickets.md`. If a drafted Story body contains a `## Design` heading, refuse to create it and surface the error to the user.
-
-    **5b. Draft each Task.** Each Task **MUST** include:
-
-   - **Title**: action-oriented, describes what the Task delivers
-   - **Description**: what to build, the technical decisions from the design that are relevant to this Task, and any constraints
-   - **Acceptance criteria**: three to five bullets per `skills/_shared/tickets.md`
-   - **Dependencies**: explicit references to parent (Story or Epic) and any other Tasks that must exist before this work
-   - **Labels**: based on work type (feature, infrastructure, testing, documentation), plus the tier marker (`tier:task`) per `skills/_shared/tickets.md`'s Tier Markers section, where the system uses labels for tier markers
-
-6. **Order the tickets.** Present the tickets to the user in the implementation order required by `../../rules/common/workflow.md`: foundations and dependencies first, features next, integration after dependencies, polish last. When Stories are present, order Stories first by dependency, then Tasks within each Story by dependency. Keep multiple requested ticket scopes and ownership boundaries explicit; do not impose serial execution where the approved dependency/wave plan permits parallel work.
+6. **Order the tickets.** Present the order using `../_shared/tickets.md` and the approved dependency/wave plan. Keep multiple requested ticket scopes and ownership boundaries explicit; do not impose serial execution where parallel work is permitted.
 
 7. **Create the epic, then the children.** Create in this order so each level can reference its parent:
 
@@ -176,60 +114,13 @@ If group Epics are **not** available, the top tier becomes a labelled Issue (`ti
 
 With Linear MCP tools. Use {{ASK_USER_QUESTION_TOOL}} to ask the user for team and project context before creating issues; Linear requires these upfront.
 
-Use Issue + sub-issue + sub-issue with `tier:epic` / `tier:story` / `tier:task` labels. **Do not** map Epic to Linear Project: Project is a different lifecycle concept and conflating it would break recovery.
+Use Issue + sub-issue + sub-issue, applying Linear tier markers from `../_shared/tickets.md`. **Do not** map Epic to Linear Project: Project is a different lifecycle concept and conflating it would break recovery.
 
-Attempt the two-level nest first; on rejection from Linear's API, **degrade to two-tier in Linear**:
-
-- Each Task carries `tier:task` and a slugified Story label `story:<slug>` where the slug is lowercase, hyphenated, ASCII, derived from the Story theme statement.
-- The Story grouping is preserved in the epic body's `## Design` under `### Story: <name>`.
-- Recovery in degraded Linear walks Task -> Epic in one hop and reads the Story theme from the epic body, using the `story:<slug>` label as the index.
-- The skill **MUST** document the degradation in the Step 9 report to the user.
+Attempt the two-level nest first. If Linear's API rejects the nested shape, use the degraded two-tier representation in `../_shared/tickets.md`. The skill **MUST** document this degradation in the Step 9 report to the user.
 
 ### Markdown Fallback
 
-When `detect-ticketing-system` returns "none", and the user requested ticket creation, write a structured Markdown deliverable to the project root or a location the user specifies. Single file per Epic. This is a permanent user-requested deliverable, not a temporary workflow artefact: never register or delete it during workflow clean-up. Preserve the complete approved design and its approval/revision or external specification reference in the file. Heading levels carry the tier markers per `skills/_shared/tickets.md` (`##` Epic, `###` Story, `####` Task).
-
-```markdown
-# <Epic Title>
-
-## Goal
-
-[one-paragraph summary]
-
-## Design
-
-[The full approved design, the same content that would go in an epic body]
-
-**Approved source:** [plan revision and approval reference, or external specification]
-
-### Story: <name>            <!-- nested under ## Design; only if Stories are introduced -->
-
-[one-sentence rationale, see "When to introduce the Story tier". This sub-heading
- is part of the `## Design` block, not a peer section.]
-
-## Tickets
-
-### Story: <name>            <!-- only if Stories are introduced -->
-
-Theme: [one-sentence theme statement]
-
-#### Task: <title>
-
-**Type:** feature | infrastructure | testing
-**Dependencies:** none | Task N
-
-**Description:**
-...
-
-**Acceptance Criteria:**
-- [ ] ...
-- [ ] ...
-- [ ] ...
-```
-
-When no Stories are introduced, `## Tickets` contains `#### Task:` entries directly. The Task heading level is invariant at `####` in both flat and grouped modes, so the heading level remains a stable tier marker for the `resolve_epic_context` walker.
-
-The file becomes the durable epic equivalent; `work-on-ticket` can read it directly when the user references a Task and the heading-level tier marker is the discriminator for the `resolve_epic_context` walker.
+When `detect-ticketing-system` returns "none" and the user requested ticket creation, write one permanent structured Markdown deliverable per Epic at the project root or a user-specified location. It is not a temporary workflow artefact, so never register or delete it during workflow clean-up. Follow the durable Epic structure and heading markers defined in `../_shared/tickets.md`. The file is the durable Epic equivalent; `work-on-ticket` can read it when the user references a Task.
 
 ## Closing the Loop
 

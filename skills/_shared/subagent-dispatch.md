@@ -11,12 +11,22 @@ actual current interface, schema and version against accessible harness evidence
 A documented fresh-child creation interface suffices without an explicit
 inheritance parameter. Use an exposed inheritance control when required by the
 actual schema; do not invent fields or assume that an omitted field means fresh.
-Supply the bounded sufficient inputs from `./task-briefs.md`, not parent history.
+Load `./task-briefs.md` and `./worker-contract.md` before dispatch. Supply the
+bounded sufficient inputs, not parent history. Paste the applicable All workers
+and role-specific worker-contract sections verbatim into each worker packet,
+with the source path and content identity. Include applicable standing rules and
+method instructions, exact read/write and side-effect scope, stable inputs and
+baseline, authorised skips and structured returns. Missing, inaccessible,
+ambiguous or conflicting required sources block affected dispatch; report the
+precise source and scope rather than guessing. Links alone do not deliver
+instructions. Do not include dispatcher-only routing or prerequisite algorithms
+in the worker packet.
 
 Do not reuse accumulated child history as a fresh start or silently fall back to
 history forks. Missing required isolation is a capability blocker; obtain
 explicit alternative authorisation before continuing under different semantics.
-Record capability and inheritance evidence under `./phase-evidence.md`.
+Before recording capability and inheritance evidence, load and apply
+`./phase-evidence.md`.
 
 Reuse still-valid isolation or compaction capability checks only while the
 harness, schema and configuration remain unchanged. This never waives the
@@ -142,8 +152,9 @@ escalation is permitted. Non-configuration capability or routing insufficiency
 requires a decision, as does an unusable or unverifiable current model. A valid
 mapping that cannot handle the task is not a configuration-fallback opportunity.
 
-Pin the actual workflow selection before first dispatch in the existing task
-record under `./workflow-artifacts.md`, with the complete selection provenance
+Before recording the actual workflow selection, load and apply
+`./workflow-artifacts.md`. Pin it before first dispatch in the existing task
+record, with the complete selection provenance
 required by `./task-briefs.md`. In-scope corrections must reuse that actual pin,
 including a fallback pin; recheck availability, routing and configuration drift.
 Do not reselect the then-current session model for corrections. Relevant drift

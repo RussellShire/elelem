@@ -10,11 +10,21 @@ metadata:
 
 Runs a holistic review of a consolidated proposed design and bounded supporting evidence. It returns a review verdict to the coordinator, never design approval. The coordinator owns user approval and persistence.
 
-The `workflow-coordinator` invokes this phase and records its verdict separately from explicit user approval. Follow `../_shared/subagent-dispatch.md` for independent high-capability reviewer selection and verified routing; skill metadata does not switch models. Do not silently downgrade.
+The `workflow-coordinator` invokes this phase and records its verdict separately from explicit user approval. Before dispatch, load and apply `../_shared/subagent-dispatch.md` for independent high-capability reviewer selection and verified routing; skill metadata does not switch models. Do not silently downgrade.
 
 ## Preconditions
 
-The caller must provide a consolidated proposed design as a single block covering goal, requirements, exclusions, architecture, components, interfaces, data flow, error handling and tests/verification. The coordinator may provide it from conversation or authorised staging; `plan.md` need not exist and approval must not precede review. The reviewer receives the proposal and only bounded supporting evidence, never session history. If the coordinator already recorded an explicit review skip, return `SKIPPED` without dispatching. If the user explicitly skips review here, return `SKIPPED`, never `Approved`, and let the coordinator record scope, reason and consequence.
+Before validating a proposal, read `../_shared/task-briefs.md` using
+`{{READ_FILE_TOOL}}`, relative to the directory of the actually loaded Design
+Review skill. If it is missing or
+inaccessible, return a blocker; do not use a checkout, history or link-only
+fallback. The caller must provide a consolidated proposal matching its proposed
+design schema. It may come from conversation or authorised staging; `plan.md`
+need not exist and approval must not precede review. The reviewer receives the
+proposal and only bounded supporting evidence, never session history. If the
+coordinator already recorded an explicit review skip, return `SKIPPED` without
+dispatching. If the user explicitly skips review here, return `SKIPPED`, never
+`Approved`, and let the coordinator record scope, reason and consequence.
 
 ## Procedure
 
@@ -42,12 +52,9 @@ The reviewer **MUST** flag only issues that would cause real problems in plannin
 
 The full prompt, bounded evidence fields, calibration and output format live in `design-reviewer-prompt.md`.
 
-The dispatched reviewer returns the verdict and findings to this review phase
-for reconciliation. Return the reconciled verdict and any remaining issues to
-the coordinator before explicit user approval or another phase. This ends the
-review procedure, not the overall workflow. The coordinator records the result
-and next action in existing `workflow.md` and continues without routine
-prompting only when the applicable approval gate permits it.
+Reconcile the reviewer's verdict and findings in this phase. Return the
+reconciled verdict and remaining issues to the coordinator before user approval
+or another phase.
 
 ## Verdict Gate
 

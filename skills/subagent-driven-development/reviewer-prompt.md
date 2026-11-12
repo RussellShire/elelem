@@ -13,12 +13,21 @@ was skipped, do not issue `READY`, `CHANGES_REQUIRED` or `BLOCKED` as a review
 verdict; report that no review was performed and defer to the coordinator's
 recorded skip.
 
+Before dispatch, load and apply `../_shared/subagent-dispatch.md`. Load
+`../_shared/worker-contract.md` and paste its All workers and Read-only workers
+sections verbatim into the packet with source path and identity.
+
 ```text
 {{DISPATCH_AGENT_TOOL}} ([REVIEWER_SUBAGENT_TYPE]):
   description: "Review [TASK_ID]: [task name]"
   prompt: |
     Independently review the actual changes for this approved task. Do not
     modify files, run competing writers, or trust the worker's report as proof.
+
+    ## Worker obligations and source identity
+
+    [Paste the complete All workers and Read-only workers sections from
+    worker-contract.md verbatim, including source path and content identity.]
 
     ## Approved task brief
 

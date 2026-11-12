@@ -20,7 +20,8 @@ workflow_files=(
   "skills/brainstorming/SKILL.md"
   "skills/work-on-ticket/SKILL.md"
   "skills/fast-path-implementation/SKILL.md"
-  "skills/fast-path-implementation/fast-path-reviewer-prompt.md"
+  "skills/_shared/worker-contract.md"
+  "skills/_shared/code-review.md"
   "skills/wave-planning/SKILL.md"
   "skills/_shared/phase-evidence.md"
   "skills/_shared/workflow-artifacts.md"
@@ -71,20 +72,6 @@ _load_function() {
     return 1
   fi
   eval "$declaration"
-}
-
-_check_required_files() {
-  local file
-  local missing=0
-  for file in "${workflow_files[@]}"; do
-    if [[ ! -f "$REPO_ROOT/$file" ]]; then
-      _fail "required_file_${file//\//_}" "expected $file to exist"
-      missing=1
-    else
-      _pass "required_file_${file//\//_}"
-    fi
-  done
-  return "$missing"
 }
 
 _check_skill_frontmatter() {
@@ -206,11 +193,11 @@ test_test_pruning_contract_is_documented() {
     "skills/_shared/test-pruning.md|survivor stability"
     "skills/test-driven-development/SKILL.md|TDD-only skip"
     "skills/test-driven-development/SKILL.md|Assertions protect named behaviour"
-    "skills/subagent-driven-development/SKILL.md|pre-prune"
-    "skills/subagent-driven-development/SKILL.md|post-prune"
+    "skills/_shared/test-pruning.md|pre-prune"
+    "skills/_shared/test-pruning.md|post-prune"
     "skills/subagent-driven-development/implementer-prompt.md|baseline"
-    "skills/subagent-driven-development/implementer-prompt.md|Do not prune"
-    "skills/subagent-driven-development/implementer-prompt.md|audit your own work"
+    "skills/_shared/worker-contract.md|does not audit or prune tests"
+    "skills/subagent-driven-development/implementer-prompt.md|Implementation workers sections"
     "skills/subagent-driven-development/reviewer-prompt.md|Important finding"
     "README.md|test pruning"
   )
@@ -624,13 +611,13 @@ test_final_pruning_runs_once_after_cumulative_reviewer_pass() {
     'review skip sequencing|skills/_shared/test-pruning.md|cumulative-review skip is not a passing verdict.*explicit sequencing authorisation'
     'failure blocks|skills/_shared/test-pruning.md|Failures block completion'
     'targeted recovery|skills/_shared/test-pruning.md|one scheduled final task.*targeted evidence recovery'
-    'ordinary worker handoff|skills/subagent-driven-development/implementer-prompt.md|Report changed paths and rename mappings, not a whole-file test/case inventory'
+    'ordinary worker handoff|skills/_shared/worker-contract.md|Report touched paths, not a whole-file inventory'
     'TDD handoff|skills/test-driven-development/SKILL.md|not a whole-file test/case inventory'
     'task history state|skills/_shared/workflow-artifacts.md|touched-path history.*reverted edits.*rename mappings'
     'brief history|skills/_shared/task-briefs.md|changed paths and rename mappings'
     'canonical timing|rules/common/testing.md|separate final task after cumulative final reviewer.*PASS'
     'workflow timing|rules/common/workflow.md|final test-pruning task.*final verification'
-    'skill timing|rules/common/skills-policy.md|test-pruning.*cumulative final reviewer.*PASS'
+    'skill timing|rules/common/skills-policy.md|test pruning.*cumulative reviewer.*PASS'
   )
   for requirement in "${requirements[@]}"; do
     file="${requirement#*|}"
@@ -648,10 +635,7 @@ test_final_pruning_runs_once_after_cumulative_reviewer_pass() {
 
 test_cumulative_review_pass_adapts_the_actual_reviewer_result() {
   local file requirement pattern content missing=0
-  local files=(
-    'skills/subagent-driven-development/SKILL.md'
-    'skills/_shared/test-pruning.md'
-  )
+  local files=('skills/_shared/code-review.md')
   local requirements=(
     'favourable performed review|PASS.{0,180}only.{0,180}actually performed.{0,180}cumulative review'
     'producer status and readiness|Status.{0,30}REVIEWED.{0,80}Ready to merge.{0,30}Yes'
@@ -674,6 +658,13 @@ test_cumulative_review_pass_adapts_the_actual_reviewer_result() {
       fi
     done
   done
+  for file in 'skills/subagent-driven-development/SKILL.md' 'skills/_shared/test-pruning.md'; do
+    content="$(tr '\n' ' ' < "$REPO_ROOT/$file" | tr -s '[:space:]' ' ')"
+    if ! grep -Eiq 'load and apply.{0,120}code-review.md' <<< "$content" || grep -Fq 'At this consumer boundary, map to `PASS`' <<< "$content"; then
+      _fail "cumulative_review_adapter_consumer_${file//\//_}" 'consumer must load the sole shared adapter'
+      missing=1
+    fi
+  done
   (( missing != 0 )) || _pass 'cumulative_review_pass_adapts_the_actual_reviewer_result'
 }
 
@@ -691,7 +682,7 @@ test_ordinary_handoff_sources_reject_pruning_prerequisites() {
   local file missing=0
   local files=(
     'skills/subagent-driven-development/reviewer-prompt.md'
-    'skills/fast-path-implementation/fast-path-reviewer-prompt.md'
+    'skills/fast-path-implementation/SKILL.md'
     'skills/test-driven-development/SKILL.md'
     'skills/subagent-driven-development/SKILL.md'
   )
@@ -880,7 +871,12 @@ test_parallel_agent_readiness_contract_reference() {
 }
 
 test_fast_path_readiness_contract_reference() {
-  _check_readiness_contract_reference "skills/fast-path-implementation/SKILL.md" "fast_path_readiness_contract_reference"
+  local file="$REPO_ROOT/skills/fast-path-implementation/SKILL.md"
+  if grep -Fq 'invoke `subagent-driven-development`' "$file" && grep -Fq '{{INVOKE_SKILL_TOOL}}' "$file"; then
+    _check_readiness_contract_reference "skills/subagent-driven-development/SKILL.md" "fast_path_readiness_contract_reference"
+  else
+    _fail 'fast_path_readiness_contract_reference' 'fast path must invoke the standard executor'
+  fi
 }
 
 test_phase_evidence_contract() {
@@ -926,15 +922,15 @@ test_phase_evidence_contract() {
 test_verification_evidence_is_reused_by_input_validity() {
   local file requirement pattern content missing=0
   local requirements=(
-    'rules/common/verification.md|exact execution identity|exact command and arguments.{0,100}working directory.{0,100}checked scope'
-    'rules/common/verification.md|relevant input identities|source, tests?, configuration, dependencies?, fixtures? and generated inputs.{0,120}dirty and untracked'
-    'rules/common/verification.md|environment and resource assumptions|environment and resource assumptions'
-    'rules/common/verification.md|captured output provenance|captured output.{0,100}exit status.{0,100}accessible provenance.{0,100}verifier identity'
-    'rules/common/verification.md|turn and session do not invalidate|new message or resumed session alone does not invalidate'
+    'skills/verification-before-completion/SKILL.md|exact execution identity|exact command and arguments.{0,100}working directory.{0,100}checked scope'
+    'skills/verification-before-completion/SKILL.md|relevant input identities|source, test, configuration, dependency, fixture and generated inputs.{0,120}dirty and untracked'
+    'skills/verification-before-completion/SKILL.md|environment and resource assumptions|environment and mutable resource assumptions'
+    'skills/verification-before-completion/SKILL.md|captured output provenance|captured output.{0,100}exit status.{0,100}accessible provenance.{0,100}verifier identity'
+    'skills/verification-before-completion/SKILL.md|turn and session do not invalidate|new message or resumed session alone does not invalidate'
     'rules/common/verification.md|affected invalidation|relevant changes invalidate affected evidence'
-    'rules/common/verification.md|unrelated change preservation|demonstrably unrelated changes.{0,100}preserve'
-    'rules/common/verification.md|unknown scope reruns conservatively|scope.{0,100}unknown.{0,100}rerun conservatively'
-    'rules/common/verification.md|honest reused evidence citation|reused output.{0,100}not as newly executed'
+    'skills/verification-before-completion/SKILL.md|unrelated change preservation|demonstrably unrelated changes.{0,100}preserve'
+    'skills/verification-before-completion/SKILL.md|unknown scope reruns conservatively|rerun conservatively when the dependency scope cannot be established'
+    'skills/verification-before-completion/SKILL.md|honest reused evidence citation|never describe reused output as newly run'
     'skills/verification-before-completion/SKILL.md|updated skill description|validates or executes checks against current relevant inputs.{0,250}reuse status'
     'skills/verification-before-completion/SKILL.md|identify claim and check|Identify the claim and check'
     'skills/verification-before-completion/SKILL.md|locate and validate execution evidence|Locate and validate execution evidence'
@@ -1051,16 +1047,15 @@ test_verification_policy_rejects_blanket_rerun_and_restore_rules() {
 test_phase_evidence_boundary_references() {
   local requirement file token content
   local requirements=(
-    'rules/common/workflow.md|skills/_shared/phase-evidence.md'
-    'rules/common/workflow.md|before implementation-oriented proposals'
     'rules/common/skills-policy.md|skills/_shared/phase-evidence.md'
+    'rules/common/workflow.md|before implementation-oriented proposals'
     'skills/workflow-coordinator/SKILL.md|../_shared/phase-evidence.md'
     'skills/workflow-coordinator/SKILL.md|entry, transitions, handover, resume, reuse and execution'
     'skills/_shared/workflow-artifacts.md|./phase-evidence.md'
     'skills/research/SKILL.md|../_shared/phase-evidence.md'
     'skills/brainstorming/SKILL.md|../_shared/phase-evidence.md'
     'skills/work-on-ticket/SKILL.md|upstream gaps to the coordinator'
-    'skills/fast-path-implementation/SKILL.md|upstream gaps to the coordinator'
+    'skills/fast-path-implementation/SKILL.md|invoke `subagent-driven-development`'
     'skills/subagent-driven-development/SKILL.md|upstream gaps to the coordinator'
     'README.md|procedural gate, not runtime enforcement'
   )
@@ -1080,8 +1075,7 @@ test_phase_evidence_installed_links_resolve() {
   local harness root relative link
   local harnesses=(claude opencode codex)
   local files=(
-    'work-on-ticket/SKILL.md' 'fast-path-implementation/SKILL.md'
-    'subagent-driven-development/SKILL.md'
+    'work-on-ticket/SKILL.md' 'subagent-driven-development/SKILL.md'
   )
   for harness in "${harnesses[@]}"; do
     root="$TEST_TMP/$harness/skills"
@@ -1095,10 +1089,6 @@ test_phase_evidence_installed_links_resolve() {
       fi
     done
   done
-}
-
-test_required_files_exist() {
-  _check_required_files || true
 }
 
 test_wave_planning_maximises_safe_static_width() {
@@ -1133,7 +1123,7 @@ test_final_audit_preserves_union_scope_after_reviews_and_barriers() {
     'skills/_shared/test-pruning.md|Audit newly touched files in full'
     'skills/_shared/test-pruning.md|Preserve unaffected decisions with stable supporting evidence'
     'skills/subagent-driven-development/reviewer-prompt.md|separate final task after the cumulative final reviewer PASS'
-    'skills/fast-path-implementation/fast-path-reviewer-prompt.md|separate final task after the cumulative final reviewer PASS'
+    'skills/fast-path-implementation/SKILL.md|invoke.{0,80}subagent-driven-development.{0,120}INVOKE_SKILL_TOOL'
     'skills/test-driven-development/SKILL.md|one final union inventory after cumulative final reviewer PASS'
     '_tests/workflow_scenarios.md|Only cumulative final reviewer PASS schedules one separate final pruning task over the union, including the corrections'
   )
@@ -1220,7 +1210,7 @@ test_changed_workflow_skills_are_installed_in_all_harnesses() {
 
 test_changed_common_rules_are_installed_in_all_harnesses() {
   local harness file target skill_tool expected actual codex_output missing=0
-  local rule_files=('workflow.md' 'skills-policy.md')
+  local rule_files=('workflow.md' 'skills-policy.md' 'testing.md')
   local manifest=() languages=()
   RULES_SOURCE="$REPO_ROOT/rules"
   for harness in claude opencode; do
@@ -1264,8 +1254,8 @@ test_final_audit_rechecks_only_affected_evidence_after_corrections() {
     'skills/_shared/test-pruning.md|coverage gap.{0,120}in-scope.{0,120}TDD.{0,120}review.{0,120}checks'
     'skills/subagent-driven-development/SKILL.md|Only actual pruning edits require an independent bounded pruning-delta review of those edits and affected coverage'
     'skills/subagent-driven-development/SKILL.md|Run final verification after the last pruning edit and review correction'
-    'skills/subagent-driven-development/implementer-prompt.md|multiple.{0,100}RED/GREEN cycles'
-    'skills/fast-path-implementation/SKILL.md|cumulative final reviewer.{0,30}PASS.{0,100}separate final.{0,40}pruning task'
+    'skills/_shared/task-briefs.md|multiple.{0,100}RED/GREEN cycles'
+    'skills/fast-path-implementation/SKILL.md|invoke.{0,80}subagent-driven-development.{0,120}INVOKE_SKILL_TOOL'
     'README.md|earliest safe wave.{0,100}verified.{0,40}capacity'
     '_tests/workflow_scenarios.md|concurrency one.{0,140}concrete reason'
     '_tests/workflow_scenarios.md|multiple.{0,100}RED/GREEN cycles'
@@ -1306,6 +1296,161 @@ test_cumulative_audit_preserves_each_task_baseline_and_skip_provenance() {
   fi
 }
 
+_codex_testing_rule_matches_source() {
+  python3 - "$1" "$REPO_ROOT/rules/common/testing.md" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+installed = Path(sys.argv[1]).read_text().splitlines(keepends=True)
+source = Path(sys.argv[2]).read_text().splitlines(keepends=True)
+start_marker = '<!-- elelem:codex:start -->'
+end_marker = '<!-- elelem:codex:end -->'
+rule_heading = '## rules/common/testing.md'
+canonical_heading = '## Meaningful Assertions'
+rule_pattern = re.compile(r'^## rules/common/[A-Za-z0-9_.-]+\.md$')
+start_lines = [index for index, line in enumerate(installed) if line.rstrip('\r\n') == start_marker]
+end_lines = [index for index, line in enumerate(installed) if line.rstrip('\r\n') == end_marker]
+if len(start_lines) != 1 or len(end_lines) != 1 or start_lines[0] >= end_lines[0]:
+    raise SystemExit('managed block boundaries are missing, duplicated or unordered')
+managed = installed[start_lines[0] + 1:end_lines[0]]
+rule_indexes = [index for index, line in enumerate(managed) if line.rstrip('\r\n') == rule_heading]
+if len(rule_indexes) != 1:
+    raise SystemExit('active testing rule entry is missing or duplicated')
+rule_start = rule_indexes[0] + 1
+rule_end = next((index for index in range(rule_start, len(managed)) if rule_pattern.fullmatch(managed[index].rstrip('\r\n'))), len(managed))
+active_rule = managed[rule_start:rule_end]
+active_indexes = [index for index, line in enumerate(active_rule) if line.rstrip('\r\n') == canonical_heading]
+source_indexes = [index for index, line in enumerate(source) if line.rstrip('\r\n') == canonical_heading]
+if len(active_indexes) != 1 or len(source_indexes) != 1:
+    raise SystemExit('canonical Meaningful Assertions section is missing or duplicated')
+
+def section(lines: list[str], index: int) -> list[str]:
+    end = next((offset for offset in range(index + 1, len(lines)) if lines[offset].startswith('## ')), len(lines))
+    return lines[index:end]
+
+if section(active_rule, active_indexes[0]) != section(source, source_indexes[0]):
+    raise SystemExit('active canonical section differs from the source section')
+PY
+}
+
+_mutate_codex_testing_rule() {
+  python3 - "$1" "$2" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+mutation = sys.argv[2]
+lines = path.read_text().splitlines(keepends=True)
+start_marker = '<!-- elelem:codex:start -->'
+end_marker = '<!-- elelem:codex:end -->'
+rule_heading = '## rules/common/testing.md'
+canonical_heading = '## Meaningful Assertions'
+rule_pattern = re.compile(r'^## rules/common/[A-Za-z0-9_.-]+\.md$')
+start_lines = [index for index, line in enumerate(lines) if line.rstrip('\r\n') == start_marker]
+end_lines = [index for index, line in enumerate(lines) if line.rstrip('\r\n') == end_marker]
+if len(start_lines) != 1 or len(end_lines) != 1 or start_lines[0] >= end_lines[0]:
+    raise SystemExit('mutation fixture has invalid managed block boundaries')
+start, end = start_lines[0], end_lines[0]
+rule_indexes = [index for index in range(start + 1, end) if lines[index].rstrip('\r\n') == rule_heading]
+if mutation == 'missing-rule':
+    if len(rule_indexes) != 1:
+        raise SystemExit('mutation fixture does not have one canonical testing rule')
+    rule_index = rule_indexes[0]
+    rule_end = next((index for index in range(rule_index + 1, end) if rule_pattern.fullmatch(lines[index].rstrip('\r\n'))), end)
+    del lines[rule_index:rule_end]
+else:
+    if len(rule_indexes) != 1:
+        raise SystemExit('mutation fixture does not have one canonical testing rule')
+    rule_index = rule_indexes[0]
+    rule_end = next((index for index in range(rule_index + 1, end) if rule_pattern.fullmatch(lines[index].rstrip('\r\n'))), end)
+    if mutation == 'duplicate-rule':
+        lines[rule_end:rule_end] = lines[rule_index:rule_end]
+    elif mutation == 'similar-rule':
+        lines[rule_index] = lines[rule_index].replace(rule_heading, rule_heading + '-extension', 1)
+    else:
+        canonical_indexes = [index for index in range(rule_index + 1, rule_end) if lines[index].rstrip('\r\n') == canonical_heading]
+        if len(canonical_indexes) != 1:
+            raise SystemExit('mutation fixture does not have one canonical section')
+        canonical_index = canonical_indexes[0]
+        canonical_end = next((index for index in range(canonical_index + 1, rule_end) if lines[index].startswith('## ')), rule_end)
+        canonical_section = lines[canonical_index:canonical_end]
+        if mutation == 'duplicate-canonical':
+            lines[canonical_end:canonical_end] = canonical_section
+        elif mutation == 'similar-canonical':
+            lines[canonical_index] = lines[canonical_index].replace(canonical_heading, canonical_heading + ' extension', 1)
+        elif mutation == 'canonical-outside':
+            del lines[canonical_index:canonical_end]
+            end = next(index for index, line in enumerate(lines) if line.rstrip('\r\n') == end_marker)
+            lines[end + 1:end + 1] = canonical_section
+        elif mutation == 'missing-canonical':
+            del lines[canonical_index:canonical_end]
+        else:
+            raise SystemExit(f'unknown mutation: {mutation}')
+path.write_text(''.join(lines))
+PY
+}
+
+_test_codex_testing_rule_mutation_rejected() {
+  local mutation="$1" case_name="$2" expected_reason="$3"
+  local fixture="$TEST_TMP/codex-testing-$case_name/AGENTS.md" output before after status=0
+  mkdir -p "$(dirname "$fixture")"
+  cp "$TEST_TMP/codex/AGENTS.md" "$fixture"
+  before="$(shasum -a 256 "$fixture" | awk '{print $1}')"
+  if ! _mutate_codex_testing_rule "$fixture" "$mutation"; then
+    _fail "codex_testing_rule_$case_name" 'malformed fixture mutation did not run'
+    return
+  fi
+  after="$(shasum -a 256 "$fixture" | awk '{print $1}')"
+  if [[ "$before" == "$after" ]]; then
+    _fail "codex_testing_rule_$case_name" 'malformed fixture mutation did not change the installed rules'
+    return
+  fi
+  output="$(_codex_testing_rule_matches_source "$fixture" 2>&1)" || status=$?
+  if (( status == 0 )) || ! grep -Fq "$expected_reason" <<< "$output"; then
+    _fail "codex_testing_rule_$case_name" "checker did not reject the fixture for: $expected_reason"
+    return
+  fi
+  _pass "codex_testing_rule_$case_name"
+}
+
+test_codex_testing_rule_matches_installed_source() {
+  if _codex_testing_rule_matches_source "$TEST_TMP/codex/AGENTS.md"; then
+    _pass 'codex_testing_rule_matches_installed_source'
+  else
+    _fail 'codex_testing_rule_matches_installed_source' 'unmodified installed testing rule did not match the source section'
+  fi
+}
+
+test_codex_testing_rule_rejects_missing_rule() {
+  _test_codex_testing_rule_mutation_rejected missing-rule missing-rule 'active testing rule entry is missing or duplicated'
+}
+
+test_codex_testing_rule_rejects_duplicate_rule() {
+  _test_codex_testing_rule_mutation_rejected duplicate-rule duplicate-rule 'active testing rule entry is missing or duplicated'
+}
+
+test_codex_testing_rule_rejects_similar_rule() {
+  _test_codex_testing_rule_mutation_rejected similar-rule similar-rule 'active testing rule entry is missing or duplicated'
+}
+
+test_codex_testing_rule_rejects_duplicate_canonical_section() {
+  _test_codex_testing_rule_mutation_rejected duplicate-canonical duplicate-canonical 'canonical Meaningful Assertions section is missing or duplicated'
+}
+
+test_codex_testing_rule_rejects_similar_canonical_section() {
+  _test_codex_testing_rule_mutation_rejected similar-canonical similar-canonical 'canonical Meaningful Assertions section is missing or duplicated'
+}
+
+test_codex_testing_rule_rejects_canonical_section_outside_managed_block() {
+  _test_codex_testing_rule_mutation_rejected canonical-outside canonical-outside 'canonical Meaningful Assertions section is missing or duplicated'
+}
+
+test_codex_testing_rule_rejects_missing_canonical_section() {
+  _test_codex_testing_rule_mutation_rejected missing-canonical missing-canonical 'canonical Meaningful Assertions section is missing or duplicated'
+}
+
 test_codex_common_rules_are_in_the_managed_block() {
   local target="$TEST_TMP/codex/AGENTS.md" file actual expected missing=0
   if ! grep -Fxq "$CODEX_MANAGED_START" "$target" || ! grep -Fxq "$CODEX_MANAGED_END" "$target"; then
@@ -1333,13 +1478,79 @@ test_codex_common_rules_are_in_the_managed_block() {
   fi
 }
 
+test_codex_rule_check_rejects_content_moved_outside_the_managed_block() {
+  local fixture="$TEST_TMP/moved-rule" output
+  mkdir -p "$fixture/codex"
+  awk '
+    /^## rules\/common\/workflow.md$/ {capture=1}
+    capture && /^## rules\/common\// && $0 != "## rules/common/workflow.md" {capture=0}
+    capture && /^<!-- elelem:codex:end -->$/ {capture=0}
+    capture {moved = moved $0 "\n"; next}
+    {print}
+    END {printf "%s", moved}
+  ' "$TEST_TMP/codex/AGENTS.md" > "$fixture/codex/AGENTS.md"
+  output="$(TEST_TMP="$fixture" test_codex_common_rules_are_in_the_managed_block)"
+  if ! grep -Fq '[FAIL] codex_rule_content_workflow.md' <<< "$output"; then
+    _fail 'codex_rule_check_rejects_content_moved_outside_the_managed_block' 'a rule outside the managed block was accepted'
+    return
+  fi
+  _pass 'codex_rule_check_rejects_content_moved_outside_the_managed_block'
+}
+
+test_codex_rule_check_rejects_changed_rule_content() {
+  local fixture="$TEST_TMP/changed-rule" output
+  mkdir -p "$fixture/codex"
+  cp "$TEST_TMP/codex/AGENTS.md" "$fixture/codex/AGENTS.md"
+  if ! _mutate_codex_workflow_rule "$fixture/codex/AGENTS.md"; then
+    _fail 'codex_rule_check_rejects_changed_rule_content' 'the workflow rule mutation was not applied'
+    return
+  fi
+  output="$(TEST_TMP="$fixture" test_codex_common_rules_are_in_the_managed_block)"
+  if ! grep -Fq '[FAIL] codex_rule_content_workflow.md' <<< "$output"; then
+    _fail 'codex_rule_check_rejects_changed_rule_content' 'changed rule content was accepted'
+    return
+  fi
+  _pass 'codex_rule_check_rejects_changed_rule_content'
+}
+
+test_codex_rule_check_rejects_duplicate_managed_rule_sections() {
+  local fixture="$TEST_TMP/duplicate-rule-section" output
+  mkdir -p "$fixture/codex"
+  cp "$TEST_TMP/codex/AGENTS.md" "$fixture/codex/AGENTS.md"
+  perl -0777 -i -pe 's/(^## rules\/common\/workflow\.md\n.*?)(?=^## rules\/common\/|^<!-- elelem:codex:end -->)/$1$1/ms' "$fixture/codex/AGENTS.md"
+  output="$(TEST_TMP="$fixture" test_codex_common_rules_are_in_the_managed_block)"
+  if ! grep -Fq '[FAIL] codex_rule_content_workflow.md' <<< "$output"; then
+    _fail 'codex_rule_check_rejects_duplicate_managed_rule_sections' 'duplicate canonical rule sections were accepted'
+    return
+  fi
+  _pass 'codex_rule_check_rejects_duplicate_managed_rule_sections'
+}
+
+test_codex_rule_check_rejects_a_similarly_named_rule_heading() {
+  local fixture="$TEST_TMP/similar-rule-heading" output
+  mkdir -p "$fixture/codex"
+  cp "$TEST_TMP/codex/AGENTS.md" "$fixture/codex/AGENTS.md"
+  perl -0777 -i -pe 's/^## rules\/common\/workflow\.md$/## rules\/common\/workflow.md-extra/m' "$fixture/codex/AGENTS.md"
+  output="$(TEST_TMP="$fixture" test_codex_common_rules_are_in_the_managed_block)"
+  if ! grep -Fq '[FAIL] codex_rule_content_workflow.md' <<< "$output"; then
+    _fail 'codex_rule_check_rejects_a_similarly_named_rule_heading' 'a similarly named heading was accepted as the canonical rule'
+    return
+  fi
+  _pass 'codex_rule_check_rejects_a_similarly_named_rule_heading'
+}
+
 test_coordinator_reuses_the_executors_final_gate_evidence() {
   local file content requirement pattern missing=0
-  local coordinator_pattern='coordinator validates the evidence.s command, scope, input identities, provenance, assumptions and independence'
+  local coordinator_pattern='before accepting that evidence, invoke `verification-before-completion` through `\{\{INVOKE_SKILL_TOOL\}\}`'
   local requirements=(
     'skills/workflow-coordinator/SKILL.md|executor returns final review, pruning and verification evidence'
     "skills/workflow-coordinator/SKILL.md|$coordinator_pattern"
-    'skills/workflow-coordinator/SKILL.md|Rerun affected checks when relevant inputs change, evidence is missing or inaccessible, or equivalence is uncertain'
+    'skills/workflow-coordinator/SKILL.md|evidence gate.{0,100}settled combined inputs.{0,100}valid reuse'
+    'skills/verification-before-completion/SKILL.md|exact command and arguments.{0,100}working directory.{0,100}checked scope'
+    'skills/verification-before-completion/SKILL.md|input identities.{0,100}assumptions still match'
+    'skills/verification-before-completion/SKILL.md|accessible provenance.{0,100}verifier identity and independence'
+    'skills/verification-before-completion/SKILL.md|missing, inaccessible, incomplete.{0,180}execute the affected check'
+    'skills/verification-before-completion/SKILL.md|matching evidence.{0,120}revalidate.{0,100}original execution identity'
     'skills/subagent-driven-development/SKILL.md|coordinator alone owns audit dispatch and state, with no nested audit dispatch'
   )
   for requirement in "${requirements[@]}"; do
@@ -1471,18 +1682,16 @@ _check_implementation_selection_consumers() {
     '_shared/wave-readiness.md|native mapping.{0,120}configuration fallback.{0,160}availability.{0,80}capability.{0,80}routing'
     '_shared/wave-readiness.md|before first dispatch.{0,100}actual task pin'
     '_shared/wave-readiness.md|drift.{0,100}authorisation'
-    'subagent-driven-development/SKILL.md|native resolution.{0,100}subagent-dispatch.md'
-    'subagent-driven-development/SKILL.md|consume the retained actual task pin.{0,100}fallback'
-    'subagent-driven-development/SKILL.md|Do not reselect.{0,100}current-session model'
-    'subagent-driven-development/SKILL.md|Preparation and reviewer.{0,100}unchanged'
-    'subagent-driven-development/SKILL.md|runtime.{0,100}outside.{0,100}policy'
-    'subagent-driven-development/implementer-prompt.md|configured source/revision.{0,100}requested tier.{0,100}rationale'
-    'subagent-driven-development/implementer-prompt.md|native selector.{0,60}provider.{0,60}API target/resolved model.{0,80}effort.{0,40}variant'
-    'subagent-driven-development/implementer-prompt.md|fallback flag.{0,60}reason.{0,60}warning.{0,60}evidence'
-    'subagent-driven-development/implementer-prompt.md|schema.{0,60}catalogue/capability.{0,60}routing evidence'
-    'subagent-driven-development/implementer-prompt.md|corrections.{0,100}retained actual task pin.{0,80}fallback'
-    'subagent-driven-development/implementer-prompt.md|Do not reselect.{0,100}current-session model'
-    'subagent-driven-development/implementer-prompt.md|drift.{0,100}authorisation'
+    'subagent-driven-development/SKILL.md|load and apply.{0,100}subagent-dispatch.md.{0,120}native model resolution.{0,80}retained pins and drift checks'
+    'subagent-driven-development/implementer-prompt.md|Apply dispatch prerequisites and routing outside the worker packet'
+    '_shared/task-briefs.md|configured source/revision.{0,100}requested tier.{0,80}rationale'
+    '_shared/task-briefs.md|native selector.{0,60}provider.{0,60}API target/resolved model.{0,80}effort.{0,40}variant'
+    '_shared/task-briefs.md|fallback flag.{0,60}reason.{0,60}warning.{0,60}evidence'
+    '_shared/task-briefs.md|schema.{0,60}catalogue/capability.{0,60}routing evidence'
+    '_shared/subagent-dispatch.md|corrections.{0,100}reuse.{0,80}actual pin.{0,80}fallback'
+    '_shared/subagent-dispatch.md|Do not reselect.{0,100}current session model'
+    '_shared/subagent-dispatch.md|drift.{0,100}authorisation'
+    '_shared/subagent-dispatch.md|runtime.{0,100}outside.{0,100}policy'
   )
   for requirement in "${requirements[@]}"; do
     file="${requirement%%|*}"; pattern="${requirement#*|}"
@@ -1619,17 +1828,29 @@ test_phase_evidence_boundary_references
 test_claude_installer_copy_and_substitution
 test_opencode_installer_copy_and_substitution
 test_codex_installer_copy_and_substitution
+test_implementation_selection_consumers_use_the_shared_contract
 test_implementation_consumers_do_not_override_configuration_fallback
 test_blocker_containment_policy_is_dependency_scoped
 test_blocker_review_findings_are_scoped_to_affected_work
 test_opencode_installs_the_actual_shell_enumeration_tools
 test_changed_workflow_skills_are_installed_in_all_harnesses
+test_implementation_selection_consumers_are_installed_in_all_harnesses
 test_installed_skill_checks_reject_wrong_tracker_mappings
 test_changed_common_rules_are_installed_in_all_harnesses
 test_common_rule_checks_reject_wrong_skill_tool_mappings
 test_codex_common_rules_are_in_the_managed_block
 test_codex_rule_check_rejects_content_moved_outside_the_managed_block
 test_codex_rule_check_rejects_changed_rule_content
+test_codex_rule_check_rejects_duplicate_managed_rule_sections
+test_codex_rule_check_rejects_a_similarly_named_rule_heading
+test_codex_testing_rule_matches_installed_source
+test_codex_testing_rule_rejects_missing_rule
+test_codex_testing_rule_rejects_duplicate_rule
+test_codex_testing_rule_rejects_similar_rule
+test_codex_testing_rule_rejects_duplicate_canonical_section
+test_codex_testing_rule_rejects_similar_canonical_section
+test_codex_testing_rule_rejects_canonical_section_outside_managed_block
+test_codex_testing_rule_rejects_missing_canonical_section
 test_test_pruning_contract_is_documented
 test_auditor_policy_categories_and_decisions_are_explicit
 test_auditor_rule_discovery_freezes_complete_harness_sources

@@ -2,6 +2,11 @@
 
 You are investigating a specific hypothesis about a bug. Your job is to confirm or eliminate this hypothesis through targeted evidence gathering.
 
+## Worker obligations and source identity
+
+[Paste the complete All workers and Read-only workers sections of
+worker-contract.md verbatim, including source path and content identity.]
+
 ## Your Assignment
 
 You will receive:
