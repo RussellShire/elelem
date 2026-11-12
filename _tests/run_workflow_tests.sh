@@ -1238,9 +1238,13 @@ test_changed_common_rules_are_installed_in_all_harnesses() {
     done
   done
   target="$TEST_TMP/codex/AGENTS.md"
-  _codex_render_agents_payload "$TEST_TMP/codex/payload.md" rule_files languages
+  _codex_render_agents_payload "$TEST_TMP/codex/payload.md" rule_files
   _codex_upsert_managed_block "$target" "$TEST_TMP/codex/payload.md"
   codex_output="$(test_codex_common_rules_are_in_the_managed_block)"
+  if [[ "$codex_output" != '[PASS] codex_common_rules_are_in_the_managed_block' ]]; then
+    _fail 'installed_rule_codex' "$codex_output"
+    missing=1
+  fi
   if (( missing == 0 )); then
     _pass "changed_common_rules_are_installed_in_all_harnesses"
   fi
@@ -1463,6 +1467,7 @@ test_codex_common_rules_are_in_the_managed_block() {
       $0 == end {inside=0; capture=0; next}
       inside && $0 == label {count++; capture=1; skip=1; next}
       capture && /^## rules\/common\// {capture=0}
+      capture && $0 == "# On-demand language packs" {capture=0}
       capture && skip {skip=0; if ($0 == "") next}
       capture {print}
       END {if (count != 1) exit 1}
@@ -1635,6 +1640,40 @@ _mutate_codex_workflow_rule() {
   grep -Fq 'final test-pruning task' "$target" || return 1
   perl -i -pe 's/final test-pruning task/per-task pruning audit/' "$target" || return 1
   grep -Fq 'per-task pruning audit' "$target"
+}
+
+test_codex_rule_check_rejects_content_moved_outside_the_managed_block() {
+  local fixture="$TEST_TMP/codex-rule-outside" output
+  mkdir -p "$fixture/codex"
+  awk -v label='## rules/common/workflow.md' '
+    $0 == label {capture=1}
+    capture && /^## rules\/common\// && $0 != label {capture=0}
+    capture {moved=moved $0 ORS; next}
+    {print}
+    END {printf "%s", moved}
+  ' "$TEST_TMP/codex/AGENTS.md" > "$fixture/codex/AGENTS.md"
+  output="$(TEST_TMP="$fixture"; passed=0; failed=0; test_codex_common_rules_are_in_the_managed_block)"
+  if ! grep -Fq '[FAIL] codex_rule_content_workflow.md:' <<< "$output" || grep -Fq '[PASS]' <<< "$output"; then
+    _fail 'codex_rule_check_rejects_content_moved_outside_the_managed_block' 'checker accepted a rule moved outside the managed block'
+    return
+  fi
+  _pass 'codex_rule_check_rejects_content_moved_outside_the_managed_block'
+}
+
+test_codex_rule_check_rejects_changed_rule_content() {
+  local fixture="$TEST_TMP/codex-rule-changed" output
+  mkdir -p "$fixture/codex"
+  cp "$TEST_TMP/codex/AGENTS.md" "$fixture/codex/AGENTS.md"
+  if ! _mutate_codex_workflow_rule "$fixture/codex/AGENTS.md"; then
+    _fail 'codex_rule_check_rejects_changed_rule_content' 'rule mutation was not applied'
+    return
+  fi
+  output="$(TEST_TMP="$fixture"; passed=0; failed=0; test_codex_common_rules_are_in_the_managed_block)"
+  if ! grep -Fq '[FAIL] codex_rule_content_workflow.md:' <<< "$output" || grep -Fq '[PASS]' <<< "$output"; then
+    _fail 'codex_rule_check_rejects_changed_rule_content' 'checker accepted changed rule content'
+    return
+  fi
+  _pass 'codex_rule_check_rejects_changed_rule_content'
 }
 
 test_common_rule_checks_reject_wrong_skill_tool_mappings() {
@@ -1838,7 +1877,6 @@ test_implementation_selection_consumers_are_installed_in_all_harnesses
 test_installed_skill_checks_reject_wrong_tracker_mappings
 test_changed_common_rules_are_installed_in_all_harnesses
 test_common_rule_checks_reject_wrong_skill_tool_mappings
-test_codex_common_rules_are_in_the_managed_block
 test_codex_rule_check_rejects_content_moved_outside_the_managed_block
 test_codex_rule_check_rejects_changed_rule_content
 test_codex_rule_check_rejects_duplicate_managed_rule_sections

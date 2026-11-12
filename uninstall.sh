@@ -279,6 +279,10 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     manifest_gone=()
 
     if ! parse_manifest "$manifest_file" manifest_base manifest_files manifest_gone; then
+      if [[ "$manifest_name" == .elelem-manifest-opencode ]]; then
+        say_err "OpenCode manifest cleanup blocked; installed files and retry metadata retained."
+        exit 1
+      fi
       continue
     fi
 
@@ -291,11 +295,16 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     fi
 
     for _f in "${manifest_files[@]+"${manifest_files[@]}"}"; do
+      manifest_relative="${_f#"$manifest_base/"}"
+      while [[ "$manifest_relative" == ./* ]]; do manifest_relative="${manifest_relative#./}"; done
+      [[ "$manifest_name" != .elelem-manifest-opencode || "$manifest_relative" != opencode.json ]] || continue
+      [[ "$manifest_name" != .elelem-manifest-opencode || "$manifest_relative" != AGENTS.md ]] || continue
       say_info "  delete: ${_f#"$manifest_base/"}"
       all_files+=("$_f")
     done
 
     for _g in "${manifest_gone[@]+"${manifest_gone[@]}"}"; do
+      [[ "$manifest_name" != .elelem-manifest-opencode || "$_g" != opencode.json ]] || continue
       say_info "  (already gone): $_g"
       all_gone+=("$manifest_base/$_g")
     done
@@ -339,6 +348,37 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     say_info "Aborted. No changes made."
     exit 0
   fi
+
+  for manifest_file in "${all_manifest_files[@]+"${all_manifest_files[@]}"}"; do
+    [[ "${manifest_file##*/}" == .elelem-manifest-opencode ]] || continue
+    if ! command -v jq > /dev/null 2>&1; then
+      say_err 'jq is required for safe instruction ownership updates; install jq and retry without deleting ownership metadata.'
+      exit 1
+    fi
+    IFS= read -r manifest_base < "$manifest_file"
+    if ! opencode_agents_preflight "$manifest_base/AGENTS.md" "$manifest_file"; then
+      say_err "OpenCode cleanup blocked; installed files, config and retry metadata retained."
+      exit 1
+    fi
+  done
+
+  for manifest_file in "${all_manifest_files[@]+"${all_manifest_files[@]}"}"; do
+    [[ "${manifest_file##*/}" == .elelem-manifest-opencode ]] || continue
+    IFS= read -r manifest_base < "$manifest_file"
+    if ! remove_opencode_instructions "$manifest_base/opencode.json" "$manifest_file" "$manifest_base/.elelem-opencode-instructions.json"; then
+      say_err "OpenCode cleanup blocked; config, installed files, ownership metadata and manifest retained for retry."
+      exit 1
+    fi
+  done
+
+  for manifest_file in "${all_manifest_files[@]+"${all_manifest_files[@]}"}"; do
+    [[ "${manifest_file##*/}" == .elelem-manifest-opencode ]] || continue
+    IFS= read -r manifest_base < "$manifest_file"
+    if ! opencode_agents_remove "$manifest_base/AGENTS.md" "$manifest_file"; then
+      say_err "OpenCode AGENTS cleanup blocked; retry metadata retained."
+      exit 1
+    fi
+  done
 
   for _f in "${all_files[@]+"${all_files[@]}"}"; do
     rm -f "$_f"
