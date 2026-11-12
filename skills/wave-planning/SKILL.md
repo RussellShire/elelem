@@ -14,26 +14,26 @@ high-capability reasoning. Verify that the active primary-session model is
 appropriate before conversational planning. Metadata does not switch the
 active model. If unsuitable, stop and ask the user to switch models; do not
 switch silently. Record the confirmed model and reuse that confirmation while
-it remains active, without prompting again. Delegated preparation and reviewer
-selection follow `../_shared/subagent-dispatch.md`: enumerate supported models
-and verify explicit routing and required capability. Their policy is unchanged
-by implementation configuration or its fallback; missing required preparation
-or reviewer capability remains a blocker.
+it remains active, without prompting again. Before delegated preparation or
+reviewer selection, load and apply `../_shared/subagent-dispatch.md`. Preparation
+and reviewer policy is unchanged by implementation configuration or fallback;
+missing required capability remains a blocker.
 
 ## Preconditions
 
 Require an approved plan revision with its user approval source reference, or
 an explicitly authorised complete task brief for the single-task skip path.
-Check workflow baseline and approval validity using
+Before checking workflow baseline and approval validity, load and apply
 `../_shared/workflow-artifacts.md`. Missing or stale inputs block planning.
 Do not infer approval from a review verdict, silence, prior conversation or
 implementation request.
 
 ## Decomposition
 
-Map every approved requirement to one or more tasks, including integration,
-tests, error cases and final verification requirements. Capture the complete
-task contract using `../_shared/task-briefs.md`. Define task dependencies as a
+Before decomposing the approved design, load and apply
+`../_shared/task-briefs.md`. Map every approved requirement to one or more tasks,
+including integration, tests, error cases and final verification requirements.
+Capture the complete task contract. Define task dependencies as a
 directed acyclic graph; contracts and foundations precede consumers, and
 integration is explicit work. One-task waves are valid. Do not impose a fixed
 file-count limit or ask bounded workers to discover architecture.
@@ -70,8 +70,10 @@ concurrency one, from dependencies, ownership, stable reads or resource limits.
 
 ## Readiness review and explicit skips
 
-Wave planning remains required unless the user explicitly skips that phase.
-Skipping only the independent readiness review does not skip wave planning.
+Before validating or reviewing readiness, load and apply
+`../_shared/wave-readiness.md`. Wave planning remains required unless the user
+explicitly skips that phase. Skipping only the independent readiness review does
+not skip wave planning.
 The planner must still complete and validate the requirement map, task briefs,
 dependency graph, ownership, stable inputs, resource model, capacity and
 verification barriers described above and in `../_shared/wave-readiness.md`.

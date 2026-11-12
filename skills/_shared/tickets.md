@@ -12,7 +12,7 @@ The hierarchy is fixed three-tier: **Epic / Story / Task**.
 
 There is no fourth Sub-task tier. If finer decomposition is needed inside a Task, use a checklist inside the Task body. Checklists are not tickets and are not recovered by `work-on-ticket`.
 
-The Story tier is introduced by `create-tickets` only when the decomposition rule (in `create-tickets/SKILL.md`) is satisfied. Most epics stay two-tier (Epic plus flat Tasks), and that remains the default shape.
+The Story tier is introduced by `create-tickets` only when the rule in "Creation and Decomposition" is satisfied. Most epics stay two-tier (Epic plus flat Tasks), and that remains the default shape.
 
 ## Epic Design Embedding
 
@@ -51,6 +51,55 @@ Every ticket created from a design carries a tier marker so recovery does not ne
 
 Tier markers are mandatory on every ticket the `create-tickets` skill produces. They are the primary discriminator used by `resolve_epic_context` (see "Recovery Before Implementation").
 
+In degraded two-tier Linear, each Task retains its `tier:task` marker and
+carries a `story:<slug>` label. The slug is lowercase, hyphenated ASCII derived
+from the Story theme statement. The label indexes the Story grouping retained
+in the Epic design; see "Degraded Linear Recovery".
+
+## Creation and Decomposition
+
+Map design elements to ticket tiers as follows:
+
+| Design element | Ticket tier |
+|---|---|
+| Overall goal and full approved design | Epic |
+| Coherent named theme grouping related Tasks | Story, only when the D2 rule below is satisfied |
+| Independent component | Task |
+| Cross-cutting concern such as authentication, logging or configuration | Task |
+| Integration between components | Task, dependent on component Tasks |
+
+Introduce Stories only when all of these D2 conditions hold:
+
+1. The design contains at least 2 coherent named themes.
+2. At least 2 themes each decompose into at least 2 Tasks.
+3. The total Task count is at least 4.
+
+A single-theme Epic always stays flat, even when its Task count exceeds 6. A
+single-Story Epic is forbidden. Before drafting Stories, confirm the grouping
+creates at least 2 Stories; otherwise keep the Epic flat. For each Story,
+include a one-sentence grouping rationale under a `### Story: <name>` heading
+inside the Epic's `## Design` section. If one theme needs more than 6 Tasks,
+ask the user whether to split the Epic rather than add a vestigial Story.
+
+The Epic is created first and contains `## Goal`, the complete approved design
+under `## Design`, its approval and revision or external-specification
+provenance, and a `## Tickets` index. The Epic design is the durable source of
+truth and must include architecture, components, interfaces, data flow,
+decisions and trade-offs, error handling, testing, and other design-conversation
+outcomes. Stories contain only an action-oriented title, one-sentence theme,
+Epic parent and child Task references. Tasks contain an action-oriented title,
+description of relevant design decisions and constraints, three to five
+acceptance-criteria bullets, parent and other Task dependencies, and work-type
+labels plus the tier marker where labels are used. Stories must not contain a
+`## Design` heading or design content.
+
+For Markdown fallback, use one permanent file per Epic. Its `## Goal`,
+`## Design`, provenance and `## Tickets` sections follow the same Epic contract.
+Heading levels are the tier markers: `##` Epic, `###` Story and `####` Task.
+Nest Story rationale headings under the Epic's `## Design`, and put Story theme
+and Tasks under `## Tickets`. Without Stories, put `#### Task:` entries directly
+under `## Tickets`. The Task heading level remains `####` in either shape.
+
 ## Recovery Before Implementation
 
 When picking up a ticket for implementation, run `resolve_epic_context` to recover durable design context before routing the work through `workflow-coordinator`. The ticket context is not a blanket approval to skip current Research or Planning: evaluate the recovered assumptions against the current repository baseline. Reuse prior approval only when the approved revision and relevant baseline remain valid. Implementation without coordinator validation of the approved design is forbidden. The coordinator owns phases, resumptions, and workflow artefact clean-up; ticket recovery must not directly bypass it.
@@ -63,6 +112,22 @@ When picking up a ticket for implementation, run `resolve_epic_context` to recov
    - If the parent's tier is **Epic**, extract `## Design` from the Epic body. Recovery completes in one hop. This is the legacy two-tier path.
 3. If the ticket's tier is **Story**, fetch its parent (which **MUST** be an Epic), extract `## Design` from the Epic, plus the Story's own theme statement.
 4. If the ticket's tier is **Epic**, extract `## Design` from its own body directly.
+
+### Parent references by system
+
+Resolve parent references from the fetched ticket data as follows:
+
+- **GitHub Issues**: use the native parent field first. If it is absent, read `Part of #N` and `Epic: #N` references from the body, including CLI fallback and legacy tickets.
+- **Jira**: use the native `parent` or `epic` field.
+- **Linear**: use the native `parent` field.
+- **GitLab**: use native group Epic associations where available; otherwise read `Part of #N` references from the body.
+- **Markdown fallback**: the parent is the nearest preceding `### Story:` heading, or the Epic file when no Story encloses the Task.
+
+Parent lookup failures follow the unresolved-parent guard below.
+
+### Degraded Linear Recovery
+
+Only after Linear rejects the nested Epic-Story-Task shape, recover a degraded two-tier Task by following its parent to the Epic in one hop. Extract the Epic's `## Design` and use the Task's `story:<slug>` label to find the corresponding `### Story: <name>` grouping and recover its theme statement. Do not try to fetch a Story ticket in this shape.
 
 ### Termination rule
 
@@ -116,11 +181,11 @@ The following conditions are validation errors and **MUST** be enforced by `crea
 
 - A Story body containing a `## Design` heading. This is a single-source-of-truth violation. At creation, the skill **MUST** reject the Story before sending it to the ticketing system. At recovery, the walker **MUST** surface the violation to the user rather than reading the Story's design content.
 - A Story containing fewer than 2 or more than 6 child Tasks. The decomposition step **MUST** split or escalate before creation.
-- A single-Story epic (one Story wrapping every Task). This is forbidden because a single Story adds a grouping layer with no sibling. The decomposition rule in `create-tickets/SKILL.md` prevents this; if it occurs, treat as a creation-time error.
+- A single-Story epic (one Story wrapping every Task). This is forbidden because a single Story adds a grouping layer with no sibling. The D2 rule in "Creation and Decomposition" prevents this; if it occurs, treat as a creation-time error.
 
 ## Ordering
 
-The implementation order of tickets follows the sequencing rule in `../../rules/common/workflow.md`: foundations and dependencies first, features next, integration after dependencies, polish last. You **MUST NOT** reorder tickets to make progress look faster or to avoid a harder ticket.
+The implementation order of tickets follows the sequencing rule in `../../rules/common/workflow.md`: foundations and dependencies first, features next, integration after dependencies, polish last. When Stories are present, order Stories first by dependency, then Tasks within each Story by dependency. You **MUST NOT** reorder tickets to make progress look faster or to avoid a harder ticket.
 
 ## Procedures
 

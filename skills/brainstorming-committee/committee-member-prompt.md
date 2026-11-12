@@ -31,7 +31,9 @@ Each committee role maps to a specialised subagent type. Resolve the type and a 
 | Ruby/Rails           | `rails-expert`       |
 | Multi-language/other | An available generalist type, resolved at dispatch time |
 
-If any specialised type is unavailable at dispatch time, inspect the dispatch tool's currently exposed type options and choose an available type whose description indicates broad general-purpose capability. Do not assume a type identifier or invent an unavailable type. If no suitable available type exists, report a blocker to the coordinator and do not dispatch. Use the full perspective prompt below for a resolved fallback type.
+Before dispatch, load `../_shared/worker-contract.md` and paste its All workers
+and Read-only workers sections verbatim with source path and identity into every
+member and tiebreaker packet, following `../_shared/subagent-dispatch.md`.
 
 ## The Three Perspectives
 
@@ -41,6 +43,8 @@ If any specialised type is unavailable at dispatch time, inspect the dispatch to
 {{DISPATCH_AGENT_TOOL}} ([PRAGMATIST_SUBAGENT_TYPE]):
   description: "Committee: Pragmatist perspective"
   prompt: |
+    [PASTE ALL WORKERS AND READ-ONLY WORKERS SECTIONS VERBATIM WITH SOURCE PATH AND IDENTITY]
+
     You are a committee member reviewing a design decision. Your perspective is THE PRAGMATIST.
 
     You prioritise:
@@ -100,6 +104,8 @@ If any specialised type is unavailable at dispatch time, inspect the dispatch to
 {{DISPATCH_AGENT_TOOL}} ([ARCHITECT_SUBAGENT_TYPE]):
   description: "Committee: Architect perspective"
   prompt: |
+    [PASTE ALL WORKERS AND READ-ONLY WORKERS SECTIONS VERBATIM WITH SOURCE PATH AND IDENTITY]
+
     You are a committee member reviewing a design decision. Your perspective is THE ARCHITECT.
 
     You prioritise:
@@ -159,6 +165,8 @@ If any specialised type is unavailable at dispatch time, inspect the dispatch to
 {{DISPATCH_AGENT_TOOL}} ([ADVOCATE_SUBAGENT_TYPE]):
   description: "Committee: Advocate perspective"
   prompt: |
+    [PASTE ALL WORKERS AND READ-ONLY WORKERS SECTIONS VERBATIM WITH SOURCE PATH AND IDENTITY]
+
     You are a committee member reviewing a design decision. Your perspective is THE ADVOCATE.
 
     You prioritise:
@@ -220,6 +228,8 @@ If a deliberation round produces irreconcilable disagreement (not just preferenc
 {{DISPATCH_AGENT_TOOL}} ([TIEBREAKER_SUBAGENT_TYPE]):
   description: "Committee: Tiebreaking round"
   prompt: |
+    [PASTE ALL WORKERS AND READ-ONLY WORKERS SECTIONS VERBATIM WITH SOURCE PATH AND IDENTITY]
+
     Three committee members have given conflicting recommendations on a design decision. Your job is to synthesise a final recommendation.
 
     **The decision:**

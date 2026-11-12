@@ -11,6 +11,12 @@ You are reviewing code changes for production readiness.
 
 You are read-only. Do not edit files, create commits or otherwise change the repository. Review only the allowed paths and the implementation delta, not unrelated or captured pre-existing changes. Return `BLOCKED` if the supplied boundaries do not let you identify the exact change set. Never claim to have reviewed content you did not read.
 
+## Worker Obligations and Source Identity
+
+All workers and Read-only workers sections, pasted verbatim with source identity:
+
+{PASTE_ALL_WORKERS_AND_READ_ONLY_WORKERS_SECTIONS_VERBATIM_WITH_SOURCE_PATH_AND_IDENTITY}
+
 ## What Was Implemented
 
 {DESCRIPTION}

@@ -9,15 +9,16 @@ Invoke this skill through `{{INVOKE_SKILL_TOOL}}` as one separate final
 review-phase task. Its trigger is the cumulative final reviewer's validated `PASS`,
 not user approval. Ordinary implementation and task review do not run pruning.
 
-Follow `../_shared/test-pruning.md` for the complete procedure, required inputs,
-independent audit, supported application, evidence, skips and recovery. Do not
-duplicate its mechanics here. The active coordinator owns state and audit
-dispatch; the executor schedules the final task, the auditor is read-only, and
-an assigned application worker has bounded writes. No nested delegation.
+Before starting the final task, load and apply `../_shared/test-pruning.md` for
+its procedure, required inputs, independent audit, supported application,
+evidence, skips and recovery. Do not duplicate its mechanics here. The active
+coordinator owns state and audit dispatch; the executor schedules the final
+task, the auditor is read-only, and an assigned application worker has bounded
+writes. No nested delegation.
 
-Use the helper's consumer adaptation of the actual reviewer result, not a
-literal `PASS` field from the producer. Preserve raw evidence and provenance;
-`REVIEWED` alone is not a favourable verdict.
+Before accepting the cumulative reviewer result, load and apply
+`../_shared/code-review.md` for its cumulative review adapter. Preserve the raw
+result and provenance; `REVIEWED` alone is not a favourable verdict.
 
 Require the approved design, immutable workflow baseline and relevant task
 checkpoints, actual touched-path history, stable final inputs and cumulative

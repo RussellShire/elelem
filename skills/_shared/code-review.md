@@ -43,11 +43,22 @@ If you pushed back and were wrong, state the correction factually in one or two 
 
 When you receive a categorised review (Critical / Important / Minor, or equivalent):
 
-- **Critical** issues **MUST** be fixed before any further progress on the work under review
-- **Important** issues **MUST** be fixed before the next task in an orchestrated flow, or before merge in ad-hoc work
-- **Minor** issues **MAY** be deferred with an explicit note
+- **Critical** and **Important** issues block acceptance of the affected work and its dependent work, and must be fixed before merge in ad-hoc work.
+- **Minor** issues **MAY** be deferred with an explicit note.
 
-You **MUST NOT** mark a task complete, proceed to the next task, or merge while Critical or Important issues remain unfixed. "I'll fix it after" is forbidden.
+An unresolved finding does not block already-authorised, demonstrably independent eligible work. Before continuing, load and apply `./subagent-dispatch.md` for affected dependency and resource closure and wave barriers; do not proceed past the affected gate or present unresolved work as complete.
+
+## Cumulative Review Adapter
+
+At this consumer boundary, map to `PASS` only an actually performed favourable
+cumulative review with Status `REVIEWED` and Ready to merge `Yes`, no unresolved
+Critical or Important findings, and evidence for the exact current cumulative
+revision. Retain the raw reviewer result and reviewer provenance, including
+reviewer identity, session/source reference and reviewed revision. `REVIEWED`
+alone is not sufficient. Adverse results, `With fixes`, `No`, `BLOCKED` and
+`SKIPPED`, plus stale or missing results, never map to `PASS`. Missing provenance
+or revision evidence also blocks that mapping. A skipped cumulative review needs
+explicit sequencing authorisation to enter pruning without inventing `PASS`.
 
 ## GitHub Inline Review Replies
 

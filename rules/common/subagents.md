@@ -20,9 +20,10 @@ delegation depth.
 
 ## Git and privilege
 
-Subagents **MUST NOT** commit, push, create branches, use worktrees, or perform
-destructive Git operations. The coordinator owns Git state. Preserve the
-user's Git preference, defaulting to leaving work uncommitted.
+Subagents may perform authorised read-only Git inspection. They **MUST NOT**
+commit, push, create branches, use worktrees, or perform destructive Git
+operations. The coordinator owns Git state. Preserve the user's Git preference,
+defaulting to leaving work uncommitted.
 
 Subagents **MUST NOT** use `sudo` or elevated-privilege commands. If a task
 requires elevation, report the blocker to the user.

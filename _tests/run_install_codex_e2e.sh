@@ -114,6 +114,118 @@ test_full_install_to_tmp_user_scope() {
   _pass "$name"
 }
 
+test_main_flow_keeps_user_rules_and_project_skills_selections_separate() {
+  local name='main_flow_keeps_user_rules_and_project_skills_selections_separate'
+  local fixture_root project_directory home_directory user_source project_source source_directory manifest_file installed_skill manifest_base expected_manifest actual_manifest source_file
+  local common_rule_count
+  fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/elelem-codex-mixed-scopes.XXXXXX")"
+  trap 'rm -rf "$fixture_root"' RETURN
+
+  project_directory="$fixture_root/project"
+  home_directory="$fixture_root/home"
+  user_source="$fixture_root/invocation/user/source"
+  project_source="$fixture_root/invocation/project/source"
+  mkdir -p "$project_directory" "$home_directory" "$fixture_root/xdg" "$fixture_root/codex" "$fixture_root/tmp" "$user_source" "$project_source"
+  for source_directory in "$user_source" "$project_source"; do
+    cp "$REPO_ROOT/_install-common.sh" "$REPO_ROOT/install-codex.sh" "$source_directory/"
+    cp -R "$REPO_ROOT/rules" "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$source_directory/"
+  done
+  common_rule_count="$(find "$project_source/rules/common" -maxdepth 1 -type f -name '*.md' | wc -l | tr -d ' ')"
+
+  cat > "$fixture_root/invocation/user/run-installer.sh" <<'INSTALLER'
+#!/usr/bin/env bash
+invocation_directory="$(cd "$(dirname "$0")" && pwd)"
+fixture_root="$(cd "$invocation_directory/../.." && pwd)"
+cd "$fixture_root/project" || exit 1
+"$invocation_directory/source/install-codex.sh"
+installer_status=$?
+printf '\nCODEX_INSTALLER_EXIT=%s\n' "$installer_status"
+exit "$installer_status"
+INSTALLER
+  cat > "$fixture_root/invocation/project/run-installer.sh" <<'INSTALLER'
+#!/usr/bin/env bash
+invocation_directory="$(cd "$(dirname "$0")" && pwd)"
+fixture_root="$(cd "$invocation_directory/../.." && pwd)"
+cd "$fixture_root/project" || exit 1
+"$invocation_directory/source/install-codex.sh"
+installer_status=$?
+printf '\nCODEX_INSTALLER_EXIT=%s\n' "$installer_status"
+exit "$installer_status"
+INSTALLER
+  chmod +x "$fixture_root/invocation/user/run-installer.sh" "$fixture_root/invocation/project/run-installer.sh"
+
+  if ! printf '\n\n\n \n\n' | HOME="$home_directory" XDG_CONFIG_HOME="$fixture_root/xdg" CODEX_HOME="$fixture_root/codex" TMPDIR="$fixture_root/tmp" PYTHONDONTWRITEBYTECODE=1 TERM=dumb NO_COLOR=1 /usr/bin/script -q "$fixture_root/user-session.log" "$fixture_root/invocation/user/run-installer.sh" >/dev/null; then
+    _fail "$name" 'user-scope rules-only installer exited unsuccessfully'
+    return
+  fi
+  if ! grep -Fq 'CODEX_INSTALLER_EXIT=0' "$fixture_root/user-session.log"; then
+    _fail "$name" 'user-scope rules-only installer did not complete'
+    return
+  fi
+
+  if ! python3 - "$project_directory" "$common_rule_count" <<'PY' | HOME="$home_directory" XDG_CONFIG_HOME="$fixture_root/xdg" CODEX_HOME="$fixture_root/codex" TMPDIR="$fixture_root/tmp" PYTHONDONTWRITEBYTECODE=1 TERM=dumb NO_COLOR=1 /usr/bin/script -q "$fixture_root/project-session.log" "$fixture_root/invocation/project/run-installer.sh" >/dev/null; then
+import sys
+import time
+
+project = sys.argv[1].encode()
+common_rule_count = int(sys.argv[2])
+chunks = [b"\x1b[A\n", project + b"\n"]
+for _ in range(common_rule_count):
+    chunks.extend((b" ", b"\x1b[B"))
+chunks.extend((b"\n", b"\n", b" \n", b"\n", b"\n"))
+for chunk in chunks:
+    sys.stdout.buffer.write(chunk)
+    sys.stdout.flush()
+    time.sleep(0.25)
+PY
+    _fail "$name" 'project-scope skills-only installer exited unsuccessfully'
+    return
+  fi
+  if ! grep -Fq 'CODEX_INSTALLER_EXIT=0' "$fixture_root/project-session.log"; then
+    _fail "$name" 'project-scope skills-only installer did not complete'
+    return
+  fi
+
+  manifest_file="$user_source/.elelem-manifest-codex"
+  if [[ ! -f "$manifest_file" ]]; then
+    _fail "$name" 'user-scope rules-only manifest is missing'
+    return
+  fi
+  manifest_base="$(sed -n '1p' "$manifest_file")"
+  if [[ "$manifest_base" != "$home_directory" ]] || tail -n +2 "$manifest_file" | grep -q '[^[:space:]]'; then
+    _fail "$name" "user-scope rules-only manifest has base '$manifest_base' and entries '$(tail -n +2 "$manifest_file" | tr '\n' ',')'"
+    return
+  fi
+  if ! grep -Fq 'rules/common/workflow.md' "$home_directory/.codex/AGENTS.md" || [[ -e "$home_directory/.agents/skills/subagent-driven-development/SKILL.md" ]]; then
+    _fail "$name" 'user-scope rules-only selection was not preserved'
+    return
+  fi
+
+  manifest_file="$project_source/.elelem-manifest-codex"
+  manifest_base="$(sed -n '1p' "$manifest_file")"
+  installed_skill="$project_directory/.agents/skills/subagent-driven-development/SKILL.md"
+  if [[ ! -f "$manifest_file" || "$manifest_base" != "$project_directory" ]] || ! grep -Fq '.agents/skills/subagent-driven-development/SKILL.md' "$manifest_file" || ! grep -Fq '.agents/skills/_shared/worker-contract.md' "$manifest_file" || [[ ! -f "$installed_skill" ]] || ! grep -Fq '../_shared/worker-contract.md' "$installed_skill" || [[ ! -f "$(dirname "$installed_skill")/../_shared/worker-contract.md" ]]; then
+    _fail "$name" 'project-scope skills-only output or manifest entries are incorrect'
+    return
+  fi
+  expected_manifest="$fixture_root/expected-project-manifest"
+  actual_manifest="$fixture_root/actual-project-manifest"
+  while IFS= read -r source_file; do
+    printf '.agents/skills/%s\n' "${source_file#"$project_source/skills/"}"
+  done < <(find "$project_source/skills" -type f | sort) > "$expected_manifest"
+  tail -n +2 "$manifest_file" | sed '/^$/d' > "$actual_manifest"
+  if ! cmp -s "$expected_manifest" "$actual_manifest"; then
+    _fail "$name" 'project-scope manifest entries do not match the selected skills source'
+    return
+  fi
+  if ! grep -Fq 'No elelem rules are currently installed for this scope.' "$project_directory/AGENTS.md" || grep -Eq '^## rules/' "$project_directory/AGENTS.md" || grep -Fq 'rules/' "$manifest_file" || ! grep -Fq 'rules/common/workflow.md' "$home_directory/.codex/AGENTS.md"; then
+    _fail "$name" 'project rule deselection activated rules or disturbed the user-scope installation'
+    return
+  fi
+
+  _pass "$name"
+}
+
 test_coexistence_three_manifests() {
   local name="coexistence_three_manifests"
   local tmphome
@@ -316,6 +428,7 @@ test_codex_bundle_conflict_allows_corrected_retry() {
 
 test_install_dot_sh_offers_codex
 test_full_install_to_tmp_user_scope
+test_main_flow_keeps_user_rules_and_project_skills_selections_separate
 test_coexistence_three_manifests
 test_post_install_scan_ignores_unrelated_files_under_skills_root
 test_codex_installs_all_packs_without_optional_instructions user

@@ -8,11 +8,22 @@ Use this template when dispatching a design reviewer subagent.
 
 **Subagent and model selection:** Resolve the reviewer type, high-capability tier and routing with `../_shared/subagent-dispatch.md`. Replace `[REVIEWER_SUBAGENT_TYPE]` with the verified type. Never invent a model identifier or silently downgrade. Metadata does not switch models.
 
+Before dispatch, read `../_shared/task-briefs.md` using `{{READ_FILE_TOOL}}`
+and paste its Proposed design proposal section verbatim into the packet with
+source path and content identity. Also load `../_shared/worker-contract.md` and paste its All workers
+and Read-only workers sections verbatim with source path and identity, following
+`../_shared/subagent-dispatch.md`. If any source is missing or inaccessible,
+block dispatch; do not use a checkout, history or link-only fallback.
+
 ```
 {{DISPATCH_AGENT_TOOL}} ([REVIEWER_SUBAGENT_TYPE]):
   description: "Review design summary"
   prompt: |
      You are an independent design reviewer. Assess the proposed design for material gaps and readiness to proceed to later wave planning. Your verdict is not user approval.
+
+     **Worker obligations and source identity:**
+
+     [PASTE THE COMPLETE ALL WORKERS AND READ-ONLY WORKERS SECTIONS VERBATIM WITH SOURCE PATH AND IDENTITY]
 
      **Proposed design:**
 

@@ -36,18 +36,10 @@ required file cannot be materialised, block before execution.
   the original starting baseline, including contents of relevant dirty paths,
   immutable throughout the workflow.
 - Task status, owner, review result, verification result, evidence and blockers.
-- In each existing task record, pin actual implementation selection before first
-  dispatch: configured source/revision, requested tier and rationale, independent
-  specialist, native selector, provider, API target/resolved model, reasoning
-  effort or variant, fallback flag, reason, warning and evidence. Retain source
-  precedence, catalogue/capability and actual schema/routing evidence without
-  secrets. Mark absent/inapplicable values explicitly. This is the requested
-  workflow selection, not proof of observed execution; record observed execution
-  evidence and uncertainty separately. External runtime retries/model switches
-  remain outside workflow-selection policy and are not prevented by this pin.
-  Corrections reuse the actual pin, including fallback; preserve drift checks
-  and explicit authorisation for any workflow model change. Never reselect a
-  changed current-session model or overwrite original selection provenance.
+- Before recording or consuming an implementation selection, load
+  `./task-briefs.md` and apply its nested implementation selection record. Pin that record in
+  each existing task record before first dispatch. Preserve its original
+  provenance and any authorised revisions.
 - Accepted-change checkpoints and wave integration results, including whether
   each checkpoint is verified or explicitly accepted-unverified.
 - Current artefact revisions and links or references to evidence.
@@ -62,8 +54,8 @@ required file cannot be materialised, block before execution.
   conditional pruning-delta review and targeted invalidation. Record empty
   scope as `NOT APPLICABLE`; skipped or failed gates are not passing evidence.
 
-Keep the concise phase evidence required by `./phase-evidence.md` in these
-existing `workflow.md` records. Preserve procedure and user-choice provenance,
+Before recording phase evidence, load and apply `./phase-evidence.md`. Keep the
+concise evidence in these existing `workflow.md` records. Preserve procedure and user-choice provenance,
 exact-source scoped skips and current validity; do not create another report.
 
 For each actual coordinator-managed phase or assigned-task handoff, preserve the
@@ -111,8 +103,8 @@ into a passing result or invent the inputs a skipped phase would have produced.
 ## Ignore and baseline
 
 Before creating repository artefacts, inspect the root `.gitignore`. Ensure it
-contains the exact entry `/.elelem/workflows/`, preserving all existing bytes
-and adding no broad ignore. Do not change an existing rule unnecessarily.
+contains the exact entry `.elelem/`, preserving all existing bytes. Do not
+change an existing rule unnecessarily.
 Verify the intended workflow path with `git check-ignore`. If an ignore update
 or workflow write is not allowed in current plan mode, write only to an
 authorised staging location; do not direct another agent to write in the

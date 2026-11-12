@@ -14,6 +14,7 @@ The `workflow-coordinator` owns lifecycle, explicit phase skips, final approval,
 
 ## Preconditions
 
+- Before developing a proposal, read `../_shared/task-briefs.md` using `{{READ_FILE_TOOL}}` relative to the directory of the actually loaded skill. If it is missing or inaccessible, return a blocker to the coordinator; do not use a checkout, history or link-only fallback.
 - This skill runs only in the coordinator's active Planning phase. If directly invoked without an active workflow, invoke `workflow-coordinator`, preserve lightweight Planning as the requested method and stop. Do not start another workflow or invoke the router recursively.
 - If a coordinator is active but Planning is not the current phase, return control to it without continuing this skill.
 - The user must explicitly select this method. Respect actual harness plan-mode restrictions; keep drafts in conversation or coordinator-authorised staging. Do not silently switch models or force plan-mode toggles.
@@ -23,14 +24,11 @@ The `workflow-coordinator` owns lifecycle, explicit phase skips, final approval,
 
 1. **Reuse existing design input.** Check the current conversation and coordinator-supplied approved inputs for the design already described. Do not ask the user to repeat it.
 2. **Ask only when needed.** If no design exists, ask for a concise statement. Ask one focused follow-up only when a required design point is genuinely ambiguous or missing; if more exploration is needed, return to the coordinator for another Planning method.
-3. **Shape the proposal.** Capture goal, requirements, exclusions, architecture, components, interfaces, data flow, errors/failure behaviour and tests/verification. Use explicit assumptions and research references. Do not invent acceptance criteria or claim the design is approved.
-4. **Return to the coordinator.** Return one self-contained proposed-design block and unresolved points. The coordinator runs any required independent review, seeks explicit final approval, persists the approved plan, and proceeds with Wave Planning.
+3. **Shape the proposal.** Use the complete proposal schema in `../_shared/task-briefs.md`, with explicit assumptions and research references. Do not invent acceptance criteria or claim the design is approved.
+4. **Return to the coordinator.** Return one self-contained proposal and unresolved points for independent review.
 
-Returning the proposed-design block ends this Planning procedure only. The
-procedure does not stop the overall workflow. The coordinator validates and records the proposal and next action in existing
-`workflow.md`, then invokes the next required phase without routine prompting.
-Lightweight Planning is not a phase skip; user choices, approval and missing
-inputs remain governed by the usual gates.
+Returning the proposal ends this Planning procedure only. Lightweight Planning
+is not a phase skip, and the proposal does not approve or advance the workflow.
 
 ## What Skip Mode Does Not Do
 

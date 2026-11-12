@@ -10,7 +10,12 @@ metadata:
 
 This skill is a reusable detection capability invoked by `create-tickets`, `work-on-ticket`, and any other skill that needs to know where tickets live for the current project. It does not create or read tickets itself; it only identifies the system.
 
-For the rules on how tickets and epics must be structured, see `skills/_shared/tickets.md`. The ticket-creation and ticket-recovery skills (`create-tickets`, `work-on-ticket`) load that file when they are invoked.
+## Load the Ticketing Rules First
+
+Before returning a system result to a ticketing consumer, read
+`../_shared/tickets.md` relative to the directory of the actually loaded skill
+using `{{READ_FILE_TOOL}}`. If it is missing or inaccessible, block the affected
+action; do not use a checkout, history or link-only fallback.
 
 ## Procedure
 

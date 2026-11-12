@@ -27,6 +27,30 @@ handoff path; a concise report does not replace original evidence or grant
 approval. Implementation workers also follow the complete brief and structured
 return below.
 
+## Proposed design proposal
+
+Every Planning method returns one self-contained proposed design with these
+sections:
+
+- Goal
+- Requirements
+- Exclusions
+- Architecture
+- Components
+- Interfaces
+- Data flow
+- Error handling and failure behaviour
+- Tests and verification
+- Assumptions and supporting evidence references
+- Unresolved decisions or questions
+
+Include every section, marking it explicitly as not applicable when appropriate.
+Use verified research and approved external inputs as evidence, distinguish
+facts from assumptions and user decisions, and carry unresolved points forward.
+This is a proposal for independent Design Review, not an approved plan. Only the
+coordinator obtains explicit final user approval and persists the approved
+design.
+
 ## Required task brief
 
 Every task brief records:
@@ -53,6 +77,9 @@ Every task brief records:
 - The retained actual task pin from the existing workflow record. In-scope
   corrections consume that retained actual selection, including fallback, with
   fresh drift/routing checks, not a newly selected current-session model.
+  Preserve original selection provenance, record observed execution evidence and
+  uncertainty separately, and require explicit authorisation for any workflow
+  model change. External runtime retries and switches remain outside the pin.
 
 The complete requirement map must cover every approved requirement. Same-wave
 tasks have disjoint writes and may not read one another's changing files.
@@ -63,24 +90,10 @@ without splitting work artificially or changing approved architecture.
 
 ## Dispatch constraints
 
-Before each dispatch, read `subagent-dispatch.md` and follow its current
-context-isolation, specialist-selection and model-resolution procedure.
-Enumerate available model identifiers and verify that the harness can route
-the selected capability to the independently chosen specialist. Use a
-high-capability tier for preparation and independent design/readiness reviews;
-other reviewers remain scope/capability-selected. Implementation uses the lowest
-capable named tier and native resolution, with only the warned, checked
-current-model configuration fallback defined in `subagent-dispatch.md`. The
-`model` metadata in a skill does not switch the primary agent. Missing model
-enumeration, routing or required capability remains a blocker; do not invent
-identifiers, silently downgrade or retry at another tier. Keep requested
-workflow selection distinct from observed runtime execution; external runtime
-plugin behaviour is outside this policy and is not controlled by task pins.
-
-The orchestrator supplies only the task brief and necessary source context.
-Workers may change only allowed files and must not commit, push, create
-branches or perform destructive Git operations. They return results to the
-coordinator; they do not modify shared workflow state.
+Before dispatch, load and apply `subagent-dispatch.md`. Supply the complete
+brief, necessary stable source context and applicable worker contract sections
+as directed there. Workers return through their owning phase and do not modify
+shared workflow state.
 
 ## Structured worker return
 
@@ -103,26 +116,13 @@ cumulative final reviewer `PASS`. The separate final pruning brief supplies
 the full frozen union and safety evidence under `test-pruning.md`; it is not an
 ordinary implementation handoff requirement.
 
-The coordinator moves a returned task to `review`, not `verified`. Independent
-review and fresh verification remain default requirements. Task-local checks
-may run during other work only when their inputs are known stable. Broad
-verification waits until all writers stop. A task is `integrated` only after
-its required verification and wave integration barrier.
+Before recording returned task state, load and apply `workflow-artifacts.md`.
+Independent review and verification remain required by default. Task-local
+checks may run during other work only on stable inputs; broad verification
+waits until all relevant writers stop.
 
 ## Blockers and corrections
 
-Classify blockers under `subagent-dispatch.md`. Pause the affected task and its
-transitive dependants, affected shared-contract or resource work and downstream
-dependants. A proven global safety failure stops all new dispatch. Unknown
-impact pauses potentially affected work. If no safe boundary can be demonstrated,
-provisionally pause all new dispatch until scope is established. Do not classify
-that uncertainty as a proven global safety failure. Continue only eligible,
-already-authorised independent work. A review finding blocks acceptance and
-completion of its affected task, not independent eligible progress. Cancel
-affected active work only when safe cancellation is supported; otherwise let it
-settle without claiming it stopped or accepting stale outputs. Preserve artefacts
-and report the blocker. Resume affected work only after required authorisation
-and eligibility are revalidated.
-Do not silently expand scope or escalate models. In-scope review corrections may
-be delegated within the approved task contract; do not apply worker changes
-manually in the coordinator context.
+Load and apply `subagent-dispatch.md` to classify blockers, contain their
+impact and resume eligible work. Return missing requirements or architecture to
+the coordinator; do not silently expand scope or change models.

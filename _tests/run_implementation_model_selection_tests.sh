@@ -106,11 +106,12 @@ check_contract task_brief_carries_resolved_selection "$briefs" \
   'corrections.{0,100}retained actual selection'
 
 check_contract existing_task_record_retains_pin_provenance "$artefacts" \
-  'existing task record.{0,100}before first dispatch' \
-  'configured source.{0,40}revision.{0,80}requested tier.{0,60}rationale' \
-  'specialist.{0,60}selector.{0,60}provider.{0,60}API target.{0,80}effort.{0,40}variant' \
-  'fallback flag.{0,60}reason.{0,60}warning.{0,60}evidence' \
-  'requested.{0,80}observed execution'
+  'load.{0,80}task-briefs.md.{0,80}nested implementation selection record.{0,100}existing task record before first dispatch' \
+  'Preserve.{0,80}original.{0,80}provenance'
+
+check_contract selection_record_preserves_observed_execution "$briefs" \
+  'original selection provenance.{0,80}observed execution evidence.{0,80}uncertainty separately' \
+  'explicit authorisation.{0,80}workflow model change'
 
 check_contract readme_explains_tier_setup_without_installing_models README.md \
   'lowest capable tier.{0,100}rationale' \

@@ -18,14 +18,19 @@ coordinator owns phase transitions and shared workflow state. See
 
 ## Entry and prerequisites
 
-Before dispatch or reuse, apply `../_shared/phase-evidence.md` to ordered
+Before dispatch or reuse, load and apply `../_shared/phase-evidence.md` to ordered
 upstream evidence. Return upstream gaps to the coordinator; approval and a
 readiness label cannot repair omitted procedures or authorise fake backfill.
 
 If there is no active valid workflow, invoke `workflow-coordinator` through
-`{{INVOKE_SKILL_TOOL}}`; do not start an independent execution pipeline. Require
+`{{INVOKE_SKILL_TOOL}}`; do not start an independent execution pipeline. Before
+validating approval or the baseline, load and apply
+`../_shared/workflow-artifacts.md`. Before consuming task briefs, load and apply
+`../_shared/task-briefs.md`. Require
 an explicitly user-approved plan revision and completed wave planning. By
-default, require an independent `READY` verdict. If the user explicitly
+default, require an independent `READY` verdict. Before accepting a readiness
+verdict or a readiness-review skip, load and apply
+`../_shared/wave-readiness.md`. If the user explicitly
 authorised skipping only the readiness review, accept the recorded scoped skip
 instead, but independently confirm that the persisted schedule and task briefs
 are complete and satisfy the wave ownership, dependency, resource, input and
@@ -56,7 +61,8 @@ default is to leave changes uncommitted. Do not ask for routine task or wave
 approvals or commit prompts. If the recorded preference is ask-before-commit,
 defer commits and report that preference rather than interrupting execution.
 Only the coordinator may commit, and only according to the recorded preference
-after the relevant checks; workers do not perform Git operations. Never push.
+after the relevant checks; workers may perform authorised read-only Git
+inspection but no Git mutations. Never push.
 
 ## Consume approved waves
 
@@ -67,29 +73,16 @@ criteria, verification commands, independent specialist type and rationale, and
 lowest-capable implementation tier (`low`, `medium` or `high`) with rationale.
 Same-wave tasks must have disjoint writes and must not consume another task's changing
 files or results. Stable shared reads are allowed. Respect resource constraints
-and verified harness concurrency. Use native resolution under
-`../_shared/subagent-dispatch.md` for first implementation dispatch, with only its
-warned, checked current-model configuration fallback. The coordinator records
-the actual task pin and complete `../_shared/task-briefs.md` provenance before
-dispatch. Do not independently choose another concrete model or change specialist
-to obtain a model. Preparation and reviewer model policies are unchanged.
+and verified harness concurrency. Before each dispatch, load and apply
+`../_shared/subagent-dispatch.md` for isolation, specialist selection, native
+model resolution, retained pins and drift checks. The coordinator records the
+nested selection record defined in `../_shared/task-briefs.md` before dispatch.
+Do not replace its routing procedure or infer runtime execution from the pin.
 
-For in-scope corrections, consume the retained actual task pin, including fallback,
-with fresh enumeration, availability, capability, routing and configuration-drift
-checks under the shared procedure. Do not reselect the then-current-session model.
-Relevant drift or any workflow model change requires explicit authorisation and
-a revised recorded pin. Use the actual native schema to route the independent
-specialist and retained selection explicitly, not omitted-model inheritance or
-invented fields. Runtime retries and model switches by external plugins remain
-outside this workflow-selection policy; do not disable or block solely because
-of them or claim pins prevent runtime changes. Requested selection is not
-observed execution evidence; worker self-report is not routing proof.
-
-Send each worker only its self-contained brief and required source context. Do
-not pass session history as a substitute. Specify its exact writes, stable
-reads, side effects and resource limits. Workers cannot modify shared workflow
-state, commit, push, create branches, use worktrees or use elevated privileges.
-Workers return structured results using `../_shared/task-briefs.md`.
+Load `../_shared/worker-contract.md` before dispatch. Deliver the applicable
+sections verbatim with source identity, complete brief and required stable source
+and method context under `../_shared/subagent-dispatch.md`. Workers return
+structured results using `../_shared/task-briefs.md`.
 
 Dispatch independent tasks in a wave in the same turn, or use only a background
 mechanism whose availability and completion semantics are verified by the
@@ -125,9 +118,9 @@ requirement, contract or architecture decision is a blocker to return to
 planning, not a prompt to silently redesign.
 
 Batch related in-scope review corrections within the approved task boundaries;
-retain independent re-review and fresh task checks after the batch. Correction
-dispatch reuses the retained implementation pin above, including fallback; it
-does not restart model selection.
+retain independent re-review and fresh task checks after the batch. Before
+correction dispatch, load and apply `../_shared/subagent-dispatch.md` for the
+retained implementation pin and current drift checks.
 
 After review or its recorded skip, the orchestrator reads the actual changed
 paths and evidence, then runs fresh task verification by default. Do not trust
@@ -140,9 +133,9 @@ and files while checking them. Do not run broad checks while any relevant
 writer remains active.
 Keep task lifecycle status separate from review and verification results. A task
 with an authorised skipped review or check may be accepted for explicitly
-authorised downstream work, but must not be labelled `verified`; it becomes
-`integrated` only after the required verification and wave integration checks
-actually run and pass. Never record a skipped check as passed.
+authorised downstream work as `accepted-unverified`, never `verified` or
+`integrated` while the required gate remains skipped. Later actual gates may
+establish those statuses under `../_shared/workflow-artifacts.md`.
 
 Report verified task progress as it becomes available, without routine approval
 prompts. If a check requires outputs from other tasks, defer it explicitly until
@@ -153,7 +146,8 @@ the coordinator's task status and evidence records; workers do not write them.
 
 ## TDD and worker evidence
 
-For code that changes observable behaviour, require the TDD cycle and specific
+For code that changes observable behaviour, require the worker to invoke
+`test-driven-development` through `{{INVOKE_SKILL_TOOL}}` and provide the
 RED-to-GREEN evidence described in `../test-driven-development/SKILL.md` and
 `./implementer-prompt.md` by default. Require a genuine failing test before
 production code, its expected failure, and a fresh passing run afterward. Do
@@ -168,23 +162,12 @@ skipped by the user.
 ## Blockers and scope control
 
 Workers report `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT` or `BLOCKED`. Read
-the actual changes and verify evidence for every returned result. `NEEDS_CONTEXT`
-requires supplying existing, authorised context, not guessing. Apply blocker
-scopes in `../_shared/subagent-dispatch.md`: pause the affected task and
-transitive dependants, affected shared-contract/resource consumers and
-downstream dependants. A proven global safety failure stops all new dispatch.
-Unknown impact pauses potentially affected work. If no safe boundary can be
-demonstrated, provisionally pause all new dispatch until scope is established.
-Do not classify that uncertainty as a proven global safety failure. Continue
-only already-authorised work whose independence and eligibility are demonstrated.
-A review finding blocks acceptance and completion of its affected task, not
-eligible independent progress. Cancel affected active work only if safe cancellation is supported;
-otherwise allow it to settle without claiming it was cancelled or accepting
-stale outputs. Preserve workflow state and report the blocker to the user. Do
-not silently retry at a higher-cost model, redesign, expand scope, or patch
-worker code in the orchestrator context. If the plan or architecture is
-inadequate, return to the coordinator and planning for user-authorised
-resolution.
+the actual changes and verify evidence for every returned result. Supply missing
+authorised context rather than guessing. Before acting on a blocker or review
+finding, load and apply `../_shared/subagent-dispatch.md` for containment,
+continuation and recovery. Return inadequate plans or architecture to the
+coordinator for user-authorised resolution; do not expand scope or patch worker
+output in the orchestrator context.
 
 ## Final feature review and verification
 
@@ -197,26 +180,19 @@ insufficient when work is uncommitted. Resolve critical and important findings
 by delegating within approved task boundaries and repeat the relevant review
 and checks. Record minor findings for the user.
 
-At this consumer boundary, map to `PASS` only an actually performed favourable
-cumulative review with Status `REVIEWED` and Ready to merge `Yes`, no unresolved
-Critical or Important findings, and evidence for the exact current cumulative
-revision. Retain the raw reviewer result and reviewer provenance, including
-reviewer identity, session/source reference and reviewed revision. `REVIEWED`
-alone is not sufficient. Adverse results, `With fixes`, `No`, `BLOCKED` and
-`SKIPPED`, plus stale or missing results, never map to `PASS`. Missing provenance
-or revision evidence also blocks that mapping. A skipped cumulative review needs
-explicit sequencing authorisation to enter pruning without inventing `PASS`.
+Before deciding whether to enter pruning, load and apply the cumulative review
+adapter in `../_shared/code-review.md` to the raw cumulative result and current
+revision. Retain its result, raw review and provenance; do not substitute a
+review verdict from another phase.
 
 After the cumulative final reviewer result is validated as `PASS`, invoke `test-pruning`
 through `{{INVOKE_SKILL_TOOL}}` as one separate final review-phase task. User
-approval is not this trigger. Follow `../test-pruning/SKILL.md` and
+approval is not this trigger. The invoked skill loads and applies
 `../_shared/test-pruning.md`; the coordinator alone owns audit dispatch and
-state, with no nested audit dispatch. Freeze the union inventory once, run
-stable pre-prune checks, obtain the independent audit, assign supported edits
-to a bounded worker, and run post-prune checks. Empty scope is `NOT APPLICABLE`.
-If final review was skipped, require explicit sequencing authorisation under
-the helper before pruning; a skip is not a `PASS`. A pruning skip permits no
-pruning edits and waives neither review nor verification.
+state, with no nested audit dispatch. If final review was skipped, require
+explicit sequencing authorisation under the helper before pruning; a skip is
+not a `PASS`. A pruning skip permits no pruning edits and waives neither review
+nor verification.
 
 Only actual pruning edits require an independent bounded pruning-delta review
 of those edits and affected coverage. A no-change audit needs none. Resolve
@@ -260,6 +236,5 @@ prompting when no gate or blocker requires a pause.
 ## Prompt templates
 
 - `./implementer-prompt.md`: bounded worker prompt for approved tasks.
-- `./reviewer-prompt.md`: independent per-task review prompt.
-- `../fast-path-implementation/fast-path-reviewer-prompt.md`: compatibility
-  template for a coordinator-scheduled single task.
+- `./reviewer-prompt.md`: independent per-task review prompt, including for a
+  single task invoked through the fast-path compatibility entry point.

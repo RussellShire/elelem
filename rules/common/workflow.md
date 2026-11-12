@@ -1,158 +1,48 @@
 # Workflow
 
-## Entry and phase defaults
+Use `workflow-coordinator` before implementation-oriented proposals and
+implementation. Research hypotheses and options remain permitted. The
+coordinator owns phase transitions and shared state; phase skills own their
+procedures. An active workflow with a validated approved design does not restart
+Planning before each edit.
 
-The `workflow-coordinator` skill is the entry point before implementation-oriented
-proposals and implementation. Research hypotheses and options remain permitted. It
-owns transitions and shared state; phase skills own their detailed procedures.
-The `brainstorming` router is only the Planning method selector within that
-workflow. Do not send the user through it again when an active workflow already
-contains an approved, current design for the requested work.
+Every workflow phase runs by default. Only an explicit scoped user instruction
+may skip a phase or method; record its source, scope, reason and consequence.
+A skip is not approval or evidence and does not supply missing inputs. Never
+infer a skip from complexity, urgency or familiarity. Validate prior research,
+design and evidence against their source, revision, scope and assumptions.
+Explicit user approval of the current design is required before implementation,
+separate from any review verdict. Substantive design changes require renewed
+approval.
 
-Apply `skills/_shared/phase-evidence.md` at workflow boundaries. Phase status,
-skill loading and later approval do not prove required procedures occurred.
+Research and Planning are conversational by default and require a capable
+primary-session model. Reviews are independent by default. Implementation
+uses an approved schedule with independent readiness review unless explicitly
+skipped; a skipped Wave Planning phase permits one complete bounded task, not
+improvised concurrency. Preserve task ownership, stable inputs, resource
+isolation, original baselines and unrelated user work. A worker report is not
+independent review or verification. Do not label skipped checks or reviews as
+passed; accepted work with a required skipped gate remains unverified.
 
-Every phase runs by default: Research, Planning, design review, Wave Planning,
-readiness review, implementation, task reviews and checks, final review,
-final test-pruning task, final verification, and clean-up. Only an explicit,
-scoped user instruction
-may skip a phase. Record its scope, reason and consequences. Every phase is
-skippable, including reviews, checks and clean-up, but a skipped review is not
-approval and skipped verification is not evidence. Do not imply a skipped gate
-passed. No complexity heuristic may automatically bypass a phase.
+The coordinator validates each phase or task handoff and continues eligible work
+without routine approvals. Findings and blockers pause affected work and its
+dependants, not demonstrably independent eligible work; wave barriers still
+apply. Unknown impact pauses potentially affected work, and a proven global
+safety failure stops new dispatch. Do not silently expand scope or change models.
 
-An existing approved research result or design may satisfy its phase only
-after validating its source, scope, revision and current assumptions. A review
-verdict is separate from explicit user design approval. Skipping a producing
-phase does not supply its missing required output: missing inputs block
-downstream work. Approval is required before implementation and is distinct
-from review verdicts and phase skips.
+Store necessary workflow artefacts under `.elelem/workflows/<ticket-or-slug>/`.
+Before creating them, ensure root `.gitignore` contains the exact `.elelem/`
+entry and verify the intended path is ignored. Preserve existing content and
+user work. Respect plan-mode write permissions. The coordinator alone owns shared
+workflow state and applies `skills/_shared/workflow-artifacts.md` for registry,
+baselines, resume and safe clean-up. Clean up only registered workflow-created
+paths; never delete unrelated or pre-existing files. Leave changes uncommitted by
+default and never push.
 
-## Research, planning and approval
-
-Research and Planning are conversational by default. Confirm that the active
-primary-session model has high-capability reasoning before conversational
-preparation; skill metadata does not switch models. If it is insufficient, ask
-the user to switch rather than silently replacing the user-facing conversation
-with a detached agent. Design review and wave readiness review are independent
-high-capability reviews. Substantive design changes return to Planning and
-require renewed explicit user approval.
-
-The coordinator records an approved design, its revision and approval source
-before implementation. For bug fixes, the design includes the reproduction
-approach and intended change. Preserve project test requirements, including a
-failing regression test before a fix, unless the user explicitly scopes a TDD
-skip. A skip does not create missing evidence or permit a false completion
-claim.
-
-## Workflow artefacts and permissions
-
-Store approved workflow state and artefacts under
-`.elelem/workflows/<ticket-or-slug>/`, creating only what the task needs:
-`workflow.md`, `research.md`, `plan.md` and `waves.md`. Before creating any
-repository artefact, ensure the root `.gitignore` contains the exact
-`/.elelem/workflows/` entry and verify the path is ignored. Record exact files
-created and preserve pre-existing or unrelated files. Keep artefacts
-uncommitted. Do not retain a persistent plan archive; clean up registered
-workflow-created files after successful ticket completion, unless the user
-explicitly skips clean-up. Apply the safe clean-up procedure in
-`skills/_shared/workflow-artifacts.md`.
-
-Respect plan-mode write permissions. Write only to authorised locations; when
-repository writes are prohibited, use authorised staging and do not instruct
-workers to write in the repository. Failure to materialise required workflow
-files blocks execution. Preserve the user's Git preference, defaulting to
-leaving changes uncommitted. Never push.
-
-## Wave execution
-
-Implementation starts only after explicit design approval and a `READY` wave
-schedule, unless the user explicitly skips a phase. If Wave Planning is
-skipped, require one complete, bounded task brief and do not improvise parallel
-work. Task briefs specify exact disjoint write paths, stable reads, interfaces,
-dependencies, acceptance criteria and verification. Account for side effects
-from tests, formatters, generators, fixtures, tools and shared resources. Same-
-wave tasks must not read one another's changing files.
-
-Run independent tasks concurrently when harness routing and concurrency are
-verified. Each task receives independent review and fresh task-local checks.
-After all writers in a wave stop, run its integration barrier before starting
-the next wave. Final review follows all waves. Only after cumulative final
-reviewer
-`PASS`, run one separate final test-pruning task through `test-pruning`, followed
-by independent bounded pruning-delta review only if tests were edited. Final
-verification runs after the last pruning edit and review correction, then
-clean-up. User approval is not the pruning trigger. A cumulative-review skip
-requires explicit sequencing authorisation before pruning and is not `PASS`.
-A pruning skip permits no pruning edits and skips neither review nor
-verification. Failures block completion. Do not automatically repeat cumulative
-review or restart pruning; recover affected evidence under the shared helper.
-Ordinary task review needs no pruning evidence or whole-file case inventory.
-The coordinator accumulates actual touched-path history across tasks and review
-corrections, including reverted edits and rename mappings, for one final union
-inventory. Preserve workflow and task baselines and unrelated user work. Do not
-ask
-for routine task or wave approvals. Keep the coordinator thin: invoke phase
-skills and track state, rather than rereading or substituting for their
-procedures.
-
-## Coordinator-managed handoffs
-
-At each actual coordinator-managed phase or assigned-task handoff, the same
-active coordinator validates the returned scope, outcome, evidence, questions
-and blockers against the current phase, user instructions, approval and relevant
-workflow state. This standing rule applies to phase or task handoffs, not to
-each tool call or each interactive question. Record the result and next action
-in the existing `workflow.md`.
-
-Construct bounded sufficient phase inputs and returns under
-`skills/_shared/task-briefs.md`; delegated isolation follows
-`skills/_shared/subagent-dispatch.md`. Assess native context maintenance under
-`workflow-coordinator`, with recoverability in
-`skills/_shared/workflow-artifacts.md` and evidence in
-`skills/_shared/phase-evidence.md`. Preserve conversational defaults, the same
-owner and all gates. Use automatic native reduction only when safe and actually
-available; errors or unavailable controls pause the dependent transition and
-offer manual compaction. Deferred unsafe boundaries and no-op outcomes are not
-failures. State-file writes and skill invocation alone do not reduce context.
-
-When the return supports the next required phase, invoke that phase without
-routine prompting. Pause only the affected transition or work for an actual user
-choice or approval, a Plan-mode limitation, a real blocker, missing evidence,
-unsafe state, unavailable capability, interruption, or an outstanding
-dependency. Continue eligible independent work under
-`skills/_shared/subagent-dispatch.md`. An outstanding dependency pauses that
-transition when it leaves no safe independent work in the affected scope.
-Preserve all existing approval, review, verification, TDD, debugging and
-scoped-skip gates. Continuation never skips a phase or treats a status label or
-worker report as evidence.
-
-Nested investigators and reviewers return to their owning phase for
-reconciliation before that phase hands off to the coordinator. Assigned workers
-return through the executor, except for pre-existing coordinator-owned dispatch.
-Safe task-local checks with stable inputs may continue while other workers run;
-dependency and wave barriers still apply. Do not recursively invoke another
-coordinator or create a second owner for the active workflow. "Stop after
-handoff" ends the current phase procedure, not the overall workflow.
-
-## Blockers and recovery
-
-Before further dispatch, classify blockers under
-`skills/_shared/subagent-dispatch.md`: a task-local blocker pauses that task and
-its transitive dependants; a shared-contract/resource blocker pauses affected
-producers, consumers or resource users and their downstream dependants; a proven
-global safety failure stops all new dispatch. Continue only already-authorised,
-demonstrably independent scheduled work with valid prerequisites, stable inputs,
-disjoint ownership and available resources. For unknown impact, pause potentially
-affected work. If no unaffected boundary can be demonstrated, provisionally
-pause all new dispatch until scope is established. Do not classify that
-uncertainty as a proven global safety failure. A review finding blocks
-acceptance and completion of its affected task, not eligible independent
-progress.
-
-Cancel affected running work only when safe cancellation is supported; otherwise
-let it settle without claiming it stopped or accepting stale outputs. Preserve
-workflow state and report the blocker. Do not silently redesign, expand approved
-scope, or change model tier. In-scope review corrections may be delegated under
-the approved task contract. Resume affected work only after required
-authorisation and eligibility are revalidated.
+Final cumulative review, the separate final test-pruning task, final
+verification and clean-up are distinct gates. Pruning follows cumulative reviewer
+`PASS`, not user approval. If cumulative review is skipped, pruning requires
+explicit sequencing authorisation; a skip is not `PASS`. A pruning skip permits
+no pruning removals and waives no other gate. Final verification follows the
+last edit and review correction. Never claim a skipped or unsuccessful check
+passed.

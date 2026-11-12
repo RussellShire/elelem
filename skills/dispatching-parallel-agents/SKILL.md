@@ -25,14 +25,14 @@ parallel dispatch requires an approved plan and a schedule with an independent
 `READY` verdict, or an explicitly user-authorised, scoped readiness-review skip
 recorded as `SKIPPED`. In the skip case, the coordinator and executor must
 confirm that the planner completed the schedule and all ownership, dependency,
-resource, input and capacity checks. Apply the canonical gate in
+resource, input and capacity checks. Before validating that schedule, load and apply
 `../_shared/wave-readiness.md` and
 `../subagent-driven-development/SKILL.md`; do not create a separate readiness
 rule here. Skipping wave planning is distinct: it permits only its one complete
 task and never authorises improvised concurrency.
 
-Before any dispatch, use the current shared dispatch procedure to select the
-most specific suitable agent and verify concrete model identifiers and
+Before any dispatch, load and apply `../_shared/subagent-dispatch.md` to select
+the most specific suitable agent and verify concrete model identifiers and
 routing. Never pass inherited session history as a substitute for a
 self-contained prompt. Metadata does not switch models. For implementation,
 workers use the bounded lower-cost capable tier, while independent reviews use
@@ -58,7 +58,9 @@ infer dependencies, or broaden a task during dispatch.
    permitted reads and writes, side-effect/resource limits, and a structured
    return format. For implementation, the complete approved task brief is the
    contract. Agents do not write shared workflow state or perform Git
-   operations. Worktrees and elevated privileges are prohibited.
+   mutations. Authorised read-only Git inspection is permitted. Worktrees and
+   elevated privileges are prohibited. Load `../_shared/worker-contract.md` and
+   deliver applicable sections as directed by `../_shared/subagent-dispatch.md`.
 2. Issue independent dispatches in the same turn, or use only a background
    mechanism whose availability and completion semantics are verified by the
    harness. Do not invent tools or call sequential dispatch concurrent.
@@ -72,21 +74,11 @@ infer dependencies, or broaden a task during dispatch.
    the wave's required checks after its writers stop.
 
 Workers report `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT` or `BLOCKED` as
-defined by `../_shared/task-briefs.md`. Classify blocker scope under
-`../_shared/subagent-dispatch.md`: pause affected work and its dependency
-closure. A proven global safety failure stops all new dispatch. Unknown impact
-pauses potentially affected work. If no safe boundary can be demonstrated,
-provisionally pause all new dispatch until scope is established. Do not classify
-that uncertainty as a proven global safety failure. Continue already-authorised
-work only when independence and eligibility are demonstrated.
-Cancel affected active work only if the harness supports safe cancellation;
-otherwise let it settle without claiming it was cancelled or accepting stale
-outputs. Preserve state and report the blocker. Do not silently retry with a
-more expensive model, redesign, expand scope or apply worker changes manually.
-In-scope review corrections are
-delegated within their existing task boundaries; findings block affected task
-acceptance, not eligible independent progress. Architectural gaps return to
-planning and require renewed user approval where the design changes.
+defined by `../_shared/task-briefs.md`. Before acting on a blocker or review
+finding, load and apply `../_shared/subagent-dispatch.md` for containment,
+continuation and recovery. Delegate in-scope corrections within their task
+boundaries. Return architectural gaps for planning and renewed approval where
+the design changes; do not broaden scope or patch worker output directly.
 
 For implementation, this skill does not replace independent task review,
 orchestrator verification, wave integration barriers, cumulative final review
