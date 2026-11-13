@@ -136,6 +136,8 @@ Cross-references between files use relative paths from the citing file's locatio
 
 ## Workflow skills
 
+`reviewing-pull-requests` guides a read-only, interactive review of another person's local PR against a ticket and a user-selected comparison branch. It explains the change in sections, discusses evidenced findings and offers advisory recommendations without submitting a review or making changes.
+
 `workflow-coordinator` is the entry point for new work and resumptions. It owns phase transitions, explicit skips, approvals, state, artefact registration, baseline checks, and clean-up. Research and Planning are conversational by default and use a high-capability primary session. The user alone may skip a phase; complexity does not bypass preparation or review, and a skipped review is not approval. Independent Design Review and explicit user approval precede Wave Planning and readiness review. After approval and readiness, implementation waves can run autonomously through the implementation workflow, using lower-cost capable specialists where routing is available. Skill metadata alone does not switch the active model or verify routing.
 
 `research` gathers bounded evidence and discusses findings. The existing `brainstorming` modes shape Planning. `design-review` independently reviews the design, `wave-planning` decomposes approved work and checks readiness, and `subagent-driven-development` executes approved tasks. `create-tickets` creates durable tickets only when requested, while `work-on-ticket` recovers ticket context and returns it to the coordinator for current-baseline validation. `skills/_shared/project-context-discovery.md` is a bounded, repository-first helper, not a substitute for conversational Research or Planning.
