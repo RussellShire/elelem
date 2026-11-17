@@ -43,9 +43,9 @@ it and the harness supports it.
 
 ## Model selection
 
-Preparation phases (Research, Planning and Wave Planning) and independent
-design or readiness reviews require high-capability reasoning. Select reviewers
-by scope and capability, not by assuming every review is tiny. Cross-cutting or
+Preparation phases (Research, Planning, Implementation Planning and Wave Planning)
+and independent design, blueprint or readiness reviews require high-capability
+reasoning. Select reviewers by scope and capability, not by assuming every review is tiny. Cross-cutting or
 design-level review needs a capable reviewer. The implementation configuration
 and configuration fallback below do not change preparation or reviewer policy.
 

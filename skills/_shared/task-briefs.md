@@ -27,6 +27,38 @@ handoff path; a concise report does not replace original evidence or grant
 approval. Implementation workers also follow the complete brief and structured
 return below.
 
+## Implementation blueprint schema
+
+This is the sole blueprint schema. It refines the approved design into cohesive
+implementation units, not scheduled tasks or a competing task-brief schema.
+Include all fields, explicitly marking genuine inapplicability with a reason:
+
+- Blueprint revision, approved design revision and approval reference, immutable
+  baseline plus ordered accepted checkpoints, and relevant source identities.
+- A set of stable unit IDs and a complete requirement-to-unit map, including
+  integration, test and error requirements; explicit dependency edges between units.
+- For each unit: exact create/modify paths, verified existing functions or document
+  headings with source identities, and distinctly labelled proposed new paths and
+  symbols. Never present a proposed location as already inspected.
+- Required stable reads, bounded context, interfaces and invariants, behavioural
+  failure cases, exclusions and complete applicable implementation instructions. Include
+  bounded pseudocode only where tricky logic needs it, not near-complete source.
+- Ordered implementation and ordered per-behaviour test-first steps, or authorised
+  non-code checks with skip provenance; test paths, scenarios, assertions and
+  commands and expected results labelled planned, never execution evidence.
+- Known generated, formatter and test outputs, side effects and resources,
+  conflicts and isolation needs, integration steps and acceptance criteria.
+- Assumptions, unresolved consequential decisions and blockers. Return
+  `NEEDS_CONTEXT` for missing paths, behaviour or contracts rather than guessed
+  precision or assigning a stronger worker to compensate.
+
+No wave IDs or concrete model assignments belong here. Wave Planning owns task
+packaging, scheduling and implementation-tier selection. A sufficient blueprint
+lets workers identify permitted changes, test sequence and escalation boundaries
+without making new consequential architecture or behaviour decisions. Instructions
+must be complete enough to deliver self-contained applicable steps in task briefs,
+not links alone. Unresolved consequential decisions block downstream work.
+
 ## Proposed design proposal
 
 Every Planning method returns one self-contained proposed design with these
@@ -56,6 +88,10 @@ design.
 Every task brief records:
 
 - Stable task and wave identifiers, objective and specialist subagent type.
+- The matching blueprint revision and unit IDs, requirement-to-unit-to-task
+  mapping, and complete applicable instructions, exact-file steps and test
+  sequence from those units, not links alone. Use this task schema, not a second
+  blueprint-derived task schema.
 - Requirement mapping, including integration, test and error-handling needs.
 - Bounded context, relevant contracts, interfaces, assumptions and exclusions.
 - Exact allowed write paths, plus known formatter, generator, build and test

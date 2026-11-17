@@ -19,6 +19,15 @@ design. In-scope implementation corrections can be delegated within the
 approved task contract. A real scope or architecture change returns to the
 workflow for renewed approval.
 
+Independent blueprint review is also distinct from design review, task review,
+wave readiness and cumulative review. Implementation Planning owns its bounded
+review/reconciliation procedure; the coordinator owns approval and persistence.
+Keep design approval and blueprint approval as separate user decisions about
+exact revisions, not review verdicts. Substantive implementation-instruction
+changes renew blueprint review and user approval; behaviour/architecture changes
+also return through affected design gates. Explicit scoped review skips are
+`SKIPPED`, not favourable verdicts or approval, and do not supply missing inputs.
+
 ## Forbidden responses to feedback
 
 You **MUST NOT** respond to code review feedback with performative, gratitude

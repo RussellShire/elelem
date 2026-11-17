@@ -39,6 +39,17 @@ a `READY` verdict. Confirm approval and the applicable planning record remain
 valid against the recorded baseline. Never infer design approval from a review
 verdict, skip or silence.
 
+Require the matching approved blueprint revision, separate blueprint approval
+source, independent review and preparation evidence valid for the approved design
+and relevant source identities. Validate the immutable baseline plus ordered
+accepted checkpoints, not HEAD alone. Every brief must retain matching unit IDs
+and complete applicable steps from that blueprint, not links alone. Apply this
+even on direct or wave-skip entry: missing or stale blueprint evidence or
+instructions return `NEEDS_CONTEXT` to the coordinator before dispatch or reuse.
+Separately recorded scoped preparation/review/approval skips require complete
+equivalent supplied input under the loaded evidence gate. No skip supplies
+missing instructions or turns a skipped gate into approval or `PASS`.
+
 If the user explicitly skipped wave planning, accept only one complete,
 fully specified task brief with exact scope and inputs. Do not invent tasks,
 decompose architecture, or improvise concurrency. An explicit skip of any other
@@ -84,6 +95,13 @@ sections verbatim with source identity, complete brief and required stable sourc
 and method context under `../_shared/subagent-dispatch.md`. Workers return
 structured results using `../_shared/task-briefs.md`.
 
+Compare each brief's blueprint revision, unit IDs and requirement-to-unit-to-task
+map against the validated blueprint. Deliver complete applicable exact-file and
+ordered test-first instructions, contracts, failure cases, outputs/resources,
+integration and acceptance to the worker. Do not ask workers to rediscover them.
+Missing mappings or consequential implementation decisions pause affected work
+and return to the coordinator's Implementation Planning boundary.
+
 Dispatch independent tasks in a wave in the same turn, or use only a background
 mechanism whose availability and completion semantics are verified by the
 harness. Do not invent a dispatch tool or assume that sequential calls are
@@ -121,6 +139,12 @@ Batch related in-scope review corrections within the approved task boundaries;
 retain independent re-review and fresh task checks after the batch. Before
 correction dispatch, load and apply `../_shared/subagent-dispatch.md` for the
 retained implementation pin and current drift checks.
+For valid in-scope corrections reuse current blueprint instructions, revision
+and unit IDs with the retained task contract; new consequential choices return
+upstream through the coordinator. Substantive instruction changes renew blueprint
+review and separate user approval. Behaviour/architecture changes also renew
+affected design gates; schedule-only changes renew readiness. Expected accepted
+task changes are not drift and do not cause routine reapproval.
 
 After review or its recorded skip, the orchestrator reads the actual changed
 paths and evidence, then runs fresh task verification by default. Do not trust

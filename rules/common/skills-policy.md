@@ -5,6 +5,15 @@ phase transitions and invokes the applicable phase skills. Within an active
 workflow, `brainstorming` selects the Planning method; do not invoke it again
 before an edit when a validated approved design already covers the work.
 
+The coordinator invokes `implementation-planning` after design approval and
+before Wave Planning, including independent blueprint review and separate user
+approval of its exact revision. Load the canonical blueprint and task schema in
+`skills/_shared/task-briefs.md`; do not duplicate schemas in consumers. Reuse valid
+approved implementation instructions for covered corrections, not repeated
+Research/Planning. Separate preparation/review/approval skips never imply approval
+or supply missing instructions. Follow the evidence and artefact owners for
+revision linkage and recovery.
+
 Invoke required skills through `{{INVOKE_SKILL_TOOL}}`; reading their files is
 not invocation. Perform their procedures and retain evidence under
 `skills/_shared/phase-evidence.md`. Loading a skill or recording a status alone

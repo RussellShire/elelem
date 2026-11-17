@@ -33,6 +33,14 @@ own procedures and the current scope, revision and current assumptions:
   autonomous Research.
 - Planning: explicit method selection, selected-mode invocation and proposal
   provenance. `brainstorming-skip` is lightweight Planning, not a phase skip.
+- Design review: independent verdict and reconciliation for the exact proposal;
+  design approval: separate explicit user decision for that revision.
+- Implementation Planning: invoked preparation and full canonical blueprint,
+  source identities and sufficiency evidence; independent blueprint review:
+  reconciled verdict and iteration provenance for its exact draft; blueprint
+  approval: separate explicit user approval of that exact revision. All must
+  remain valid for the matching design and source revision, baseline and ordered
+  accepted checkpoints before Wave Planning, readiness or execution.
 - Other phases: required procedures, outputs, verdicts, approval or checks valid
   for the current inputs
   under their owning skills, or an exact-source scoped skip. Keep review
@@ -42,6 +50,16 @@ An instruction to implement or a model/mode switch is not a phase skip. An
 explicit skip covers only its named scope. Missing dependent inputs still block;
 neither approval nor a skip invents them. Executors and ticket entry points
 return upstream gaps to the coordinator rather than repairing them inline.
+
+Record preparation, blueprint review and blueprint approval skips separately,
+with exact user source, scope, reason and consequence. Label each `SKIPPED`,
+never approval or PASS, and do not infer one skip from another. A preparation
+skip requires equivalent complete supplied input and does not skip review or
+approval. Missing or unknown downstream context blocks even with explicit
+skips. Validate full supplied instructions and their revision/source identities;
+skipped approval does not authorise persisting an approved blueprint.md. An
+existing schedule, legacy/direct entry or stronger worker cannot supply missing
+instructions. Return gaps to the coordinator's earliest unsupported phase.
 
 ## Reuse and recovery
 

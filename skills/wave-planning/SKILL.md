@@ -1,6 +1,6 @@
 ---
 name: wave-planning
-description: "Decomposes an explicitly approved design into bounded tasks and reviews wave readiness by default before dispatch."
+description: "Packages an approved file-level blueprint into bounded tasks and safe waves, with independent readiness review by default before dispatch."
 metadata:
   model: openai/gpt-6.1-sol
   reasoning_effort: high
@@ -8,8 +8,9 @@ metadata:
 
 # Wave Planning
 
-Turn an explicitly approved design into complete, bounded tasks and safe
-execution waves. Conversational planning and readiness review require
+Package an explicitly approved file-level blueprint, linked to its approved
+design, into complete bounded tasks and safe execution waves. Conversational
+planning and readiness review require
 high-capability reasoning. Verify that the active primary-session model is
 appropriate before conversational planning. Metadata does not switch the
 active model. If unsuitable, stop and ask the user to switch models; do not
@@ -21,18 +22,30 @@ missing required capability remains a blocker.
 
 ## Preconditions
 
-Require an approved plan revision with its user approval source reference, or
-an explicitly authorised complete task brief for the single-task skip path.
+Require an approved plan revision with its user approval source reference and
+the matching approved blueprint revision with its separate blueprint approval
+source. Apply separately recorded scoped skips only with equivalent complete
+supplied input and exact provenance under `../_shared/phase-evidence.md`.
+Load and apply `../_shared/phase-evidence.md` to validate preparation, independent
+blueprint review and separate approval in order, including matching design and
+source identities, original baseline and ordered accepted checkpoints. A review
+verdict, single-task or readiness skip cannot supply missing instructions.
 Before checking workflow baseline and approval validity, load and apply
 `../_shared/workflow-artifacts.md`. Missing or stale inputs block planning.
 Do not infer approval from a review verdict, silence, prior conversation or
 implementation request.
+Return missing or stale blueprint evidence or incomplete instructions as
+`NEEDS_CONTEXT` to the coordinator before packaging or readiness review.
 
 ## Decomposition
 
-Before decomposing the approved design, load and apply
-`../_shared/task-briefs.md`. Map every approved requirement to one or more tasks,
-including integration, tests, error cases and final verification requirements.
+Before packaging the blueprint, load and apply `../_shared/task-briefs.md`.
+Preserve and package cohesive blueprint units into complete task contracts with
+a requirement-to-unit-to-task map, matching revision and unit IDs, and complete
+applicable steps, tests, failure cases and acceptance criteria. Work without
+rediscovering implementation instructions. Map every approved requirement to
+one or more tasks, including integration, tests, error cases and final
+verification requirements. Deliver full applicable instructions, not links alone.
 Capture the complete task contract. Define task dependencies as a
 directed acyclic graph; contracts and foundations precede consumers, and
 integration is explicit work. One-task waves are valid. Do not impose a fixed
@@ -88,10 +101,12 @@ explicitly authorised skipping only this readiness review, do not invoke a
 reviewer or claim `READY`; record the review as `SKIPPED` with the authorisation,
 scope, reason and consequence. The planning record must make clear that the
 schedule is planner-completed but has no independent readiness verdict. A skip
-does not approve a design or authorise a design change. If requirements,
-architecture, contracts or external expectations are missing, stop and return
-to planning and renewed user approval as needed. Do not turn an architectural
-gap into an unapproved task.
+does not approve a design or blueprint or authorise changes to either. Return
+instruction gaps to Implementation Planning through the coordinator for review
+and separate blueprint approval. Return real behaviour/architecture gaps to
+design Planning and affected design/blueprint gates. Scheduling-only corrections
+stay here and renew readiness, not blueprint approval. Do not turn an
+architectural gap into an unapproved task.
 
 Return the proposed `waves.md` contents and revision, the readiness record
 (independent verdict `READY` or `GAPS`, or authorised review status
@@ -106,5 +121,5 @@ procedure for reconciliation. Return the reconciled schedule, readiness result
 and blockers to the coordinator. This ends Wave Planning, not the overall
 workflow. The coordinator records the schedule and next action in existing
 `workflow.md` and proceeds to execution without routine prompting only after
-the approved-plan, readiness or explicitly scoped skip, capability and safety
-gates are satisfied. A `SKIPPED` review is not `READY`.
+the approved-plan, approved-blueprint, readiness or explicitly scoped skip,
+capability and safety gates are satisfied. A `SKIPPED` review is not `READY`.
