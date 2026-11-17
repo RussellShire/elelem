@@ -82,9 +82,13 @@ remain blockers.
 For scheduling-only gaps, return precise corrections to wave planning. No new
 user prompt is needed if requirements, architecture and contracts remain
 unchanged. If a requirement, architecture, external expectation or contract is
-missing, return the gap to planning. Any substantive design change requires
-renewed explicit user approval and a fresh design review before readiness is
-reassessed. Never dispatch on `GAPS`.
+missing, return the gap to Planning. For a substantive design change, Planning
+produces one revised consolidated proposal, an independent design review
+assesses that revision, the coordinator obtains explicit user approval of the
+reviewed revision, and affected readiness is reassessed before dispatch. Review
+verdict, user approval and verification remain distinct. Honour any existing
+scoped skips without treating a skip as a verdict or approval. Never dispatch
+on `GAPS`.
 
 If wave planning was explicitly skipped, do not invent parallel tasks or claim
 this review occurred. Require one complete, bounded task brief; execute only

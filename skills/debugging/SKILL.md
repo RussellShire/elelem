@@ -10,7 +10,7 @@ metadata:
 
 The iron-law rules (the Hard Gate, Evidence Over Intuition, and the bug-fixes-still-need-tests-and-verification cross-references) live in `../../rules/common/debugging.md` and load on every session. The procedural rules that bind once this skill is running (scope discipline, the re-focus rule, the investigation budget, root cause vs symptom, the minimal fix principle, the rationalisation table) live in `RULES.md` alongside this file. The bug-fix TDD rule lives in `../../rules/common/testing.md`. The post-fix verification gate lives in `../../rules/common/verification.md`. This skill runs the seven investigation phases and returns evidence for coordinator-owned execution.
 
-Before running the procedure below, you **MUST** read `RULES.md` (sibling file in this skill directory) and `../_shared/subagent-dispatch.md` (the debugging skill dispatches an investigator subagent) using the Read tool if you have not already read them in this session. The procedure below assumes those rules are in your context.
+Before running the procedure below, you **MUST** read `RULES.md` (sibling file in this skill directory) and `../_shared/subagent-dispatch.md` (the debugging skill dispatches an investigator subagent) using `{{READ_FILE_TOOL}}` if you have not already read them in this session. The procedure below assumes those rules are in your context.
 
 **Precondition**: the user has reported something not working, pasted an error, reported a failing test, or described behaviour differing from what was intended. If you are unsure whether the report is a bug or a feature request, clarify during Phase 1. This skill runs within a valid `workflow-coordinator` workflow. If invoked directly with no active workflow, invoke `workflow-coordinator` through `{{INVOKE_SKILL_TOOL}}`, pass through the report and any explicit debugging mode or skip, then stop. The coordinator establishes or resumes workflow state and invokes this investigation; on that re-entry, continue without invoking the coordinator again. Respect only explicitly scoped, coordinator-recorded skips. A skip does not create evidence or waive the hard gate.
 
@@ -57,11 +57,11 @@ In **Guided mode**, explain why reproduction matters: without it, you cannot ver
 
 Apply the scope discipline in `RULES.md`. The initial-scope allowlist and the explicit prohibitions on wider reading are the rules; this phase is where they bite.
 
-In **Autonomous mode**, dispatch two or three investigator subagents in parallel via `{{DISPATCH_AGENT_TOOL}}` using the template at `investigator-prompt.md` in this skill directory:
+Phase 3 uses `EVIDENCE_GATHERING` assignments. In **Autonomous mode**, dispatch two or three investigator subagents in parallel via `{{DISPATCH_AGENT_TOOL}}` using that form in `investigator-prompt.md` in this skill directory:
 
-- One reads the error site and its immediate context
-- One checks recent git history for affected files
-- One traces the specific code path from the error
+- Give each investigator one bounded evidence question and exact scope, such as observing the error site and its immediate context, checking specified recent history, or tracing an identified code path.
+- Do not require a root-cause hypothesis or verdict at this phase.
+- Reconcile observations, provenance, gaps and uncertainty in this phase; use them to form hypotheses in Phase 4.
 
 Per `../../rules/common/subagents.md`, give each investigator exactly the context it needs and nothing more.
 
@@ -85,12 +85,14 @@ In **Guided mode**, explain the reasoning behind the ranking. What makes one hyp
 
 Test the most likely hypothesis first:
 
-1. Identify a specific check that would confirm or eliminate it
-2. Run the check: read code, add temporary logging, run a test with different input
-3. Record the result as evidence for or against
-4. If confirmed, proceed to Phase 6. If disproven, move to the next hypothesis.
+1. Identify a specific read-only check that would confirm or eliminate the claim
+2. Run the check by examining code or captured output, or running a test with different input
+3. Record the predicted and observed result with evidence provenance
+4. If confirmed, proceed to Phase 6. If eliminated, move to the next hypothesis. If inconclusive, narrow the check or return for user refocusing.
 
-In **Autonomous mode**, test the top two or three hypotheses in parallel using investigator subagents (see `investigator-prompt.md`), each with a clear scope and a single question to answer. Invoke the `dispatching-parallel-agents` skill if more than one investigator runs at once.
+Do not add logging or make other instrumentation edits. If instrumentation is needed, return its purpose and proposed bounded write paths to `workflow-coordinator` for a separately authorised worker task. Resume hypothesis testing only when the coordinator identifies stable outputs. This proposal is not edit authorisation and does not create another implementation flow or skip a gate.
+
+Phase 5 uses `HYPOTHESIS_TESTING` assignments. In **Autonomous mode**, test the top two or three hypotheses in parallel using that form in `investigator-prompt.md`, each with a claim, predicted observation, clear scope and one question to answer. Reconcile only evidence-backed `CONFIRMED`, `ELIMINATED` or `INCONCLUSIVE` outcomes. Invoke the `dispatching-parallel-agents` skill if more than one investigator runs at once.
 
 Apply the Investigation Budget from `RULES.md`: three cycles maximum before you stop and return to `workflow-coordinator` for user refocusing.
 
@@ -119,11 +121,13 @@ Autonomous mode is the only mode in which investigator subagents run. When dispa
 
 - Load `../_shared/worker-contract.md` and paste the All workers and Read-only workers sections verbatim into each investigator packet with source path and identity, following `../_shared/subagent-dispatch.md`
 - Use the template at `skills/debugging/investigator-prompt.md` as the base prompt
-- Provide each investigator with: the bug description (expected vs actual), the specific hypothesis it is testing, and the scoped list of files or areas it may examine
+- In Phase 3, provide each investigator with: the bug description (expected vs actual), one bounded evidence question and the scoped list of files or areas it may examine. A hypothesis is not required.
+- In Phase 5, provide each investigator with: the bug description (expected vs actual), one specific claim, its predicted observation and the scoped list of files or areas it may examine
 - Per `../../rules/common/subagents.md` and `../_shared/subagent-dispatch.md`, pick the most specific subagent type and a verified model tier suited to the investigation scope. Integration reasoning may require a capable investigator; do not assume an unconditional low-cost default.
+- Phase 3 reconciliation is evidence gathering only: record observations, provenance, gaps and uncertainty without a root-cause verdict. The verdict reconciliation below applies only to Phase 5.
 - Reconcile the returned verdicts yourself in the orchestrator context: CONFIRMED verdicts advance you to Phase 6, ELIMINATED verdicts move you to the next hypothesis, INCONCLUSIVE verdicts either need a better-scoped re-dispatch or a refocusing with the user
 
-Investigators are evidence-only. A bounded worker owns approved implementation; `workflow-coordinator` owns transitions, dispatch, reviews and verification. The debugging skill and investigator do not patch code or take over execution.
+Investigators are read-only and evidence-only. A bounded worker owns approved implementation; `workflow-coordinator` owns transitions, dispatch, reviews and verification. The debugging skill and investigator do not patch code, add logging or take over execution.
 
 ## When the Bug Cannot Be Found
 

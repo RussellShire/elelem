@@ -28,13 +28,19 @@ Apply `../_shared/phase-evidence.md` to recovered context. Return upstream gaps
 to the coordinator, not an inferred phase completion from a ticket, approval or
 scope confirmation. Preserve accessible provenance for legitimate prior work.
 
+## Detection Result Handling
+
+Preserve the result returned by `detect-ticketing-system`, including its status, every match, mechanism, evidence, confidence and support. For a `confirmed` supported target, fetching may proceed; detection is not proof of authentication, project visibility or ticket access.
+
+For `candidate` or `ambiguous`, ask the user to select and confirm a supported target before fetching. For `unsupported`, do not call that backend; ask for a supported alternative or the user's authorisation to use the existing pasted-ticket or Markdown recovery path. For `none`, ask the user to paste the ticket content and, when applicable, its parent Epic content. Preserve an explicit selection for the rest of this request and do not detect again.
+
 **Precondition**: the user has referenced a specific ticket to work on (for example, "work on #42", "pick up PROJ-123", "implement issue 7"). Without a specific reference, this skill does not apply; if the user is asking what to work on next, that is a triage question, not this skill.
 
 ## Procedure
 
 You **MUST** complete these steps in order. Do not skip a step and do not reorder them.
 
-1. **Detect the ticketing system.** Invoke the `detect-ticketing-system` skill to identify where the ticket lives.
+1. **Detect the ticketing system.** Invoke the `detect-ticketing-system` skill and apply Detection Result Handling. Do not fetch through an unsupported backend or fetch a candidate or ambiguous target before the user selects and confirms a supported system.
 
 2. **Fetch the ticket.** Retrieve its full content: title, description, labels, status, parent or epic relationship, child or sub-issue references, and linked tickets. See "Per-system fetch" below for the specific API calls.
 
@@ -56,6 +62,8 @@ You **MUST** complete these steps in order. Do not skip a step and do not reorde
    - **Current codebase state**: relevant observations from step 5
 
 7. **Get explicit scope confirmation.** Use `{{ASK_USER_QUESTION_TOOL}}` to confirm that the recovered ticket scope is what the user intends. This confirmation is not design approval and does not skip any workflow phase. Plain-text confirmation is not sufficient.
+
+   This is a schematic example. Adapt its fields to the actual exposed question-tool interface while preserving single-choice selection and tool-confirmation. Plain-text confirmation is not sufficient.
 
    ```
    {{ASK_USER_QUESTION_TOOL}}:

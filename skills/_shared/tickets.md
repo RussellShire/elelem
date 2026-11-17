@@ -29,11 +29,17 @@ The epic body **MUST** include, at minimum:
 - The testing strategy
 - Anything else that emerged from the design conversation and affects how the children should be built
 
+## Epic Body Limits
+
+The complete rendered Epic body includes its goal, full approved design, approval and revision or external-specification provenance, and tickets index. When the target's body limit is known before creating the Epic, validate that complete rendered body. If it is too large, stop before creating and ask the user for an authorised alternative. Do not evade a limit with additional headings, truncation, splitting the design, or an external-only design reference.
+
+If the limit is discovered through rejection of the initial Epic creation, or its outcome is uncertain, stop. Do not retry with a changed or shortened body. Do not create children under a missing or incomplete Epic. Report the exact failed operation and current partial state.
+
+After child creation, render and check the complete Epic body with actual references before back-fill when the limit is known. If it exceeds the limit, preserve the created tickets, do not attempt the update, and report the partial state for the user to resolve. An Epic body update may be attempted at most once. If the update is rejected or its outcome is uncertain, do not repeat that body write; preserve created tickets and report the exact failed operation and current partial state. A child-creation failure retains the existing partial-state back-fill requirement only if no earlier body write was rejected or uncertain and either the complete updated body is known to fit or no limit is known and one update attempt remains safe. If safe back-fill is not possible, stop and report rather than risk a repeated write.
+
 ## Single Source of Truth
 
 The epic body **MUST** be the single source of truth for the design. You **MUST NOT** replace the design section with a link to an external file, a conversation transcript, a gist, a commit, or any other artefact outside the ticketing system. Links rot, external context disappears, and future sessions will open the epic and find nothing usable.
-
-If the epic is too large for the ticketing system's body limit, split the design across multiple headings in the same body, not across multiple documents.
 
 Stories **MUST NOT** carry a `## Design` heading or any design content. The epic body is the only place the design lives. A Story body that contains a `## Design` heading is a single-source-of-truth violation and is an error in both creation (rejected before the Story is created) and recovery (surfaced to the user). See "Validation" below.
 
@@ -128,6 +134,18 @@ Parent lookup failures follow the unresolved-parent guard below.
 ### Degraded Linear Recovery
 
 Only after Linear rejects the nested Epic-Story-Task shape, recover a degraded two-tier Task by following its parent to the Epic in one hop. Extract the Epic's `## Design` and use the Task's `story:<slug>` label to find the corresponding `### Story: <name>` grouping and recover its theme statement. Do not try to fetch a Story ticket in this shape.
+
+### GitHub Relationship Degradation
+
+For GitHub MCP creation, put matching textual parent references in Story and Task bodies when creating them, then try the native Epic-to-Story relationship and the native Story-to-Task relationship in that order. If Task-to-Story is explicitly rejected, preserve the successful Epic-to-Story relationship. Give the Task no native parent; its existing body reference is `Part of #<story>, Epic: #<epic>`. Do not also make the Task a native child of the Epic, because that conflicts with its textual Story parent. When a native relationship succeeds, its immediate parent must match the body's `Part of #...` reference.
+
+If Epic-to-Story is explicitly rejected, create Stories and Tasks as labelled siblings of the Epic with textual parent references throughout and no native parent relationships for that hierarchy. A Story body refers to `Part of #<epic>`; a Task under a Story refers to `Part of #<story>, Epic: #<epic>`; a flat Task refers to `Part of #<epic>`. A rejected flat Epic-to-Task relationship uses the same textual Epic reference. Tier labels remain mandatory in every degradation.
+
+For a flat Epic and Tasks, include `Part of #<epic>` in each Task body at creation and attempt each Epic-to-Task relationship at most once. If a flat Epic-to-Task relationship is explicitly rejected, give that Task no native parent. Continue only with other independent ticket operations whose outcomes are certain; do not retry the rejected edge.
+
+Only an explicit rejection is a rejected relationship. If a relationship operation has an uncertain outcome, stop further ticket creation and relationship writes and report the exact operation and partial state. Do not retry an uncertain operation, retry a rejected edge, reparent a successfully linked child, or delete a successful link. Recovery of a Task under a Story reads the Story theme and then follows the Story's Epic reference to recover the complete Epic `## Design`.
+
+For GitHub recovery, use the native parent field first. When it is absent, use `Part of #N` as the immediate parent reference. For a Task under a Story, recover the Story theme from that Story and follow its Epic reference; `Epic: #N` in the Task body records the ancestor and does not replace the Story parent. Extract the complete `## Design` only from the Epic.
 
 ### Termination rule
 

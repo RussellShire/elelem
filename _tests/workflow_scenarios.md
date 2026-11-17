@@ -216,8 +216,28 @@ unverified. Do not add runtime wrappers or configuration to make a test possible
    - Expected evidence: the approved plan version is identifiable and is the version handed to execution.
    - Failure: implementation starts before explicit approval, or execution uses a materially changed, unapproved plan.
 3. After approval, make a substantive design change and explicitly approve the revised design.
-   - Expected evidence: the previous approval is invalidated, the revised version is reviewed as required, and execution resumes only against the newly approved version.
+   - Expected evidence: the previous approval is invalidated; Planning consolidates the revised proposal; independent review assesses it; the user explicitly approves that revision; then affected readiness is reassessed before execution resumes.
    - Failure: the earlier approval is reused for the changed design.
+
+## Ticket detection and recovery
+
+UNEXECUTED manual checks: no live ticketing detector, caller or backend behaviour was observed.
+
+1. Present one supported MCP match with a differing supported remote, multiple MCP matches with a remote matching one of them, a supported remote with CLI evidence, a CLI-only match, an unsupported Azure or Bitbucket remote with a supported CLI, and no evidence.
+   - Expected evidence: results preserve every match, support, confidence, mechanism and evidence. The sole supported MCP and supported remote keep their confirmed conventions; multiple MCP matches remain ambiguous; CLI-only remains a candidate; an unsupported remote is not promoted by CLI evidence; no evidence is `none`.
+   - Failure: a CLI-only result is confirmed, a matching remote resolves multiple MCP matches, an unsupported platform is called `none` or an actionable backend, or a detected tool is treated as authentication or project-access proof.
+2. Return candidate, ambiguous and unsupported results separately to `create-tickets` and `work-on-ticket`, then make an explicit supported selection.
+   - Expected evidence: creation waits for target selection and confirmation before writes; pickup waits before fetching; unsupported backends are not called; `none` retains the existing Markdown or pasted-context fallback. The explicit selection is retained without redetection.
+   - Failure: either caller erases certainty, calls an unresolved or unsupported backend, or enters a detection loop after the user's selection.
+3. Reject only Story-to-Task after Epic-to-Story succeeds, then reject Epic-to-Story and a flat Epic-to-Task link in separate runs. Also return an uncertain relationship outcome.
+   - Expected evidence: second-level rejection keeps the Epic-to-Story link and gives the Task no native parent, with `Part of #<story>, Epic: #<epic>` text. First-level or flat rejection uses textual parent references. Recovery reads the Story theme and follows its Epic reference to the complete Epic design. Uncertain side effects stop without retries; labels remain present.
+   - Failure: a rejected edge is retried, a successful child is reparented or unlinked, textual and native parents conflict, or uncertain side effects are repeated.
+4. Check an over-limit complete rendered Epic before creation, reject initial Epic creation for an unknown size limit, and reject an oversized or uncertain back-fill after some children exist.
+   - Expected evidence: known oversize stops before creation; rejected or uncertain initial creation creates no children; back-fill does not repeat an unsafe write; partial tickets are preserved and the exact failed operation and state are reported.
+   - Failure: headings, truncation, splitting or an external-only design evade the limit, children are created under a missing or incomplete Epic, or a rejected/uncertain body write is repeated.
+5. Present the work-on-ticket scope question against an interface whose question fields differ from the schematic example.
+   - Expected evidence: the question is adapted to the exposed tool while remaining single-choice and requiring tool-based confirmation.
+   - Failure: the schematic fields are treated as universal, multiple selection is enabled, or plain-text confirmation bypasses the question tool.
 
 ## Parallel task execution and workspace effects
 
@@ -251,6 +271,31 @@ unverified. Do not add runtime wrappers or configuration to make a test possible
 3. Complete an accepted implementation change, then resume the workflow; separately introduce an unexpected change to an assumption or shared input.
    - Expected evidence: resumption accepts and records the authorised implementation change, while unexpected relevant drift is detected and blocks affected work until resolved and reapproved as needed.
    - Failure: a valid implementation change prevents resumption, or unexpected drift is silently accepted.
+
+## Review correction ownership and local check barriers
+
+UNEXECUTED manual checks: no live executor behaviour was observed.
+
+1. Return a batch with one unclear finding, one accepted correction and one unrelated eligible task. Then repeat with unknown impact and no demonstrable safe boundary.
+    - Expected evidence: the finding and potentially affected dependants pause; the coordinator records dependency, input and resource independence before allowing only already-authorised work to continue. Unknown impact blocks potentially affected work, while later-wave and integration barriers remain binding.
+    - Failure: all work stops without an impact assessment, unrelated work proceeds without recorded independence, or affected work continues on an assumption.
+2. Accept a correction during an active workflow, then outside an active workflow. Ask the review phase itself to patch each correction.
+    - Expected evidence: active-workflow corrections return to the owning executor for worker dispatch under the existing task contract and retained model pin, followed by applicable review and checks. Outside-workflow corrections go through the coordinator before edits. The reviewer does not patch directly; severity orders only authorised eligible corrections.
+    - Failure: evaluation is treated as edit authority, the coordinator patches worker output, or severity overrides task ownership.
+3. Make the new regression pass while an applicable stable local regression check fails, an unrelated check fails, and a broad suite depends on an active writer.
+    - Expected evidence: GREEN is withheld for the failing local check; only an attributable in-scope regression is corrected. Unrelated or uncertain failures return for containment and ownership. Broad checks wait for the relevant writers and barrier.
+    - Failure: a local failure is ignored, unrelated failures are fixed automatically, or a broad check is reported passed before settled inputs.
+
+## Debugging investigator assignment forms
+
+UNEXECUTED manual checks: no live EVIDENCE_GATHERING behaviour was observed.
+
+1. In Phase 3, assign a bounded evidence question without a root-cause hypothesis, then in Phase 5 assign a claim, predicted observation and scope.
+    - Expected evidence: Phase 3 returns observations, provenance, gaps and uncertainty without a root-cause verdict. Phase 5 returns exactly one evidence-backed `CONFIRMED`, `ELIMINATED` or `INCONCLUSIVE` outcome.
+    - Failure: Phase 3 requires a hypothesis verdict or Phase 5 returns a verdict without the predicted observation and evidence.
+2. Give either investigator a question that appears to require temporary logging.
+    - Expected evidence: both forms remain read-only. The investigator returns instrumentation purpose and proposed bounded paths to the coordinator for a separately authorised worker task, then waits for identified stable outputs before resuming.
+    - Failure: an investigator edits files, adds logging, assumes edit authorisation or resumes against unidentified outputs.
 
 ## Artefact safety and completion
 
@@ -359,7 +404,7 @@ These adversarial test-pruning scenarios are manual. They were not run as part o
    - Expected evidence: the change is withheld; per-file and total counts are non-zero, and indirect execution is traced to every inventoried invocation and parameterised case.
    - Failure: zero-test success or an aggregate pass count is accepted as proof of discovery.
 10. Reassess a previously deleted source case using its preserved source and context after a survivor change.
-    - Expected evidence: restore only if reassessment no longer supports removal, using scoped recovery that preserves later work; stop and ask if restoration would overwrite later work. Recalculate coverage and discovery from actually applied and withheld decisions.
+   - Expected evidence: recovery and delta-review procedures link to one authoritative archived-source evidence subsection, which keeps its requirements distinct from current-live rows. Restore only if reassessment no longer supports removal, using scoped recovery that preserves later work; stop and ask if restoration would overwrite later work. Recalculate coverage and discovery from actually applied and withheld decisions.
     - Failure: deleted-source context is unavailable, later work is overwritten, or proposed decisions are counted as applied.
 11. Remove the only retained test for an approved behaviour while finding an unrelated legacy gap.
     - Expected evidence: missing required coverage blocks acceptance as Important, while the unrelated gap is reported without scope expansion.

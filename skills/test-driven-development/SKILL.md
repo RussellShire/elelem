@@ -10,7 +10,7 @@ metadata:
 
 This skill executes the red-green-refactor cycle. The iron-law rules (the iron law itself, when TDD applies, the verification requirement, YAGNI during GREEN, good-test criteria) live in `../../rules/common/testing.md` and apply throughout. The procedural rules that bind once this skill is running (the rationalisation table, the red-flags stop list) live in `RULES.md` alongside this file. Final pruning is a separate post-review task under `../_shared/test-pruning.md`, not part of this cycle or ordinary task review.
 
-Before running the cycle below, you **MUST** read `RULES.md` (sibling file in this skill directory) using the Read tool if you have not already read it in this session.
+Before running the cycle below, you **MUST** read `RULES.md` (sibling file in this skill directory) using `{{READ_FILE_TOOL}}` if you have not already read it in this session.
 
 ## The Cycle
 
@@ -20,7 +20,7 @@ digraph tdd_cycle {
     red [label="RED\nWrite failing test", shape=box, style=filled, fillcolor="#ffcccc"];
     verify_red [label="Verify fails\ncorrectly", shape=diamond];
     green [label="GREEN\nMinimal code", shape=box, style=filled, fillcolor="#ccffcc"];
-    verify_green [label="Verify passes\nAll green", shape=diamond];
+    verify_green [label="Verify passes\nStable local checks", shape=diamond];
     refactor [label="REFACTOR\nClean up", shape=box, style=filled, fillcolor="#ccccff"];
     next [label="Next", shape=ellipse];
 
@@ -134,12 +134,13 @@ npm test path/to/test.test.ts
 
 Confirm:
 
-- The new test passes
-- All other tests still pass
+- The new test and applicable stable task-local regression checks pass
+- A required failing local check is not reported as GREEN
 - Output is pristine, no warnings, no stray errors
 
-If the new test fails, fix the code, not the test.
-If other tests fail, fix them now before continuing.
+If the new test fails, fix the code, not the test. Investigate other failures to determine whether they are attributable to this change and within the approved task. Fix only attributable in-scope regressions; return unrelated or uncertain failures for containment and ownership rather than making broad fixes.
+
+Broader checks remain required, but defer them until all relevant writers stop and the applicable wave or final barrier is reached. Do not report them as passed early.
 
 ## REFACTOR: Clean Up While Green
 
@@ -204,7 +205,8 @@ Before claiming a cycle complete, confirm every box:
 - [ ] You watched each test fail before implementing
 - [ ] Each test failed for the expected reason, not a typo or import error
 - [ ] You wrote only the minimal code to pass each test
-- [ ] All tests pass
+- [ ] The new test and applicable stable task-local regression checks pass
+- [ ] Broader checks are deferred until the relevant writers stop and their barrier is reached
 - [ ] Output is pristine
 - [ ] Tests exercise real code, mocks only at true boundaries
 - [ ] Cases are defined by approved behaviours and named defects

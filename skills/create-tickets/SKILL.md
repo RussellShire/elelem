@@ -23,11 +23,17 @@ grouping, marker and sizing rules in `../_shared/tickets.md`.
 
 This skill creates tickets only when requested. Ticket creation is not an automatic side effect of planning or implementation. For multiple requested tickets, retain their ownership boundaries and use the coordinator's approved scope and dependency/wave plan; do not broaden one ticket to include another.
 
+## Detection Result Handling
+
+Preserve the result returned by `detect-ticketing-system`, including its status, every match, mechanism, evidence, confidence and support. For a `confirmed` supported target, confirm that target with the user before any writes. Confirmation is a user choice, not proof of authentication or project access.
+
+For `candidate` or `ambiguous`, ask the user to select and confirm a supported target before using a backend. For `unsupported`, do not call that backend; ask for a supported alternative or the user's authorisation to use the existing Markdown fallback. For `none`, use the existing Markdown fallback. Preserve an explicit selection for the rest of this request and do not detect again.
+
 ## Procedure
 
-1. **Validate the durable approved input.** Confirm the approved plan revision and its explicit approval reference, or the approved external specification. Preserve that provenance and copy the complete approved design into its durable Epic `## Design` section or Markdown fallback. Do not rely on a temporary workflow path as the only copy. If no valid input is available, stop and route to `workflow-coordinator`.
+1. **Validate the durable approved input.** Confirm the approved plan revision and its explicit approval reference, or the approved external specification. Preserve that provenance and copy the complete approved design into its durable Epic `## Design` section or Markdown fallback. Do not rely on a temporary workflow path as the only copy. Render the complete Epic body, including its goal, design, provenance and tickets index. If no valid design input is available, stop and route to `workflow-coordinator`.
 
-2. **Detect the ticketing system.** Invoke the `detect-ticketing-system` skill. Confirm the result with the user before creating anything.
+2. **Detect the ticketing system.** Invoke the `detect-ticketing-system` skill. Apply Detection Result Handling. Do not call a backend until the supported target is confirmed by the user. If the selected target has a known body limit, compare it with the complete rendered Epic body and stop before any creation if the body is too large; ask the user for an authorised alternative.
 
 3. **Decompose the design.** Apply the tier mapping, grouping, D2 and sizing rules in `../_shared/tickets.md`. Preserve the approved scope, dependencies and ownership boundaries; do not broaden multiple requested tickets.
 
@@ -45,12 +51,12 @@ This skill creates tickets only when requested. Ticket creation is not an automa
 
    Use the API appropriate to the detected system (see "Per-System Creation" below).
 
-8. **Back-fill the epic body.** Once all child tickets exist and have real references (issue numbers, Jira keys, Linear IDs), update the epic body's `## Tickets` section with the actual references and links at all tiers.
+8. **Back-fill the epic body.** Once all child tickets exist and have real references (issue numbers, Jira keys, Linear IDs), render the complete updated Epic body and check it against a known body limit. If it exceeds the limit, preserve the created tickets, skip the update and report the partial state. Otherwise, attempt the body update at most once. If it is rejected or has an uncertain outcome, do not repeat that body write; preserve the created tickets and report the exact failed operation and current partial state.
 
    **Failure semantics.** If any Story or Task creation fails mid-run, the skill **MUST**:
 
    1. Stop further creation immediately.
-   2. Back-fill the epic body with whatever children **did** get created, so the user can see the partial state.
+   2. Back-fill the epic body with whatever children **did** get created, so the user can see the partial state, only when the complete updated body is known to fit or one safe update attempt remains. Do not repeat a rejected or uncertain body write. If safe back-fill is not possible, stop and report the exact failed operation and partial state instead.
    3. Report the failure to the user, citing the specific child that failed and its intended position in the hierarchy.
    4. Leave the partially-created tickets in place.
 
@@ -73,12 +79,11 @@ This skill creates tickets only when requested. Ticket creation is not an automa
 With GitHub MCP tools (preferred):
 
 1. Use `issue_write` to create the Epic, each Story (if any), and each Task. Apply tier labels at creation: `tier:epic`, `tier:story`, `tier:task` (use `get_label` and create labels if missing).
-2. Use `sub_issue_write` to attach children to their parent. **Decision rule for nesting**, in order:
-   1. Try Epic -> Story -> Task using two `sub_issue_write` calls (Story as sub-issue of Epic; Task as sub-issue of Story).
-   2. If the second-level nest is rejected by the API, attach Tasks as sub-issues of the Story but reference the Epic via body text (`Epic: #<epic>`).
-   3. If the first-level nest is also rejected, fall back to fully flat: Stories and Tasks are labelled siblings of the Epic, and parent references go in body text (`Part of #<story>, Epic: #<epic>`).
-3. Tier labels are mandatory in **every** path.
+2. Include matching textual parent references in Story and Task bodies when creating them. Use `sub_issue_write` once for Epic -> Story, then once for Story -> Task, to try Epic -> Story -> Task. Apply the exact degradation in `skills/_shared/tickets.md`'s GitHub Relationship Degradation section. If Task-to-Story is explicitly rejected, keep the successful Epic-to-Story relationship and give the Task no native parent; its body already contains `Part of #<story>, Epic: #<epic>`. Never give a Story-grouped Task a native Epic parent. If Epic-to-Story is explicitly rejected, use textual parent references throughout and create no native parent relationships. For a flat Epic and Tasks, include `Part of #<epic>` in each Task body at creation and attempt each Epic-to-Task relationship at most once; if a flat Epic-to-Task relationship is explicitly rejected, give that Task no native parent. Do not retry rejected edges, reparent successful children, or delete successful links. If an outcome is uncertain, stop further ticket creation and relationship writes, then report the exact operation and partial state without retrying.
+3. Tier labels remain mandatory in every path.
 4. Reference dependencies in the description: "Depends on #N".
+
+Before creating the Epic, validate the complete rendered Epic body against a known body limit. If the Epic creation is rejected for size or has an uncertain outcome, stop, report the exact operation and partial state, and create no children under a missing or incomplete Epic. Do not retry with a changed or shortened body.
 
 With `gh` CLI (fallback):
 

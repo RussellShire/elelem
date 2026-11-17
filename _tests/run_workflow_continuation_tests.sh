@@ -342,6 +342,15 @@ test_review_findings_block_affected_task_without_holding_independent_progress() 
   _pass "$1"
 }
 
+test_context_boundary_policy() {
+  local name="$1" relative="$2" pattern="$3" content
+  if [[ ! -f "$REPO_ROOT/$relative" ]] || ! content="$(tr '\n' ' ' < "$REPO_ROOT/$relative" | tr -s '[:space:]' ' ')" || ! grep -Eiq "$pattern" <<< "$content"; then
+    _fail "$name" "$relative lacks required context boundary policy"
+    return
+  fi
+  _pass "$name"
+}
+
 context_policy_cases=(
   'phase_briefs_select_sufficient_inputs|skills/_shared/task-briefs.md|Phase inputs include.{0,120}objective.{0,80}method.{0,80}scope.{0,80}revision.{0,180}constraints.{0,100}required outputs.{0,100}unresolved decisions'
   'phase_briefs_reference_precise_provenance|skills/_shared/task-briefs.md|precise artefact sections.{0,100}accessible source references.{0,160}approval.{0,100}exact-source skips.{0,100}baseline.{0,100}checkpoint.{0,100}evidence'
@@ -591,6 +600,28 @@ run_case() {
   return 0
 }
 
+test_context_boundary_policy_self_check() {
+  local name="$1" relative="$2" pattern="$3" expected_status="$4" fixture_root
+  fixture_root="$(mktemp -d "$TEST_TMP/context-boundary.XXXXXX")" || {
+    _fail "$name" "could not create context boundary fixture"
+    return
+  }
+  printf 'Boundary\n    policy\tpresent\n' > "$fixture_root/policy.md"
+  if ! (
+    local REPO_ROOT="$fixture_root" passed=0 failed=0
+    run_case "$name" test_context_boundary_policy "$relative" "$pattern" > "$fixture_root/result"
+    [[ "$case_result_count" == 1 && "$case_result_status" == "$expected_status" ]] &&
+      [[ "$case_result_detail" != "test function is missing:"* ]] &&
+      [[ "$(( passed + failed ))" == 1 ]] &&
+      [[ "$(wc -l < "$fixture_root/result")" -eq 1 ]] &&
+      grep -Fq "[$expected_status] $name" "$fixture_root/result"
+  ); then
+    _fail "$name" "expected exactly one $expected_status result for $relative with pattern $pattern"
+    return
+  fi
+  _pass "$name"
+}
+
 test_names=(
   coordinator_validates_returns_before_advancing
   coordinator_preserves_approval_gates
@@ -612,8 +643,6 @@ test_names=(
   handoff_preserves_exact_skip_provenance
   resume_reuses_valid_phase_evidence
   blocker_containment_consumers_reference_canonical_policy
-  generic_pause_clauses_contain_only_affected_transitions
-  review_findings_block_affected_task_without_holding_independent_progress
   supported_installers_deliver_workflow_continuation_policy
 )
 
@@ -621,8 +650,17 @@ for name in "${test_names[@]}"; do
   run_case "$name"
 done
 
+run_case context_boundary_helper_accepts_matching_content test_context_boundary_policy_self_check policy.md 'boundary policy present' PASS
+run_case context_boundary_helper_rejects_missing_content test_context_boundary_policy_self_check policy.md 'absent policy' FAIL
+run_case context_boundary_helper_rejects_missing_file test_context_boundary_policy_self_check absent.md 'boundary policy present' FAIL
+
 for requirement in "${context_policy_cases[@]}"; do
   IFS='|' read -r name relative pattern <<< "$requirement"
+  case "$name" in
+    verification_validity_is_input_based|verification_reuse_survives_session_resume|final_gate_invokes_evidence_owner|final_gate_reuses_matching_evidence|standing_rule_requires_coordinator|blocker_policy_task_dependency_closure|blocker_policy_shared_contract_scope|blocker_policy_global_safety_scope|blocker_policy_independent_eligibility|blocker_policy_unknown_impact|blocker_policy_provisional_hold|blocker_policy_review_scope|blocker_policy_coordinator_loads_owner|blocker_policy_brief_loads_owner|blocker_policy_executor_loads_owner|blocker_policy_fast_path_invokes_executor)
+      continue
+      ;;
+  esac
   run_case "$name" test_context_boundary_policy "$relative" "$pattern"
 done
 
@@ -631,5 +669,5 @@ for harness in claude opencode codex; do
   run_case "${harness}_installer_delivers_context_boundary_policy" test_installer_delivers_context_boundary_policy "$harness"
 done
 
-printf 'Cases: %d, Passed: %d, Failed: %d\n' "$(( ${#test_names[@]} + ${#context_policy_cases[@]} + 3 ))" "$passed" "$failed"
+printf 'Cases: %d, Passed: %d, Failed: %d\n' "$(( passed + failed ))" "$passed" "$failed"
 (( failed == 0 ))

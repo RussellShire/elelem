@@ -112,7 +112,9 @@ The user may explicitly authorise a scoped TDD skip, including for throwaway pro
 
 Every RED step **MUST** end with you running the test and watching it fail for the expected reason. A test that errors (syntax error, import error, missing symbol) does not count as RED. A test that passes on its first run is testing behaviour that already exists; fix the test.
 
-Every GREEN step **MUST** end with you running the test and watching it pass and confirming that no other tests broke. Output **MUST** be pristine: no warnings, no stray errors, no skipped tests you did not intend to skip.
+Every GREEN step **MUST** end with running the new test and applicable stable task-local regression checks and watching them pass. A required failing local check means GREEN has not been reached. Output **MUST** be pristine: no warnings, no stray errors, no skipped tests you did not intend to skip. Investigate other failures for attribution and scope. Fix only regressions attributable to the change and within the approved task; return unrelated or uncertain failures for containment and ownership rather than expanding the fix.
+
+Broader checks remain required but are deferred until all relevant writers stop and the applicable wave or final barrier is reached. Do not report a broad check as passed before it runs against settled inputs.
 
 ### YAGNI During GREEN
 

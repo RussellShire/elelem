@@ -216,8 +216,10 @@ applying a proposed removal or merge. These uncertainties do not override a
 REMOVE otherwise permitted by the canonical rule when the auditor cannot name
 a production defect.
 
+### Archived-source reassessment evidence
+
 Archived removed-source reassessments are separate from current-live cases.
-Always require the preserved exact source and surrounding context,
+Always require the exact preserved source and surrounding context,
 pre-removal snapshot identities, and actual prior check and discovery evidence,
 including commands, outputs, exit status, and discovery counts. Establish the
 original runner and whether historical trace evidence was applicable. Require
@@ -231,6 +233,8 @@ required archived evidence is missing, unstable, or inconsistent, return
 `BLOCKED`; do not invent or fabricate prior evidence.
 Record separate report rows for current-live cases and archived reassessments,
 with their distinct evidence.
+
+### Live audit decisions and coverage
 
 For every `MERGE`, identify the source case, a `KEEP` survivor in this same
 current audit, the small added assertion, the production line and reachable
@@ -337,12 +341,10 @@ history. Audit newly touched files in full. A retained, unchanged current-audit
 KEEP decision may support a merge only while its evidence remains stable.
 Unexpected changes to a survivor cause transitive survivor-dependency
 invalidation. After GREEN and stable passing checks for live cases, re-audit the
-affected live cases and survivors. For a previously removed source, present its
-archived source, context, pre-removal snapshot, and prior trace/check evidence
-to the auditor for reassessment; do not require current execution of that
-archived case. If required archived context or evidence is missing or unstable,
-block reassessment rather than fabricating history. Restore it through scoped
-recovery only when reassessment no longer supports removal. Changes to
+affected live cases and survivors. For a previously removed source, follow
+[Archived-source reassessment evidence](#archived-source-reassessment-evidence).
+Restore it through scoped recovery only when reassessment no longer supports
+removal. Changes to
 active-task ownership or survivor stability invalidate affected evidence.
 Re-run applicable checks and dispatch a fresh independent audit on stable
 inputs only for unexpected changes. Record new recovery material before any
@@ -367,13 +369,8 @@ require trace-to-case execution evidence. For direct runners, accept actual
 check output and discovery evidence without requiring a trace. No file or last
 test may be deleted, and post-prune discovery counts must match actual applied
 decisions and remain non-zero per file and in total.
-For archived reassessment, verify exact preserved source and context,
-pre-removal snapshot identity, and actual prior check and discovery evidence for
-each archived source. Require historical trace evidence only for an indirect
-original runner; for a direct original runner, prior check and discovery
-evidence is sufficient without a trace. Missing or unstable required archived
-evidence blocks reassessment. Do not fabricate history or require current
-execution of archived sources.
+For archived reassessments, follow [Archived-source reassessment
+evidence](#archived-source-reassessment-evidence).
 
 Delegate in-scope delta corrections or scoped recovery to the bounded worker,
 then refresh checks, discovery and affected review/evidence. Unexpected input
