@@ -15,6 +15,20 @@ Explicit user approval of the current design is required before implementation,
 separate from any review verdict. Substantive design changes require renewed
 approval.
 
+After design approval, run Implementation Planning to prepare precise file-level
+instructions, independent blueprint review, then separate explicit user approval
+of the exact blueprint revision before Wave Planning. The coordinator alone
+persists approved `blueprint.md`. Keep design and blueprint approvals separate
+from review verdicts and readiness. Use the canonical schema in
+`skills/_shared/task-briefs.md` and evidence/artefact contracts for source linkage,
+drift, resume and separate scoped preparation/review/approval skips. A preparation
+skip requires equivalent complete supplied input; missing context blocks later
+work. Behaviour/architecture changes renew design and blueprint gates;
+substantive instructions renew blueprint review/approval; scheduling-only changes
+renew readiness, not routine blueprint approval. After both approvals, continue
+eligible work without routine task/wave approval prompts. Do not escalate scope
+or models to compensate for missing instructions.
+
 Research and Planning are conversational by default and require a capable
 primary-session model. Reviews are independent by default. Implementation
 uses an approved schedule with independent readiness review unless explicitly

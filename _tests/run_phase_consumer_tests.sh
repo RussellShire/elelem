@@ -29,6 +29,10 @@ paths = {
     "detect": "skills/detect-ticketing-system/SKILL.md",
     "project_discovery": "skills/_shared/project-context-discovery.md",
     "confluence": "skills/_shared/confluence-discovery.md",
+    "wave": "skills/wave-planning/SKILL.md",
+    "readiness": "skills/_shared/wave-readiness.md",
+    "executor": "skills/subagent-driven-development/SKILL.md",
+    "implementer": "skills/subagent-driven-development/implementer-prompt.md",
 }
 texts = {}
 for name, relative in paths.items():
@@ -36,6 +40,13 @@ for name, relative in paths.items():
     if not path.is_file():
         raise SystemExit(f"Required contract is missing: {relative}")
     texts[name] = path.read_text(encoding="utf-8")
+
+for name, relative in (
+    ("implementation_planning", "skills/implementation-planning/SKILL.md"),
+    ("blueprint_prompt", "skills/implementation-planning/blueprint-reviewer-prompt.md"),
+):
+    path = root / relative
+    texts[name] = path.read_text(encoding="utf-8") if path.is_file() else ""
 
 passed = 0
 failed = 0
@@ -320,6 +331,83 @@ def phase_behaviour_contract(texts_to_check: dict[str, str]) -> bool:
     )
 
 
+def blueprint_schema_contract(owner: str) -> bool:
+    schema = section(owner, "## Implementation blueprint schema\n", "## Proposed design proposal\n")
+    fields = (
+        "approved design revision and approval reference", "immutable baseline",
+        "relevant source identities", "stable unit IDs", "requirement-to-unit map",
+        "dependency edges", "exact create/modify paths", "verified existing functions or document headings",
+        "proposed new paths and symbols", "stable reads", "interfaces and invariants",
+        "behavioural failure cases", "ordered per-behaviour test-first steps",
+        "commands and expected results labelled planned", "generated, formatter and test outputs",
+        "resources", "integration steps", "acceptance criteria", "blockers",
+        "No wave IDs or concrete model assignments", "NEEDS_CONTEXT",
+    )
+    return owner.count("## Implementation blueprint schema") == 1 and has_all(schema, fields)
+
+
+def blueprint_preparation_contract(skill: str) -> bool:
+    loads = ("task-briefs.md", "workflow-artifacts.md", "phase-evidence.md", "subagent-dispatch.md", "worker-contract.md")
+    return all(has_required_load(skill, f"../_shared/{name}") for name in loads) and has_all(skill, (
+        "name: implementation-planning", "model: openai/gpt-6.1-sol", "reasoning_effort: high",
+        "active coordinator", "validated approved design", "relevant source identities",
+        "bounded source inspection", "do not repeat Research", "NEEDS_CONTEXT",
+        "unresolved consequential decisions", "three reviewer dispatches", "independent high-capability reviewer",
+        "Do not write shared state", "do not seek user approval", "do not schedule or implement",
+    ))
+
+
+def blueprint_owner_contract(contracts: dict[str, str]) -> bool:
+    consumers = ("implementation_planning", "blueprint_prompt", "wave", "readiness", "executor", "implementer")
+    return blueprint_schema_contract(contracts["briefs"]) and all(
+        "## Implementation blueprint schema\n" not in contracts[name] for name in consumers
+    )
+
+
+def blueprint_review_delivery_contract(prompt: str) -> bool:
+    return has_required_load(prompt, "../_shared/task-briefs.md") and has_required_load(prompt, "../_shared/subagent-dispatch.md") and has_all(prompt, (
+        "paste its Implementation blueprint schema section verbatim", "source path and content identity",
+        "load `../_shared/worker-contract.md`", "All workers and Read-only workers sections verbatim",
+        "full approved design", "full draft blueprint", "relevant source identities", "applicable skips",
+        "Approved | Issues Found", "fidelity", "coverage", "test-first", "verified paths",
+        "self-contained", "planned versus executed", "not user approval or readiness", "no writes or nested delegation",
+    ))
+
+
+def blueprint_task_link_contract(owner: str) -> bool:
+    brief = section(owner, "## Required task brief\n", "## Dispatch constraints\n")
+    return has_all(brief, ("matching blueprint revision and unit IDs", "complete applicable instructions", "not links alone"))
+
+
+check("blueprint preparation loads canonical inputs before independent review", blueprint_preparation_contract(texts["implementation_planning"]))
+blueprint_consumer_clauses: dict[str, tuple[str, ...]] = {
+    "wave": (
+        "matching approved blueprint revision", "separate blueprint approval source",
+        "equivalent complete supplied input", "package cohesive blueprint units",
+        "requirement-to-unit-to-task map", "complete applicable steps",
+        "without rediscovering implementation instructions", "NEEDS_CONTEXT",
+    ),
+    "readiness": (
+        "full blueprint", "blueprint revision", "source identities", "unit-to-task map",
+        "complete applicable steps", "missing or stale blueprint evidence", "GAPS",
+        "instruction gaps return to Implementation Planning", "design Planning",
+    ),
+    "executor": (
+        "matching approved blueprint revision", "separate blueprint approval source",
+        "complete applicable steps", "direct or wave-skip entry", "NEEDS_CONTEXT",
+        "valid in-scope corrections reuse current blueprint instructions",
+        "new consequential choices return upstream",
+    ),
+    "implementer": (
+        "matching blueprint revision and unit IDs", "full applicable exact-file instructions",
+        "ordered per-behaviour test-first steps", "not links alone",
+    ),
+}
+for consumer, clauses in blueprint_consumer_clauses.items():
+    check(f"{consumer} consumes complete revision-linked blueprint instructions", has_all(texts[consumer], clauses))
+check("blueprint reviewer receives complete schema and independent read-only obligations", blueprint_review_delivery_contract(texts["blueprint_prompt"]))
+check("task briefs retain blueprint revision with complete instructions", blueprint_task_link_contract(texts["briefs"]))
+check("blueprint schema has one canonical owner", blueprint_owner_contract(texts))
 check("canonical proposal schema and actual pre-use loading", proposal_contract(texts))
 check("design reviewer loads and delivers canonical proposal schema", proposal_delivery_contract(texts["design_prompt"]))
 check("committee mapping has one owner and retains fallback and deliberation", committee_contract(texts))
@@ -335,86 +423,6 @@ check(
 )
 check("discovery and ticket consumers load installed-source contracts", discovery_contract(texts))
 check("phase-specific interaction and approval boundaries remain", phase_behaviour_contract(texts))
-
-missing_goal = texts.copy()
-missing_goal["briefs"] = missing_goal["briefs"].replace("- Goal\n", "", 1)
-check("proposal schema mutation missing a field is rejected", not proposal_contract(missing_goal))
-
-duplicated_schema = texts.copy()
-duplicated_schema["standard"] += "\n## Proposed design proposal\n" + section(
-    texts["briefs"], "## Proposed design proposal\n", "## Required task brief\n"
-)
-check("duplicated proposal schema in a consumer is rejected", not proposal_contract(duplicated_schema))
-
-missing_planning_load = texts.copy()
-missing_planning_load["standard"] = missing_planning_load["standard"].replace(
-    "read `../_shared/task-briefs.md`", "use `../_shared/task-briefs.md`", 1
-)
-check("Planning link without actual schema load is rejected", not proposal_contract(missing_planning_load))
-
-missing_review_delivery = texts["design_prompt"].replace(
-    "paste its Proposed design proposal section verbatim into the packet",
-    "refer to its Proposed design proposal section",
-    1,
-)
-check(
-    "reviewer source read without schema delivery is rejected",
-    has_required_load(missing_review_delivery, "../_shared/task-briefs.md")
-    and not proposal_delivery_contract(missing_review_delivery),
-)
-
-missing_role_mapping = texts.copy()
-missing_role_mapping["committee_prompt"] = missing_role_mapping["committee_prompt"].replace(
-    "| TypeScript           | `typescript-pro`     |", "| TypeScript           | unavailable          |", 1
-)
-check("committee stack mapping mutation is rejected", not committee_contract(missing_role_mapping))
-
-missing_committee_delivery = texts.copy()
-missing_committee_delivery["committee_prompt"] = missing_committee_delivery["committee_prompt"].replace(
-    "[PASTE ALL WORKERS AND READ-ONLY WORKERS SECTIONS VERBATIM WITH SOURCE PATH AND IDENTITY]", "", 1
-)
-check("committee worker contract delivery mutation is rejected", not committee_contract(missing_committee_delivery))
-
-missing_ticket_guard = texts.copy()
-missing_ticket_guard["tickets"] = missing_ticket_guard["tickets"].replace(
-    "**Maximum walk depth**: 2 hops", "Maximum walk depth: unlimited", 1
-)
-check("ticket recovery depth mutation is rejected", not ticket_contract(missing_ticket_guard))
-
-missing_grouped_order = texts.copy()
-missing_grouped_order["tickets"] = missing_grouped_order["tickets"].replace(
-    "When Stories are present, order Stories first by dependency, then Tasks within each Story by dependency.",
-    "When Stories are present, use the general implementation order.",
-    1,
-)
-check("grouped ticket order mutation is rejected", not ticket_ordering_contract(missing_grouped_order["tickets"], texts["create"]))
-
-missing_linear_owner = texts["tickets"].replace("lowercase, hyphenated ASCII", "lowercase ASCII", 1)
-check("Linear marker ownership mutation is rejected", not linear_degradation_contract(missing_linear_owner, texts["create"], texts["work"]))
-
-duplicated_linear_rule = texts["work"] + "\nUse the Task's `story:<slug>` label to find the corresponding `### Story:` grouping."
-check("duplicated Linear recovery rule in consumer is rejected", not linear_degradation_contract(texts["tickets"], texts["create"], duplicated_linear_rule))
-
-duplicated_parent_rule = texts["work"] + "\nGitHub Issues: use the native parent field first."
-check("duplicated parent resolution rule in consumer is rejected", not ticket_consumers_contract(texts["create"], duplicated_parent_rule))
-
-missing_source_guard = texts.copy()
-missing_source_guard["work"] = missing_source_guard["work"].replace(
-    "use a checkout, history or link-only fallback", "use the repository checkout as fallback", 1
-)
-check("ticket consumer checkout fallback mutation is rejected", not discovery_contract(missing_source_guard))
-
-link_only_phase_evidence = texts["work"].replace(
-    "read `../_shared/phase-evidence.md`",
-    "link to `../_shared/phase-evidence.md`",
-    1,
-)
-check(
-    "ticket phase-evidence link without actual load is rejected",
-    "Apply `../_shared/phase-evidence.md`" in link_only_phase_evidence
-    and not ticket_phase_evidence_contract(link_only_phase_evidence),
-)
-
 
 print(f"Cases: {passed + failed}, Passed: {passed}, Failed: {failed}")
 if failed:

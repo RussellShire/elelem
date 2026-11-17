@@ -25,6 +25,14 @@ prerequisite algorithms to the worker.
     writes, stable reads, prohibited concurrent reads, known side effects,
     resource limits, verification commands and expected evidence.]
 
+    [Supply matching blueprint revision and unit IDs with the complete
+    requirement-to-unit-to-task map. Paste full applicable exact-file instructions,
+    verified existing anchors versus proposed new paths/symbols, contracts,
+    invariants, failure cases, ordered per-behaviour test-first steps and test
+    specifications, planned commands/results, outputs/resources, integration and
+    acceptance criteria, not links alone. Missing consequential instructions
+    return NEEDS_CONTEXT; do not rediscover architecture or invent behaviour.]
+
     ## Baseline, context and methods
 
     [Supply immutable task-start HEAD and relevant dirty/untracked contents,

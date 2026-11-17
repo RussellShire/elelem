@@ -45,10 +45,15 @@ harness:
 3. Independent design review with the `design-review` skill
    (`../design-review/SKILL.md`).
 4. Obtain explicit user approval, then persist the approved plan.
-5. Wave planning with the `wave-planning` skill (`../wave-planning/SKILL.md`).
-6. Execute approved tasks using the `subagent-driven-development` skill
+5. Implementation Planning with `implementation-planning`
+   (`../implementation-planning/SKILL.md`), including independent blueprint review
+   and reconciliation of its findings.
+6. Obtain separate explicit user approval of the exact blueprint revision, then
+   persist approved `blueprint.md` before any wave packaging.
+7. Wave planning with the `wave-planning` skill (`../wave-planning/SKILL.md`).
+8. Execute approved tasks using the `subagent-driven-development` skill
    (`../subagent-driven-development/SKILL.md`).
-7. Before validating a cumulative final reviewer result, load and apply
+9. Before validating a cumulative final reviewer result, load and apply
     `../_shared/code-review.md`. After that result is validated as `PASS`, the
     executor invokes `test-pruning` as one separate final review-phase task. Only actual pruning edits require
     an independent bounded pruning-delta review. Final verification follows the
@@ -76,10 +81,23 @@ There is no complexity-based automatic bypass. A missing required input blocks
 downstream work even when its producing phase was skipped.
 
 Research and planning are conversational by default. Committee mode is an
-explicit less-conversational choice, not an automatic alternative. After design
-review and explicit user approval, wave planning and execution proceed without
+explicit less-conversational choice, not an automatic alternative. After both
+design and blueprint approvals, wave planning and execution proceed without
 routine task or wave approval prompts. Ask the user before changing approved
-scope or architecture.
+scope or architecture. A blueprint review verdict is not either user approval.
+
+Validate the approved design and source inputs before invoking Implementation
+Planning. Reconcile its returned draft, revision and independent review evidence;
+unresolved material findings block the approval transition. Present that exact
+revision for separate explicit user approval through `{{ASK_USER_QUESTION_TOOL}}`.
+Only then persist its approved content as `blueprint.md` under the shared artefact
+contract, with separate review and approval sources, before invoking Wave Planning.
+The preparation phase neither approves nor writes shared state.
+
+Legacy, ticket and direct entry return missing blueprint evidence to this
+coordinator as `NEEDS_CONTEXT`; never infer completion from an implementation
+request, design approval, prior task brief or existing schedule. Apply separate
+preparation, review and approval skips only under `../_shared/phase-evidence.md`.
 
 ## State and ownership
 
@@ -97,8 +115,11 @@ plus ordered accepted-change checkpoints. Follow
 `../_shared/workflow-artifacts.md` for checkpoint evidence and resume handling.
 Expected approved task changes are not drift. Unexpected changes or invalidated
 assumptions require affected approval or readiness reassessment. A substantive
-design change requires renewed explicit user approval; schedule-only replanning
-requires a fresh readiness review unless the user explicitly skips it.
+design change requires renewed explicit user approval and affected design and
+blueprint gates. Substantive implementation-instruction changes require renewed
+blueprint review and separate approval; schedule-only replanning requires a fresh
+readiness review unless the user explicitly skips it. Follow the shared artefact
+contract for demonstrated equivalence, source revision linkage and scoped skips.
 
 Before any repository artefact is created, ensure the root `.gitignore` has
 the exact `.elelem/` entry. Preserve all existing content and verify with

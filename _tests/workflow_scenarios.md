@@ -558,3 +558,57 @@ rules, unique procedural source words, total procedural words delivered and
 exact duplicated paragraph spans separately. Include increases and decreases.
 These are source-content measurements, not runtime tokens, harness compliance
 or context-window savings.
+
+## File-level blueprint acceptance
+
+These acceptance scenarios are manual and unexecuted. Run separately in each
+available Claude Code, OpenCode and Codex harness with active updated instructions.
+Structural tests establish policy contracts and delivery, not live behavioural
+compliance, routing or performance evidence. Record actual inputs, revisions,
+observations and limitations; do not infer a speed improvement or low-tier fitness.
+Earlier unrelated runtime waivers remain unchanged.
+
+1. Approve a reviewed design, but withhold the implementation blueprint and its
+   separate user approval.
+   - Expected evidence: Design approval alone cannot enter Wave Planning. The
+     coordinator invokes implementation-planning, reconciles independent blueprint
+     review and requests separate approval of the exact blueprint revision first.
+   - Failure: a design-review verdict or design approval authorises waves directly.
+2. Supply a substantive, reviewed and separately approved exact-file blueprint
+   and its complete task brief to a bounded worker.
+   - Expected evidence: the worker identifies exact allowed writes, ordered test
+     sequence and escalation boundaries from matching revision/unit instructions
+     without new consequential decisions. Inspect the delivered packet, not links
+     alone, for verified anchors, contracts, failure cases and planned checks.
+   - Failure: the worker must rediscover architecture, invent behaviour or infer
+     permissions before starting its test-first sequence.
+3. Withhold a consequential path, fact or contract from the blueprint or brief.
+   - Expected evidence: `NEEDS_CONTEXT` returns to the owning phase and dependent
+     work blocks; missing precision is not hidden by stronger workers or guesses.
+   - Failure: implementation or scheduling proceeds with invented instructions.
+4. Supply a stale design or blueprint revision after valid review and approval.
+   - Expected evidence: provenance validation blocks affected work until matching
+     evidence and applicable renewed approval exist, preserving valid prior work.
+   - Failure: a review, approval or readiness label masks the revision mismatch.
+5. Request separate preparation, review and approval skips, one at a time, with
+   exact-source scope, reason and consequence recorded.
+   - Expected evidence: skips do not supply absent inputs or favourable verdicts.
+     A preparation skip needs equivalent complete supplied instructions and does
+     not skip review or approval. Review and approval skips are `SKIPPED`, not
+     approval or `PASS`; unskipped gates remain required.
+   - Failure: any skip is widened or treated as missing instructions or approval.
+6. Change only the schedule, then change implementation instructions, then change
+   behaviour or architecture in separate cases.
+   - Expected evidence: Scheduling-only changes renew readiness; substantive
+     instructions renew blueprint review and approval; behaviour or architecture
+     changes also renew affected design gates. Equivalent wording or anchor
+     relocation retains evidence only with demonstrated equivalence and provenance.
+   - Failure: routine scheduling demands blueprint approval or material changes
+     reuse stale approval.
+7. Resume after authorised task changes with an immutable baseline plus ordered
+   accepted checkpoints and matching source identities.
+   - Expected evidence: expected accepted changes are not drift. Preserve original
+     provenance and continue eligible covered work without redundant approval;
+     separately introduced unexpected relevant changes block affected work.
+   - Failure: accepted changes invalidate resume automatically, or unexpected
+     changes are silently accepted as a new baseline.

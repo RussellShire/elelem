@@ -8,7 +8,7 @@ metadata:
 
 # Brainstorming (Lightweight Planning)
 
-This is the lightweight Planning method selected explicitly by the user. It captures an existing design as a proposed design without a full alternatives dialogue. It does not skip Research, independent Design Review, explicit final approval or Wave Planning.
+This is the lightweight Planning method selected explicitly by the user. It captures an existing design as a proposed design without a full alternatives dialogue. It does not skip Research, independent Design Review, explicit design approval, Implementation Planning, independent blueprint review, separate user blueprint approval or Wave Planning.
 
 The `workflow-coordinator` owns lifecycle, explicit phase skips, final approval, persistence and downstream work. Selecting this method is not authorisation to skip any phase.
 

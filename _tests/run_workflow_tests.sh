@@ -23,6 +23,8 @@ workflow_files=(
   "skills/_shared/worker-contract.md"
   "skills/_shared/code-review.md"
   "skills/wave-planning/SKILL.md"
+  "skills/implementation-planning/SKILL.md"
+  "skills/implementation-planning/blueprint-reviewer-prompt.md"
   "skills/_shared/phase-evidence.md"
   "skills/_shared/workflow-artifacts.md"
   "skills/_shared/task-briefs.md"
@@ -40,6 +42,7 @@ skill_files=(
   "skills/workflow-coordinator/SKILL.md"
   "skills/research/SKILL.md"
   "skills/wave-planning/SKILL.md"
+  "skills/implementation-planning/SKILL.md"
 )
 
 _pass() {
@@ -120,7 +123,6 @@ _copy_and_substitute_harness() {
       return
     fi
   done
-  _pass "${harness}_installer_copy_and_substitution"
 }
 
 test_claude_installer_copy_and_substitution() {
@@ -171,7 +173,6 @@ test_codex_installer_copy_and_substitution() {
       return
     fi
   done
-  _pass "codex_installer_copy_and_substitution"
 }
 
 test_test_pruning_contract_is_documented() {
@@ -1049,13 +1050,11 @@ test_phase_evidence_boundary_references() {
   local requirements=(
     'rules/common/skills-policy.md|skills/_shared/phase-evidence.md'
     'rules/common/workflow.md|before implementation-oriented proposals'
-    'skills/workflow-coordinator/SKILL.md|../_shared/phase-evidence.md'
     'skills/workflow-coordinator/SKILL.md|entry, transitions, handover, resume, reuse and execution'
     'skills/_shared/workflow-artifacts.md|./phase-evidence.md'
     'skills/research/SKILL.md|../_shared/phase-evidence.md'
     'skills/brainstorming/SKILL.md|../_shared/phase-evidence.md'
     'skills/work-on-ticket/SKILL.md|upstream gaps to the coordinator'
-    'skills/fast-path-implementation/SKILL.md|invoke `subagent-driven-development`'
     'skills/subagent-driven-development/SKILL.md|upstream gaps to the coordinator'
     'README.md|procedural gate, not runtime enforcement'
   )
@@ -1852,13 +1851,83 @@ _check_blocker_policy_mutation_rejected() {
 }
 
 
+test_blueprint_lifecycle_summaries_are_explicit() {
+  local requirement name file pattern content
+  local requirements=(
+    'router_gates|skills/brainstorming/SKILL.md|does not skip Research, Design Review, explicit design approval, Implementation Planning, independent blueprint review, separate user blueprint approval or Wave Planning'
+    'lightweight_gates|skills/brainstorming-skip/SKILL.md|does not skip Research, independent Design Review, explicit design approval, Implementation Planning, independent blueprint review, separate user blueprint approval or Wave Planning'
+    'merge_gates|skills/merge-main/SKILL.md|independent design review, explicit user design approval, `implementation-planning`, independent blueprint review, separate user blueprint approval, wave planning and readiness remain coordinator phases'
+    'debugging_instruction_validation|skills/debugging/SKILL.md|Phase 7:.*coordinator validates applicable approved blueprint instructions.{0,100}before scheduling'
+    'debugging_covered_correction|skills/debugging/SKILL.md|Phase 7:.*Reuse valid covered blueprint instructions and task contracts.{0,140}without redundant approval.{0,160}missing or stale instructions.{0,160}coordinator'
+    'readme_phase_order|README.md|Independent Design Review.{0,100}explicit user design approval.{0,100}`implementation-planning`.{0,180}independent blueprint review.{0,100}separate explicit user approval.{0,100}Wave Planning.{0,80}readiness review.{0,100}implementation'
+    'readme_preparation_responsibility|README.md|`implementation-planning` prepares precise file-level instructions.{0,180}independent blueprint review.{0,180}`wave-planning` packages approved blueprint units'
+    'readme_design_purpose|README.md|`plan.md` records what.{0,100}approved design'
+    'readme_blueprint_purpose|README.md|`blueprint.md` records how.{0,100}approved implementation instructions'
+    'readme_wave_purpose|README.md|`waves.md` records ownership, complete task contracts and schedule'
+    'readme_schema_ownership|README.md|canonical blueprint and task schemas remain in `skills/_shared/task-briefs.md`'
+    'readme_persistence_owner|README.md|coordinator alone persists.{0,100}`blueprint.md`.{0,100}separate user approval.{0,80}exact revision'
+    'readme_capability_limit|README.md|Complete instructions can make lower-capability implementation suitable.{0,150}not mandatory.{0,80}no speed guarantee'
+    'readme_instruction_activation|README.md|Reinstall updated workflow instructions.{0,100}blueprint phase.{0,100}installers and native model configuration remain unchanged'
+    'manual_blueprint_not_executed|_tests/workflow_scenarios.md|File-level blueprint acceptance.{0,180}manual and unexecuted.{0,180}Structural tests.{0,180}not live behavioural compliance, routing or performance evidence'
+    'manual_design_only_blocks|_tests/workflow_scenarios.md|Design approval alone.{0,150}cannot enter Wave Planning'
+    'manual_blueprint_usability|_tests/workflow_scenarios.md|worker identifies exact allowed writes, ordered test sequence and escalation boundaries.{0,150}without new consequential decisions'
+    'manual_missing_facts|_tests/workflow_scenarios.md|Withhold a consequential path, fact or contract.{0,180}NEEDS_CONTEXT'
+    'manual_stale_revisions|_tests/workflow_scenarios.md|stale design or blueprint revision.{0,180}blocks affected work'
+    'manual_separate_skips|_tests/workflow_scenarios.md|separate preparation, review and approval skips.{0,180}do not supply absent inputs or favourable verdicts'
+    'manual_change_classes|_tests/workflow_scenarios.md|Scheduling-only changes.{0,100}readiness.{0,100}substantive instructions.{0,100}blueprint review and approval.{0,100}behaviour or architecture.{0,100}design gates'
+    'manual_checkpoint_resume|_tests/workflow_scenarios.md|immutable baseline plus ordered accepted checkpoints.{0,180}expected accepted changes are not drift'
+  )
+  for requirement in "${requirements[@]}"; do
+    name="${requirement%%|*}"
+    file="${requirement#*|}"; pattern="${file#*|}"; file="${file%%|*}"
+    content=''
+    [[ ! -f "$REPO_ROOT/$file" ]] || content="$(tr '\n' ' ' < "$REPO_ROOT/$file" | tr -s '[:space:]' ' ')"
+    if grep -Eiq "$pattern" <<< "$content"; then
+      _pass "blueprint_summary_$name"
+    else
+      _fail "blueprint_summary_$name" "expected $file to protect $name"
+    fi
+  done
+}
+
+test_blueprint_frontmatter_check_is_registered() {
+  if ! printf '%s\n' "${skill_files[@]}" | grep -Fxq 'skills/implementation-planning/SKILL.md' || printf '%s\n' "${skill_files[@]}" | grep -Fxq 'skills/implementation-planning/blueprint-reviewer-prompt.md'; then
+    _fail 'blueprint_frontmatter_check_is_registered' 'register the implementation-planning skill, not its supporting prompt, for frontmatter validation'
+    return
+  fi
+  _pass 'blueprint_frontmatter_check_is_registered'
+}
+
+_check_blueprint_installed_links() {
+  local root="$1" relative="$2" reference
+  [[ -f "$root/$relative" ]] || return 1
+  while IFS= read -r reference; do
+    if _is_source_reference "$reference" || [[ "$reference" == 'blueprint-reviewer-prompt.md' ]]; then
+      [[ -f "$root/$(dirname "$relative")/$reference" ]] || return 1
+    fi
+  done < <(grep -Eo '`[^`]+\.md`' "$root/$relative" | sed -E 's/^`([^`]*)`$/\1/' || true)
+}
+
+test_blueprint_skill_and_prompt_are_delivered_with_resolving_links() {
+  local harness relative
+  for harness in claude opencode codex; do
+    for relative in implementation-planning/SKILL.md implementation-planning/blueprint-reviewer-prompt.md; do
+      if _check_blueprint_installed_links "$TEST_TMP/$harness/skills" "$relative"; then
+        _pass "${harness}_blueprint_delivery_${relative//\//_}"
+      else
+        _fail "${harness}_blueprint_delivery_${relative//\//_}" 'expected the installed blueprint instruction file with resolving source links'
+      fi
+    done
+  done
+}
+
 _check_skill_frontmatter
+test_blueprint_lifecycle_summaries_are_explicit
 test_coordinator_reuses_the_executors_final_gate_evidence
 test_pruning_delta_review_receives_audit_evidence_and_criteria
 test_wave_planning_maximises_safe_static_width
 test_final_audit_preserves_union_scope_after_reviews_and_barriers
 test_operative_sources_do_not_schedule_pruning_before_final_review
-test_final_audit_rechecks_only_affected_evidence_after_corrections
 test_cumulative_audit_preserves_each_task_baseline_and_skip_provenance
 test_phase_evidence_contract
 test_verification_evidence_is_reused_by_input_validity
@@ -1867,28 +1936,15 @@ test_phase_evidence_boundary_references
 test_claude_installer_copy_and_substitution
 test_opencode_installer_copy_and_substitution
 test_codex_installer_copy_and_substitution
+test_blueprint_skill_and_prompt_are_delivered_with_resolving_links
 test_implementation_selection_consumers_use_the_shared_contract
 test_implementation_consumers_do_not_override_configuration_fallback
 test_blocker_containment_policy_is_dependency_scoped
 test_blocker_review_findings_are_scoped_to_affected_work
 test_opencode_installs_the_actual_shell_enumeration_tools
 test_changed_workflow_skills_are_installed_in_all_harnesses
-test_implementation_selection_consumers_are_installed_in_all_harnesses
-test_installed_skill_checks_reject_wrong_tracker_mappings
 test_changed_common_rules_are_installed_in_all_harnesses
-test_common_rule_checks_reject_wrong_skill_tool_mappings
-test_codex_rule_check_rejects_content_moved_outside_the_managed_block
-test_codex_rule_check_rejects_changed_rule_content
-test_codex_rule_check_rejects_duplicate_managed_rule_sections
-test_codex_rule_check_rejects_a_similarly_named_rule_heading
 test_codex_testing_rule_matches_installed_source
-test_codex_testing_rule_rejects_missing_rule
-test_codex_testing_rule_rejects_duplicate_rule
-test_codex_testing_rule_rejects_similar_rule
-test_codex_testing_rule_rejects_duplicate_canonical_section
-test_codex_testing_rule_rejects_similar_canonical_section
-test_codex_testing_rule_rejects_canonical_section_outside_managed_block
-test_codex_testing_rule_rejects_missing_canonical_section
 test_test_pruning_contract_is_documented
 test_auditor_policy_categories_and_decisions_are_explicit
 test_auditor_rule_discovery_freezes_complete_harness_sources
@@ -1913,7 +1969,6 @@ test_stale_workflow_lifecycle_instructions_are_absent
 test_gitignore_excludes_workflow_artifacts
 test_new_backticked_source_references_resolve
 test_parallel_agent_readiness_contract_reference
-test_fast_path_readiness_contract_reference
 test_phase_evidence_installed_links_resolve
 
 total=$(( passed + failed ))

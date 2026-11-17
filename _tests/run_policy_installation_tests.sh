@@ -173,8 +173,6 @@ try:
     send(b" ")
     wait_for(b"> [ ] testing")
     send(b"\n")
-    wait_for(b"Language packs to install")
-    send(b"\n")
     wait_for(b"Skills (target:")
     send(b" ")
     wait_for(b"> [ ] Install skills")
@@ -261,12 +259,12 @@ test_claude_user_install_can_select_rules_without_skills() {
   local input installer_output
   mkdir -p "$home" "$invocation" "$TEST_TMP/tmp" "$TEST_TMP/xdg" "$TEST_TMP/codex"
   _copy_install_source "$source"
-  input=$'\n\n\n \n\n'
+  input=$'\n\n \n\n'
   if ! installer_output="$(_run_pty_installer "$source" claude "$home" "$invocation" "$input")"; then
     _fail "$name" 'Claude user-scope installer did not complete'
     return
   fi
-  if [[ ! -f "$home/.claude/rules/common/testing.md" || -e "$home/.claude/skills/debugging/SKILL.md" ]] || grep -Fq 'skills/' "$source/.elelem-manifest-claude"; then
+  if [[ ! -f "$home/.claude/rules/common/testing.md" || -e "$home/.claude/skills/debugging/SKILL.md" ]] || awk -F/ '$1 == "skills" && !(NF >= 3 && $2 ~ /^elelem-language-[[:alnum:]_-]+$/ && $3 != "") { found = 1 } END { exit !found }' "$source/.elelem-manifest-claude"; then
     _fail "$name" 'Claude did not preserve rules-only selection and its manifest'
     return
   fi

@@ -7,6 +7,8 @@ current task:
 - `workflow.md`: identity, state, registry, baseline, tasks, evidence, blockers.
 - `research.md`: persisted research findings and references.
 - `plan.md`: final design only after explicit user approval.
+- `blueprint.md`: implementation instructions only after separate explicit user approval
+  of the exact blueprint revision, never a draft or review verdict alone.
 - `waves.md`: approved task briefs, waves and readiness verdict.
 
 Do not replace, truncate or repurpose pre-existing content. Drafts remain in
@@ -26,6 +28,12 @@ required file cannot be materialised, block before execution.
 - Design-review verdict and readiness-review verdict, separate from user
   approval. Record approval as explicit, with plan revision and source
   reference. A verdict or skipped review is never approval.
+- Blueprint draft revision and accessible content reference, linked design
+  revision and relevant source identities, preparation evidence, independent
+  blueprint review verdict/iteration/source, and separate user approval source
+  with the exact approved blueprint revision. Keep these distinct from design
+  review, design approval and wave readiness; no second ledger. Record any
+  preparation, review or approval skip separately with exact-source provenance.
 - Registry of exact files created by this workflow, with whether each existed
   before the workflow. For authorised staging files, also record the exact
   authorised staging root. Do not register pre-existing files as created.
@@ -79,7 +87,8 @@ This recoverability checkpoint is not task acceptance or a new approval.
 Missing recoverable decisions, draft proposals or evidence blocks destructive
 reduction. Preserve draft content through accessible original sources or
 authorised staging before it can be lost. Never persist an unapproved design
-into `plan.md`. A summary is not a substitute for exact permission or procedure
+into `plan.md`. Never persist an unapproved blueprint into `blueprint.md`.
+A summary is not a substitute for exact permission or procedure
 provenance. Follow `./phase-evidence.md` for the concise maintenance record;
 do not create another ledger, transcript dump or per-phase artefact family.
 
@@ -146,12 +155,24 @@ overwriting, accepting, or discarding it.
 
 Do not invalidate approved work merely because an approved task changed files.
 Only unexpected changes or changes that invalidate recorded assumptions require
-affected approval or readiness reassessment. A substantive design change
-requires renewed explicit user approval. A schedule-only replanning requires a
-fresh readiness review, unless the user explicitly skips that review. Never
-accept a stale approval merely because its file still exists. Every phase is
-user-skippable, but a skip is not approval and missing required inputs still
-block downstream work.
+affected approval or readiness reassessment. Behaviour or architecture changes
+renew affected design and blueprint review and approval. Substantive
+implementation-instruction changes renew blueprint review and separate user
+approval for the exact revised instructions before downstream use. Schedule-only
+changes renew readiness, not routine blueprint approval. Harmless wording or
+anchor relocation may reuse evidence only with demonstrated equivalence and
+original provenance retained. Compare against immutable baseline plus ordered
+accepted checkpoints, not HEAD alone or a moving replacement baseline.
+
+Never accept a stale approval merely because its file still exists. Every phase
+is user-skippable, but a skip is not approval and missing required inputs still
+block downstream work. When blueprint approval is explicitly skipped, record
+`SKIPPED`, not approved; retain the complete supplied revision in conversation or
+authorised staging with accessible source identity, not as approved blueprint.md.
+Consumers must receive that complete input and the separate applicable skips.
+Preparation skips require equivalent complete supplied instructions; review and
+approval remain required unless separately skipped. Apply `./phase-evidence.md`
+before reusing or resuming any blueprint-dependent work.
 
 Before taking ownership, inspect for active state with the same workflow
 identity. Do not overwrite it or run a second coordinator on its active task.
