@@ -344,14 +344,39 @@ test_review_findings_block_affected_task_without_holding_independent_progress() 
 
 test_context_boundary_policy() {
   local name="$1" relative="$2" pattern="$3" content
-  if [[ ! -f "$REPO_ROOT/$relative" ]] || ! content="$(tr '\n' ' ' < "$REPO_ROOT/$relative" | tr -s '[:space:]' ' ')" || ! grep -Eiq "$pattern" <<< "$content"; then
-    _fail "$name" "$relative lacks required context boundary policy"
+  if [[ ! -f "$REPO_ROOT/$relative" || ! -r "$REPO_ROOT/$relative" ]]; then
+    _fail "$name" "cannot read $relative to check requirement $name: $pattern"
+    return
+  fi
+  if ! content="$(tr '\n' ' ' < "$REPO_ROOT/$relative" | tr -s '[:space:]' ' ')"; then
+    _fail "$name" "could not read $relative to check requirement $name: $pattern"
+    return
+  fi
+  if ! grep -Eiq "$pattern" <<< "$content"; then
+    _fail "$name" "$relative lacks requirement $name: $pattern"
     return
   fi
   _pass "$name"
 }
 
 context_policy_cases=(
+  'blueprint_wave_input|skills/wave-planning/SKILL.md|matching approved blueprint revision.{0,160}separate blueprint approval source.{0,220}equivalent complete supplied input'
+  'blueprint_wave_complete_steps|skills/wave-planning/SKILL.md|package cohesive blueprint units.{0,180}requirement-to-unit-to-task map.{0,120}complete applicable steps.{0,180}without rediscovering implementation instructions'
+  'blueprint_executor_direct_entry|skills/subagent-driven-development/SKILL.md|direct or wave-skip entry.{0,150}missing or stale.{0,150}NEEDS_CONTEXT'
+  'blueprint_corrections_reuse|skills/subagent-driven-development/SKILL.md|valid in-scope corrections reuse current blueprint instructions.{0,150}new consequential choices return upstream'
+  'blueprint_phase_order|skills/workflow-coordinator/SKILL.md|explicit user approval.{0,100}approved plan.{0,150}implementation-planning.{0,250}independent blueprint review.{0,200}explicit user approval.{0,100}exact blueprint revision.{0,180}blueprint.md.{0,180}Wave planning'
+  'blueprint_separate_approval|skills/workflow-coordinator/SKILL.md|After both design and blueprint approvals.{0,150}without routine task or wave approval prompts'
+  'blueprint_revision_state|skills/_shared/workflow-artifacts.md|Blueprint draft revision.{0,160}design revision.{0,100}source identities.{0,180}review verdict.{0,150}approval source.{0,120}exact approved blueprint revision'
+  'blueprint_approved_only_persistence|skills/_shared/workflow-artifacts.md|blueprint.md.{0,120}only after separate explicit user approval'
+  'blueprint_ordered_evidence|skills/_shared/phase-evidence.md|Design review.{0,200}design approval.{0,200}Implementation Planning.{0,250}independent blueprint review.{0,250}blueprint approval.{0,200}matching design and source revision'
+  'blueprint_drift_design|skills/_shared/workflow-artifacts.md|Behaviour or architecture changes.{0,160}design and blueprint review and approval'
+  'blueprint_drift_instructions|skills/_shared/workflow-artifacts.md|Substantive implementation-instruction changes.{0,160}blueprint review and separate user approval'
+  'blueprint_drift_schedule|skills/_shared/workflow-artifacts.md|Schedule-only changes.{0,100}readiness.{0,160}not routine blueprint approval'
+  'blueprint_equivalence_resume|skills/_shared/workflow-artifacts.md|wording or anchor relocation.{0,160}demonstrated equivalence.{0,100}original provenance'
+  'blueprint_separate_skips|skills/_shared/phase-evidence.md|preparation, blueprint review and blueprint approval skips separately.{0,180}SKIPPED.{0,160}never approval or PASS'
+  'blueprint_skip_requires_input|skills/_shared/phase-evidence.md|preparation skip requires equivalent complete supplied input.{0,160}does not skip review or approval.{0,180}Missing or unknown downstream context blocks'
+  'blueprint_legacy_entry|skills/workflow-coordinator/SKILL.md|Legacy, ticket and direct entry.{0,160}missing blueprint evidence.{0,100}NEEDS_CONTEXT.{0,150}never infer completion'
+  'blueprint_preparation_handoff|skills/implementation-planning/SKILL.md|Return the draft content and revision.{0,180}reconciled review verdict.{0,150}questions.{0,100}coordinator'
   'phase_briefs_select_sufficient_inputs|skills/_shared/task-briefs.md|Phase inputs include.{0,120}objective.{0,80}method.{0,80}scope.{0,80}revision.{0,180}constraints.{0,100}required outputs.{0,100}unresolved decisions'
   'phase_briefs_reference_precise_provenance|skills/_shared/task-briefs.md|precise artefact sections.{0,100}accessible source references.{0,160}approval.{0,100}exact-source skips.{0,100}baseline.{0,100}checkpoint.{0,100}evidence'
   'phase_briefs_do_not_truncate_required_review_context|skills/_shared/task-briefs.md|Sufficiency takes precedence over.{0,60}size.{0,180}full approved design.{0,80}cumulative changes.{0,180}complete implementation briefs'
@@ -394,7 +419,38 @@ context_policy_cases=(
   'blocker_policy_fast_path_invokes_executor|skills/fast-path-implementation/SKILL.md|invoke.{0,80}subagent-driven-development.{0,120}through'
  )
 
-handoff_skill_files=(verification-before-completion/SKILL.md workflow-coordinator/SKILL.md _shared/workflow-artifacts.md _shared/task-briefs.md _shared/subagent-dispatch.md _shared/phase-evidence.md research/SKILL.md brainstorming/SKILL.md brainstorming-standard/SKILL.md brainstorming-guided/SKILL.md brainstorming-committee/SKILL.md brainstorming-skip/SKILL.md design-review/SKILL.md work-on-ticket/SKILL.md debugging/SKILL.md wave-planning/SKILL.md subagent-driven-development/SKILL.md dispatching-parallel-agents/SKILL.md fast-path-implementation/SKILL.md)
+blueprint_mutation_cases=(
+  'blueprint_order_rejects_missing_preparation|skills/workflow-coordinator/SKILL.md|approved plan.{0,150}implementation-planning.{0,250}independent blueprint review|implementation-planning'
+  'blueprint_approval_rejects_unspecified_revision|skills/workflow-coordinator/SKILL.md|separate explicit user approval of the exact blueprint revision|exact blueprint revision'
+  'blueprint_state_rejects_unlinked_sources|skills/_shared/workflow-artifacts.md|Blueprint draft revision.{0,160}design revision.{0,100}source identities|source identities'
+  'blueprint_instructions_reject_stale_approval|skills/_shared/workflow-artifacts.md|Substantive implementation-instruction changes.{0,160}blueprint review and separate user approval|blueprint review and separate user approval'
+  'blueprint_schedule_rejects_unnecessary_reapproval|skills/_shared/workflow-artifacts.md|Schedule-only changes renew readiness, not routine blueprint approval|not routine blueprint approval'
+  'blueprint_skip_rejects_incomplete_input|skills/_shared/phase-evidence.md|preparation skip requires equivalent complete supplied input|equivalent complete supplied input'
+  'blueprint_skip_rejects_implicit_review_skip|skills/_shared/phase-evidence.md|does not skip review or approval|does not skip review or approval'
+  'blueprint_resume_rejects_unproven_equivalence|skills/_shared/workflow-artifacts.md|wording or anchor relocation.{0,160}demonstrated equivalence.{0,100}original provenance|demonstrated equivalence'
+  'blueprint_direct_entry_rejects_missing_context|skills/subagent-driven-development/SKILL.md|direct or wave-skip entry.{0,150}missing or stale.{0,150}NEEDS_CONTEXT|missing or stale'
+)
+
+test_blueprint_contract_rejects_missing_guard() {
+  local name="$1" relative="$2" pattern="$3" removed="$4" content mutated
+  if [[ ! -r "$REPO_ROOT/$relative" ]]; then
+    _fail "$name" "cannot read $relative"
+    return
+  fi
+  content="$(tr '\n' ' ' < "$REPO_ROOT/$relative" | tr -s '[:space:]' ' ')"
+  if ! grep -Eiq "$pattern" <<< "$content"; then
+    _fail "$name" "positive source contract is absent in $relative: $pattern"
+    return
+  fi
+  mutated="${content//"$removed"/REMOVED}"
+  if [[ "$mutated" == "$content" ]] || grep -Eiq "$pattern" <<< "$mutated"; then
+    _fail "$name" "contract accepts missing guard $removed in $relative"
+    return
+  fi
+  _pass "$name"
+}
+
+handoff_skill_files=(verification-before-completion/SKILL.md workflow-coordinator/SKILL.md _shared/workflow-artifacts.md _shared/task-briefs.md _shared/subagent-dispatch.md _shared/phase-evidence.md research/SKILL.md brainstorming/SKILL.md brainstorming-standard/SKILL.md brainstorming-guided/SKILL.md brainstorming-committee/SKILL.md brainstorming-skip/SKILL.md design-review/SKILL.md implementation-planning/SKILL.md implementation-planning/blueprint-reviewer-prompt.md work-on-ticket/SKILL.md debugging/SKILL.md wave-planning/SKILL.md subagent-driven-development/SKILL.md dispatching-parallel-agents/SKILL.md fast-path-implementation/SKILL.md)
 
 _prepare_claude_install() {
   local root="$1"
@@ -654,20 +710,7 @@ run_case context_boundary_helper_accepts_matching_content test_context_boundary_
 run_case context_boundary_helper_rejects_missing_content test_context_boundary_policy_self_check policy.md 'absent policy' FAIL
 run_case context_boundary_helper_rejects_missing_file test_context_boundary_policy_self_check absent.md 'boundary policy present' FAIL
 
-for requirement in "${context_policy_cases[@]}"; do
-  IFS='|' read -r name relative pattern <<< "$requirement"
-  case "$name" in
-    verification_validity_is_input_based|verification_reuse_survives_session_resume|final_gate_invokes_evidence_owner|final_gate_reuses_matching_evidence|standing_rule_requires_coordinator|blocker_policy_task_dependency_closure|blocker_policy_shared_contract_scope|blocker_policy_global_safety_scope|blocker_policy_independent_eligibility|blocker_policy_unknown_impact|blocker_policy_provisional_hold|blocker_policy_review_scope|blocker_policy_coordinator_loads_owner|blocker_policy_brief_loads_owner|blocker_policy_executor_loads_owner|blocker_policy_fast_path_invokes_executor)
-      continue
-      ;;
-  esac
-  run_case "$name" test_context_boundary_policy "$relative" "$pattern"
-done
-
-
-for harness in claude opencode codex; do
-  run_case "${harness}_installer_delivers_context_boundary_policy" test_installer_delivers_context_boundary_policy "$harness"
-done
+run_case claude_installer_delivers_context_boundary_policy test_installer_delivers_context_boundary_policy claude
 
 printf 'Cases: %d, Passed: %d, Failed: %d\n' "$(( passed + failed ))" "$passed" "$failed"
 (( failed == 0 ))

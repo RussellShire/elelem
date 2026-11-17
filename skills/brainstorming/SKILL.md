@@ -15,7 +15,7 @@ This skill selects a Planning method within the lifecycle owned by `../workflow-
 - `brainstorming-committee`: explicitly selected, hands-off deliberation by three perspectives
 - `brainstorming-skip`: lightweight Planning method that captures an existing design
 
-All workflow phases remain on by default. Choosing a Planning method, including skip, does not skip Research, Design Review, explicit final approval or Wave Planning. The coordinator owns these phases and all state transitions.
+All workflow phases remain on by default. Choosing a Planning method, including skip, does not skip Research, Design Review, explicit design approval, Implementation Planning, independent blueprint review, separate user blueprint approval or Wave Planning. The coordinator owns these phases and all state transitions.
 
 Use `../_shared/phase-evidence.md`: return explicit method-selection,
 selected-mode invocation and proposal provenance to the coordinator. Router

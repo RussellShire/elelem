@@ -20,7 +20,7 @@ _fail() {
 }
 
 _manifest_has_unsupported_skill_entries() {
-  awk '$0 ~ /^skills\// { path = substr($0, 8); sub(/\/.*/, "", path); if (path !~ /^elelem-language-/) unsupported = 1 } END { exit !unsupported }' "$1"
+  awk -F/ '$1 == "skills" && !(NF >= 3 && $2 ~ /^elelem-language-[[:alnum:]_-]+$/ && $3 != "") { found = 1 } END { exit !found }' "$1"
 }
 
 _copy_install_source() {
@@ -536,6 +536,19 @@ test_claude_manifest_rejects_optional_skill_paths() {
   _pass "$name"
 }
 
+test_claude_manifest_rejects_malformed_language_paths() {
+  local name='claude_manifest_rejects_malformed_language_paths'
+  local manifest="$TEST_TMP/malformed-language-manifest" path
+  for path in 'skills/elelem-language-' 'skills/elelem-language-python' 'skills/elelem-language-python/'; do
+    printf '%s\n' "$path" > "$manifest"
+    if ! _manifest_has_unsupported_skill_entries "$manifest"; then
+      _fail "$name" "manifest policy accepts malformed language path: $path"
+      return
+    fi
+  done
+  _pass "$name"
+}
+
 test_claude_user_install_can_select_rules_without_skills() {
   local name='claude_user_install_can_select_rules_without_skills'
   local source="$TEST_TMP/claude-source"
@@ -563,6 +576,7 @@ test_expired_cleanup_grace_has_a_zero_select_timeout
 test_opencode_early_exit_preserves_output_and_error
 test_opencode_unexpected_error_preserves_output_and_error
 test_claude_manifest_rejects_optional_skill_paths
+test_claude_manifest_rejects_malformed_language_paths
 test_claude_user_install_can_select_rules_without_skills
 printf 'Tests: %d passed, %d failed\n' "$passed" "$failed"
 ((failed == 0))

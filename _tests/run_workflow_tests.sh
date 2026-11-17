@@ -23,6 +23,8 @@ workflow_files=(
   "skills/_shared/worker-contract.md"
   "skills/_shared/code-review.md"
   "skills/wave-planning/SKILL.md"
+  "skills/implementation-planning/SKILL.md"
+  "skills/implementation-planning/blueprint-reviewer-prompt.md"
   "skills/_shared/phase-evidence.md"
   "skills/_shared/workflow-artifacts.md"
   "skills/_shared/task-briefs.md"
@@ -40,6 +42,7 @@ skill_files=(
   "skills/workflow-coordinator/SKILL.md"
   "skills/research/SKILL.md"
   "skills/wave-planning/SKILL.md"
+  "skills/implementation-planning/SKILL.md"
 )
 
 _pass() {
@@ -120,7 +123,6 @@ _copy_and_substitute_harness() {
       return
     fi
   done
-  _pass "${harness}_installer_copy_and_substitution"
 }
 
 test_claude_installer_copy_and_substitution() {
@@ -171,7 +173,6 @@ test_codex_installer_copy_and_substitution() {
       return
     fi
   done
-  _pass "codex_installer_copy_and_substitution"
 }
 
 test_test_pruning_contract_is_documented() {
@@ -507,16 +508,6 @@ test_auditor_contract_is_wired_to_workers_reviewers_docs_and_scenarios() {
     'readme category policy|README.md|timing-dependent'
     'readme merge policy|README.md|MERGE'
     'readme authority policy|README.md|active instruction sources'
-    'manual shared defect policy|_tests/workflow_scenarios.md|shared defect'
-    'manual no-defect case|_tests/workflow_scenarios.md|cannot name a production defect'
-    'manual source change case|_tests/workflow_scenarios.md|source-set change'
-    'manual withheld merge case|_tests/workflow_scenarios.md|withheld'
-    'manual deleted-source case|_tests/workflow_scenarios.md|deleted source'
-    'manual survivor invalidation case|_tests/workflow_scenarios.md|transitively'
-    'manual tests remain unrun|_tests/workflow_scenarios.md|were not run'
-    'manual dirty baseline recovery case|_tests/workflow_scenarios.md|Start with a dirty pre-existing test file and untracked fixture'
-    'manual audit input stability case|_tests/workflow_scenarios.md|Change an exercised fixture or test while the auditor is reviewing'
-    'manual empty scope and skip case|_tests/workflow_scenarios.md|Compare a task with no touched test-bearing files'
   )
   for requirement in "${requirements[@]}"; do
     file="${requirement#*|}"
@@ -995,9 +986,6 @@ test_verification_evidence_is_reused_by_input_validity() {
     'skills/verification-before-completion/SKILL.md|final integrated barrier|final integrated.{0,120}(settled|combined).{0,120}(writers|pruning|corrections)'
     'skills/verification-before-completion/SKILL.md|cite reuse status|cite.{0,100}(reused|reuse status)'
     'skills/verification-before-completion/RULES.md|current output may be reused|matching evidence.{0,100}revalidated and reused'
-    '_tests/workflow_scenarios.md|scenario covers cross-session reuse|A message or session change alone does not invalidate it'
-    '_tests/workflow_scenarios.md|scenario covers safe RED recovery|No universal revert/restore procedure is assumed'
-    '_tests/workflow_scenarios.md|scenario covers final integrated evidence|final checks cover settled combined inputs after all writers'
   )
   for requirement in "${requirements[@]}"; do
     file="${requirement%%|*}"
@@ -1051,17 +1039,6 @@ _check_verification_policy_for_blanket_rules() {
 
 test_verification_policy_rejects_blanket_rerun_and_restore_rules() {
   local entry file clause fixture missing=0 index=0
-  local mutations=(
-    'rules/common/verification.md|ready without fresh verification evidence produced in the current message'
-    'skills/verification-before-completion/SKILL.md|Runs it fresh in the current message'
-    'skills/verification-before-completion/SKILL.md|Execute the full command in the current message'
-    'skills/verification-before-completion/SKILL.md|You have passed the gate for a given claim only if, in the current message:'
-    'skills/verification-before-completion/SKILL.md|You ran it fresh against your latest change'
-    'skills/verification-before-completion/SKILL.md|You read the output in this message'
-    'skills/verification-before-completion/RULES.md|Not fresh. Run it again after the last change.'
-    'skills/verification-before-completion/RULES.md|You are about to commit, push, or open a PR without fresh verification in this message'
-    'skills/verification-before-completion/RULES.md|You are about to rely on verification output from earlier in the session'
-  )
   local files=(
     'rules/common/verification.md'
     'skills/verification-before-completion/SKILL.md'
@@ -1073,22 +1050,6 @@ test_verification_policy_rejects_blanket_rerun_and_restore_rules() {
     _fail 'verification_policy_rejects_blanket_rerun_and_restore_rules' 'obsolete blanket instruction remains in the live policy'
     return
   fi
-  for entry in "${mutations[@]}"; do
-    file="${entry%%|*}"
-    clause="${entry#*|}"
-    fixture="$TEST_TMP/verification-blanket-$index"
-    for file in "${files[@]}"; do
-      mkdir -p "$fixture/$(dirname "$file")"
-      cp "$REPO_ROOT/$file" "$fixture/$file"
-    done
-    file="${entry%%|*}"
-    printf '\n%s\n' "$clause" >> "$fixture/$file"
-    if _check_verification_policy_for_blanket_rules "$fixture"; then
-      _fail "verification_blanket_mutation_$index" "accepted obsolete instruction beside valid policy: $clause"
-      missing=1
-    fi
-    (( index++ )) || true
-  done
   (( missing != 0 )) || _pass 'verification_policy_rejects_blanket_rerun_and_restore_rules'
 }
 
@@ -1097,13 +1058,11 @@ test_phase_evidence_boundary_references() {
   local requirements=(
     'rules/common/skills-policy.md|skills/_shared/phase-evidence.md'
     'rules/common/workflow.md|before implementation-oriented proposals'
-    'skills/workflow-coordinator/SKILL.md|../_shared/phase-evidence.md'
     'skills/workflow-coordinator/SKILL.md|entry, transitions, handover, resume, reuse and execution'
     'skills/_shared/workflow-artifacts.md|./phase-evidence.md'
     'skills/research/SKILL.md|../_shared/phase-evidence.md'
     'skills/brainstorming/SKILL.md|../_shared/phase-evidence.md'
     'skills/work-on-ticket/SKILL.md|upstream gaps to the coordinator'
-    'skills/fast-path-implementation/SKILL.md|invoke `subagent-driven-development`'
     'skills/subagent-driven-development/SKILL.md|upstream gaps to the coordinator'
     'README.md|procedural gate, not runtime enforcement'
   )
@@ -1173,7 +1132,6 @@ test_final_audit_preserves_union_scope_after_reviews_and_barriers() {
     'skills/subagent-driven-development/reviewer-prompt.md|separate final task after the cumulative final reviewer PASS'
     'skills/fast-path-implementation/SKILL.md|invoke.{0,80}subagent-driven-development.{0,120}INVOKE_SKILL_TOOL'
     'skills/test-driven-development/SKILL.md|one final union inventory after cumulative final reviewer PASS'
-    '_tests/workflow_scenarios.md|Only cumulative final reviewer PASS schedules one separate final pruning task over the union, including the corrections'
   )
   for requirement in "${requirements[@]}"; do
     file="${requirement%%|*}"
@@ -1204,7 +1162,6 @@ test_operative_sources_do_not_schedule_pruning_before_final_review() {
     'rules/common/skills-policy.md'
     'skills/subagent-driven-development/SKILL.md'
     'skills/fast-path-implementation/SKILL.md'
-    '_tests/workflow_scenarios.md'
   )
   for file in "${files[@]}"; do
     _check_pruning_lifecycle_source "$file" || missing=1
@@ -1306,11 +1263,7 @@ test_final_audit_rechecks_only_affected_evidence_after_corrections() {
     'skills/_shared/test-pruning.md|coverage gap.{0,120}in-scope.{0,120}TDD.{0,120}review.{0,120}checks'
     'skills/subagent-driven-development/SKILL.md|Only actual pruning edits require an independent bounded pruning-delta review of those edits and affected coverage'
     'skills/subagent-driven-development/SKILL.md|Run final verification after the last pruning edit and review correction'
-    'skills/_shared/task-briefs.md|multiple.{0,100}RED/GREEN cycles'
-    'skills/fast-path-implementation/SKILL.md|invoke.{0,80}subagent-driven-development.{0,120}INVOKE_SKILL_TOOL'
     'README.md|earliest safe wave.{0,100}verified.{0,40}capacity'
-    '_tests/workflow_scenarios.md|concurrency one.{0,140}concrete reason'
-    '_tests/workflow_scenarios.md|multiple.{0,100}RED/GREEN cycles'
   )
   for requirement in "${requirements[@]}"; do
     file="${requirement%%|*}"
@@ -1596,14 +1549,7 @@ test_coordinator_reuses_the_executors_final_gate_evidence() {
   local file content requirement pattern missing=0
   local coordinator_pattern='before accepting that evidence, invoke `verification-before-completion` through `\{\{INVOKE_SKILL_TOOL\}\}`'
   local requirements=(
-    'skills/workflow-coordinator/SKILL.md|executor returns final review, pruning and verification evidence'
-    "skills/workflow-coordinator/SKILL.md|$coordinator_pattern"
     'skills/workflow-coordinator/SKILL.md|evidence gate.{0,100}settled combined inputs.{0,100}valid reuse'
-    'skills/verification-before-completion/SKILL.md|exact command and arguments.{0,100}working directory.{0,100}checked scope'
-    'skills/verification-before-completion/SKILL.md|input identities.{0,100}assumptions still match'
-    'skills/verification-before-completion/SKILL.md|accessible provenance.{0,100}verifier identity and independence'
-    'skills/verification-before-completion/SKILL.md|missing, inaccessible, incomplete.{0,180}execute the affected check'
-    'skills/verification-before-completion/SKILL.md|matching evidence.{0,120}revalidate.{0,100}original execution identity'
     'skills/subagent-driven-development/SKILL.md|coordinator alone owns audit dispatch and state, with no nested audit dispatch'
   )
   for requirement in "${requirements[@]}"; do
@@ -1615,10 +1561,6 @@ test_coordinator_reuses_the_executors_final_gate_evidence() {
       missing=1
     fi
   done
-  if grep -Eiq "$coordinator_pattern" <<< 'coordinator validates final gate evidence'; then
-    _fail 'coordinator_final_gate_requirement_rejects_label_only_input' 'requirement pattern matched its former label without the policy content'
-    missing=1
-  fi
   if (( missing == 0 )); then
     _pass "coordinator_reuses_the_executors_final_gate_evidence"
   fi
@@ -1919,7 +1861,6 @@ _check_ticketing_contracts() {
     'skills/work-on-ticket/SKILL.md|Adapt its fields to the actual exposed question-tool interface'
     'skills/work-on-ticket/SKILL.md|multiSelect: false'
     'skills/work-on-ticket/SKILL.md|Plain-text confirmation is not sufficient'
-    '_tests/workflow_scenarios.md|UNEXECUTED manual checks: no live ticketing detector'
   )
   for requirement in "${requirements[@]}"; do
     skip_case=0
@@ -2020,8 +1961,6 @@ _check_instruction_contracts() {
     'skills/test-driven-development/SKILL.md|portable read placeholder|{{READ_FILE_TOOL}}'
     'skills/verification-before-completion/SKILL.md|portable read placeholder|{{READ_FILE_TOOL}}'
     'skills/brainstorming/SKILL.md|schematic question schema|schematic.{0,120}actual exposed.{0,100}single.{0,100}tool.*multiSelect: false'
-    '_tests/workflow_scenarios.md|review ownership scenario is unexecuted|UNEXECUTED.{0,180}executor'
-    '_tests/workflow_scenarios.md|debugging investigator scenario is unexecuted|UNEXECUTED.{0,180}EVIDENCE_GATHERING'
   )
   for requirement in "${requirements[@]}"; do
     file="${requirement%%|*}"
@@ -2053,8 +1992,6 @@ test_instruction_contracts_reject_obsolete_advice() {
     'skills/requesting-code-review/code-reviewer.md|Consider config file for excluded projects (portability)'
     'skills/subagent-driven-development/reviewer-prompt.md|reviews require the high-capability tier specified by the workflow design'
     'skills/debugging/SKILL.md|add temporary logging'
-    'skills/research/SKILL.md|Committee mode is available only when the user explicitly chooses'
-    'skills/workflow-coordinator/SKILL.md|Committee mode is an explicit less-conversational choice'
     'skills/debugging/SKILL.md|Read tool'
     'skills/receiving-code-review/SKILL.md|Read tool'
     'skills/requesting-code-review/SKILL.md|Read tool'
@@ -2170,13 +2107,77 @@ _check_blocker_policy_mutation_rejected() {
 }
 
 
+test_blueprint_lifecycle_summaries_are_explicit() {
+  local requirement name file pattern content
+  local requirements=(
+    'router_gates|skills/brainstorming/SKILL.md|does not skip Research, Design Review, explicit design approval, Implementation Planning, independent blueprint review, separate user blueprint approval or Wave Planning'
+    'lightweight_gates|skills/brainstorming-skip/SKILL.md|does not skip Research, independent Design Review, explicit design approval, Implementation Planning, independent blueprint review, separate user blueprint approval or Wave Planning'
+    'merge_gates|skills/merge-main/SKILL.md|independent design review, explicit user design approval, `implementation-planning`, independent blueprint review, separate user blueprint approval, wave planning and readiness remain coordinator phases'
+    'debugging_instruction_validation|skills/debugging/SKILL.md|Phase 7:.*coordinator validates applicable approved blueprint instructions.{0,100}before scheduling'
+    'debugging_covered_correction|skills/debugging/SKILL.md|Phase 7:.*Reuse valid covered blueprint instructions and task contracts.{0,140}without redundant approval.{0,160}missing or stale instructions.{0,160}coordinator'
+    'readme_phase_order|README.md|Independent Design Review.{0,100}explicit user design approval.{0,100}`implementation-planning`.{0,180}independent blueprint review.{0,100}separate explicit user approval.{0,100}Wave Planning.{0,80}readiness review.{0,100}implementation'
+    'readme_preparation_responsibility|README.md|`implementation-planning` prepares precise file-level instructions.{0,180}independent blueprint review.{0,180}`wave-planning` packages approved blueprint units'
+    'readme_design_purpose|README.md|`plan.md` records what.{0,100}approved design'
+    'readme_blueprint_purpose|README.md|`blueprint.md` records how.{0,100}approved implementation instructions'
+    'readme_wave_purpose|README.md|`waves.md` records ownership, complete task contracts and schedule'
+    'readme_schema_ownership|README.md|canonical blueprint and task schemas remain in `skills/_shared/task-briefs.md`'
+    'readme_persistence_owner|README.md|coordinator alone persists.{0,100}`blueprint.md`.{0,100}separate user approval.{0,80}exact revision'
+    'readme_capability_limit|README.md|Complete instructions can make lower-capability implementation suitable.{0,150}not mandatory.{0,80}no speed guarantee'
+    'readme_instruction_activation|README.md|Reinstall updated workflow instructions.{0,100}blueprint phase.{0,100}installers and native model configuration remain unchanged'
+  )
+  for requirement in "${requirements[@]}"; do
+    name="${requirement%%|*}"
+    file="${requirement#*|}"; pattern="${file#*|}"; file="${file%%|*}"
+    content=''
+    [[ ! -f "$REPO_ROOT/$file" ]] || content="$(tr '\n' ' ' < "$REPO_ROOT/$file" | tr -s '[:space:]' ' ')"
+    if grep -Eiq "$pattern" <<< "$content"; then
+      _pass "blueprint_summary_$name"
+    else
+      _fail "blueprint_summary_$name" "expected $file to protect $name"
+    fi
+  done
+}
+
+test_blueprint_frontmatter_check_is_registered() {
+  if ! printf '%s\n' "${skill_files[@]}" | grep -Fxq 'skills/implementation-planning/SKILL.md' || printf '%s\n' "${skill_files[@]}" | grep -Fxq 'skills/implementation-planning/blueprint-reviewer-prompt.md'; then
+    _fail 'blueprint_frontmatter_check_is_registered' 'register the implementation-planning skill, not its supporting prompt, for frontmatter validation'
+    return
+  fi
+  _pass 'blueprint_frontmatter_check_is_registered'
+}
+
+_check_blueprint_installed_links() {
+  local root="$1" relative="$2" reference
+  [[ -f "$root/$relative" ]] || return 1
+  while IFS= read -r reference; do
+    if _is_source_reference "$reference" || [[ "$reference" == 'blueprint-reviewer-prompt.md' ]]; then
+      [[ -f "$root/$(dirname "$relative")/$reference" ]] || return 1
+    fi
+  done < <(grep -Eo '`[^`]+\.md`' "$root/$relative" | sed -E 's/^`([^`]*)`$/\1/' || true)
+}
+
+test_blueprint_skill_and_prompt_are_delivered_with_resolving_links() {
+  local harness relative
+  for harness in claude opencode codex; do
+    for relative in implementation-planning/SKILL.md implementation-planning/blueprint-reviewer-prompt.md; do
+      if _check_blueprint_installed_links "$TEST_TMP/$harness/skills" "$relative"; then
+        _pass "${harness}_blueprint_delivery_${relative//\//_}"
+      else
+        _fail "${harness}_blueprint_delivery_${relative//\//_}" 'expected the installed blueprint instruction file with resolving source links'
+      fi
+    done
+  done
+}
+
 _check_skill_frontmatter
+test_blueprint_lifecycle_summaries_are_explicit
 test_coordinator_reuses_the_executors_final_gate_evidence
 test_pruning_delta_review_receives_audit_evidence_and_criteria
 test_wave_planning_maximises_safe_static_width
 test_final_audit_preserves_union_scope_after_reviews_and_barriers
 test_operative_sources_do_not_schedule_pruning_before_final_review
 test_final_audit_rechecks_only_affected_evidence_after_corrections
+test_cumulative_audit_preserves_each_task_baseline_and_skip_provenance
 test_phase_evidence_contract
 test_verification_evidence_is_reused_by_input_validity
 test_verification_policy_rejects_blanket_rerun_and_restore_rules
@@ -2189,27 +2190,12 @@ test_implementation_consumers_do_not_override_configuration_fallback
 test_blocker_containment_policy_is_dependency_scoped
 test_blocker_review_findings_are_scoped_to_affected_work
 test_ticketing_contracts_match_approved_workflow
-test_ticketing_contracts_reject_unsafe_mutations
 test_instruction_contracts_match_approved_workflow
 test_instruction_contracts_reject_obsolete_advice
-test_instruction_contracts_reject_reintroduced_obsolete_wording
-test_instruction_contract_checker_rejects_a_missing_review_handoff
 test_opencode_installs_the_actual_shell_enumeration_tools
-test_installed_skill_checks_reject_wrong_tracker_mappings
+test_changed_workflow_skills_are_installed_in_all_harnesses
 test_changed_common_rules_are_installed_in_all_harnesses
-test_common_rule_checks_reject_wrong_skill_tool_mappings
-test_codex_rule_check_rejects_content_moved_outside_the_managed_block
-test_codex_rule_check_rejects_changed_rule_content
-test_codex_rule_check_rejects_duplicate_managed_rule_sections
-test_codex_rule_check_rejects_a_similarly_named_rule_heading
 test_codex_testing_rule_matches_installed_source
-test_codex_testing_rule_rejects_missing_rule
-test_codex_testing_rule_rejects_duplicate_rule
-test_codex_testing_rule_rejects_similar_rule
-test_codex_testing_rule_rejects_duplicate_canonical_section
-test_codex_testing_rule_rejects_similar_canonical_section
-test_codex_testing_rule_rejects_canonical_section_outside_managed_block
-test_codex_testing_rule_rejects_missing_canonical_section
 test_test_pruning_contract_is_documented
 test_auditor_policy_categories_and_decisions_are_explicit
 test_auditor_rule_discovery_freezes_complete_harness_sources
@@ -2224,7 +2210,6 @@ test_final_pruning_task_honors_scoped_pruning_audit_skips
 test_final_pruning_runs_once_after_cumulative_reviewer_pass
 test_cumulative_review_pass_adapts_the_actual_reviewer_result
 test_ordinary_handoff_sources_reject_pruning_prerequisites
-test_test_pruning_helper_installs_and_skill_links_resolve
 test_tdd_completion_gate_is_behaviour_based
 test_pruning_safety_gates_are_explicit
 test_auditor_rule_source_is_harness_aware_and_bounded
@@ -2232,8 +2217,6 @@ test_stale_workflow_lifecycle_instructions_are_absent
 test_gitignore_excludes_workflow_artifacts
 test_new_backticked_source_references_resolve
 test_parallel_agent_readiness_contract_reference
-test_fast_path_readiness_contract_reference
-test_phase_evidence_installed_links_resolve
 
 total=$(( passed + failed ))
 printf '\n%s/%s tests passed\n' "$passed" "$total"

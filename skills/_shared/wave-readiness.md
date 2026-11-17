@@ -18,12 +18,28 @@ pass session history as a substitute for these inputs. Before dispatch, load
 `worker-contract.md` and paste its All workers and Read-only workers sections
 verbatim with source path and identity, following `subagent-dispatch.md`.
 
+Supply the full blueprint, its exact blueprint revision, separate review and
+user approval sources, linked design revision, relevant source identities,
+immutable baseline plus accepted checkpoints, requirement-to-unit map and
+unit-to-task map. Deliver complete applicable steps and source context for every
+task, not links alone. Include any separately recorded scoped preparation,
+blueprint-review or approval skips with equivalent complete supplied inputs.
+Load and apply `phase-evidence.md` to validate those ordered prerequisites.
+
 ## Readiness checks
 
 The independent reviewer returns `READY` or `GAPS`, with evidence for each
 finding. The planner checks the same requirements while constructing the
 schedule, regardless of whether an independent review is authorised to be
 skipped. Check:
+
+- Require matching design, blueprint review and approval revisions and source
+  identities, with complete requirement/unit/task coverage and preservation of
+  exact-file instructions, ordered test-first steps, failure cases and acceptance.
+- Treat missing or stale blueprint evidence or incomplete supplied instructions
+  as `GAPS`, including on direct/single-task paths; a review skip cannot invent
+  these inputs. Validate expected state against the immutable baseline and ordered
+  accepted checkpoints, not by treating expected accepted task changes as drift.
 
 - Every design requirement, integration need, test, error case and final check
   maps to a task or explicit verification activity.
@@ -64,8 +80,9 @@ policy; it neither blocks readiness by itself nor is prevented by task pins.
 ## Verdict and response
 
 `READY` means the proposed schedule is complete and safe to dispatch against
-the supplied approved design. It does not approve the design or authorise a
-design change. Record verdict, reviewer identity, plan revision and material
+the supplied approved design and blueprint. It does not approve either or
+authorise their change. Record verdict, reviewer identity, plan revision, blueprint
+revision, source identities, unit-to-task coverage and material
 findings in `waves.md` and coordinator state.
 
 If the user explicitly skips only this review, do not invoke a reviewer and do
@@ -81,14 +98,15 @@ remain blockers.
 
 For scheduling-only gaps, return precise corrections to wave planning. No new
 user prompt is needed if requirements, architecture and contracts remain
-unchanged. If a requirement, architecture, external expectation or contract is
-missing, return the gap to Planning. For a substantive design change, Planning
-produces one revised consolidated proposal, an independent design review
-assesses that revision, the coordinator obtains explicit user approval of the
-reviewed revision, and affected readiness is reassessed before dispatch. Review
-verdict, user approval and verification remain distinct. Honour any existing
-scoped skips without treating a skip as a verdict or approval. Never dispatch
-on `GAPS`.
+unchanged. Scheduling gaps stay in Wave Planning and renew readiness only.
+Blueprint instruction gaps return to Implementation Planning through the
+coordinator for renewed independent blueprint review and separate user approval.
+True behaviour/architecture, external expectation or design-contract gaps return
+to design Planning for one revised consolidated proposal, independent design
+review and explicit user approval, then affected blueprint gates and readiness
+reassessment. Review verdict, user approval and verification remain distinct.
+Honour any existing scoped skips without treating a skip as a verdict or approval.
+Never dispatch on `GAPS`.
 
 If wave planning was explicitly skipped, do not invent parallel tasks or claim
 this review occurred. Require one complete, bounded task brief; execute only
