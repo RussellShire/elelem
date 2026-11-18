@@ -118,6 +118,9 @@ silently dropping their tests or authorising deletion. Explain any legitimate
 non-live path against recorded approved changes before excluding it; an empty
 live scope, including an explained all-non-live history, is `NOT APPLICABLE`.
 Do not include unrelated user work or infer scope from a broad HEAD diff.
+Apply the case boundary definition from the already retrieved active canonical
+Meaningful Assertions section. Before declaring the inventory complete, map each
+case's source, independently varied input or outcome, and execution evidence.
 Record stable case identifiers, independent parameterised cases and source
 identities for every live file. Archived removed-source records are separate
 from the current live inventory; do not add archived cases to it or count them

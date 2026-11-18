@@ -144,7 +144,7 @@ Cross-references between files use relative paths from the citing file's locatio
 
 `research` gathers bounded evidence and discusses findings. The existing `brainstorming` modes shape Planning. `design-review` independently reviews the design. After design approval, `implementation-planning` prepares precise file-level instructions using high-capability reasoning and reconciles independent blueprint review. Following separate user blueprint approval, `wave-planning` packages approved blueprint units into complete tasks and checks readiness, and `subagent-driven-development` executes approved tasks. The canonical blueprint and task schemas remain in `skills/_shared/task-briefs.md`. Complete instructions can make lower-capability implementation suitable, but a low tier is not mandatory and there is no speed guarantee. Missing consequential instructions return `NEEDS_CONTEXT`, not stronger workers to conceal gaps. `create-tickets` creates durable tickets only when requested, while `work-on-ticket` recovers ticket context and returns it to the coordinator for current-baseline validation. `skills/_shared/project-context-discovery.md` is a bounded, repository-first helper, not a substitute for conversational Research or Planning.
 
-Reinstall updated workflow instructions to activate the blueprint phase in existing installations; installers and native model configuration remain unchanged. Source edits alone do not activate installed instructions.
+Reinstall updated workflow instructions to activate the blueprint phase in existing installations; installers and native model configuration remain unchanged. Source checks alone do not activate installed instructions or prove live compliance. After separate explicit operator authorisation, use only the matching installer from the checkout that owns the target harness manifest and scope. Preserve unmanaged content and existing model/provider settings. Verify expected tool-substituted managed bodies rather than raw source hashes, then start a fresh session and observe the updated instructions load before claiming activation.
 
 Wave planning places ready independent tasks in the earliest safe wave up to
 verified harness and resource capacity, recording concrete reasons for
@@ -160,7 +160,7 @@ Active workflow state and temporary phase files live under `.elelem/workflows/<t
 - `blueprint.md` records how to build it: the approved implementation instructions.
 - `waves.md` records ownership, complete task contracts and schedule, including readiness.
 
-The coordinator alone persists approved `plan.md` and `blueprint.md`, the latter only after separate user approval of its exact revision. Drafts and review verdicts are not approved artefacts. At workflow start, the coordinator adds the exact `.elelem/` entry to the consuming project's root `.gitignore` and verifies the path is ignored. These files are local and uncommitted by default. Resumption uses local files, so deleting them or using another checkout loses that temporary state; durable ticket bodies retain the approved design. After successful requested work, the coordinator removes only registered workflow-created files. Paused or blocked workflows retain state for resumption. User-requested deliverables such as Markdown ticket fallback files are permanent and are never workflow cleanup targets. Installers do not modify arbitrary consuming projects to add this ignore rule.
+The coordinator alone persists approved `plan.md` and `blueprint.md`, the latter only after separate user approval of its exact revision. Drafts and review verdicts are not approved artefacts. At workflow start, the coordinator adds the exact `.elelem/` entry to the consuming project's root `.gitignore` and verifies the path is ignored. These files are local and uncommitted by default. Resumption uses local files, so deleting them or using another checkout loses that temporary state; durable ticket bodies retain the approved design. After successful requested work, the coordinator removes only registered workflow-created files. User-owned, pre-existing, unregistered and harness-owned archives, and user-requested deliverables such as Markdown ticket fallback files, remain protected. Registered temporary recovery snapshots created by the workflow are candidates only when they remain within their recorded scope and are no longer needed for active recovery or evidence; the existing final review, verification and cleanup gates still apply. Paused or blocked workflows retain state for resumption. Installers do not modify arbitrary consuming projects to add this ignore rule.
 
 ### Implementation model selection
 
@@ -475,7 +475,7 @@ with the dispatcher. Resolve active rules from the harness's configured scope,
 including Codex's managed `AGENTS.md` block. Do not substitute an adjacent
 checkout file when the active installed source is missing or ambiguous.
 
-## Writing a new language pack
+## On-demand language packs
 
 Every install includes Go, JavaScript, PHP, Python, Rust and TypeScript packs, even when optional common rules and workflow skills are declined. Each generated `elelem-language-<language>/` directory contains a thin `SKILL.md` and `references/` copies of its canonical topics. Tool placeholders are substituted in wrappers and references.
 

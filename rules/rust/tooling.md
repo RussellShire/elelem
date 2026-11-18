@@ -28,7 +28,7 @@ project/
 - Use `cargo add <crate>` to add dependencies
 - Separate `[dependencies]` (runtime) from `[dev-dependencies]` (test/build)
 - Use `[build-dependencies]` for build script dependencies
-- Specify versions with semver: `"1.2.3"` (exact), `"^1.2"` (compatible), `"~1.2.3"` (patch)
+- Specify versions with semver: `"1.2.3"` (default, caret-compatible), `"^1.2"` (compatible), `"~1.2.3"` (patch), and `"=1.2.3"` (exact)
 - Use workspace for multi-crate projects: `[workspace]` in root `Cargo.toml`
 
 ## Formatting and Linting
@@ -36,7 +36,7 @@ project/
 - Formatter: `cargo fmt` (uses `rustfmt`)
 - Linter: `cargo clippy` with project-specific allowed/denied lints
 - Run `cargo check` for fast type checking without code generation
-- Never suppress Clippy warnings with `#[allow(clippy::...)]` without a comment explaining why
+- Suppress Clippy warnings with `#[allow(clippy::...)]` only when active project policy permits it and a comment explains why. Functional syntax does not authorise suppressions; fix the underlying issue or seek direction
 
 ## Build and Run
 

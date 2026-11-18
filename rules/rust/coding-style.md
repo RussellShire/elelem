@@ -11,7 +11,7 @@ Rust's type system is your friend. Use it fully:
 
 - Prefer `Result<T, E>` for recoverable errors; `panic!`/`unwrap()` only for programmer errors
 - Use `Option<T>` over null; pattern match or use combinator methods (`map`, `and_then`, `unwrap_or`)
-- Never use `unwrap()` or `expect()` without a comment explaining why it's safe
+- Use `unwrap()` or `expect()` only for programmer errors, with a comment permitted by active project policy explaining why it is safe; otherwise use explicit handling or request direction
 - Use custom error types with `thiserror` or `anyhow` for better error handling
 - Leverage the borrow checker; prefer borrowing (`&T`, `&mut T`) over cloning
 

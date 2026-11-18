@@ -657,3 +657,31 @@ Earlier unrelated runtime waivers remain unchanged.
      separately introduced unexpected relevant changes block affected work.
    - Failure: accepted changes invalidate resume automatically, or unexpected
      changes are silently accepted as a new baseline.
+
+## Policy clarity acceptance
+
+These scenarios are manual and unexecuted. Static source checks and packaging
+checks do not establish live compliance or installed activation. The canonical
+case boundary is defined in `rules/common/testing.md` under Meaningful Assertions.
+This Markdown acceptance documentation is not executable and does not contribute
+to live test-pruning discovery.
+
+1. Compare required compiler, build, type or framework syntax in production and
+test files with explanatory prose and a suppression. Confirm required syntax is
+permitted only for a configured toolchain or required contract, while prose
+restrictions and active suppression policy still apply.
+2. Use JavaScript JSDoc annotations in a project that needs and permits them,
+then compare with unnecessary annotations. Confirm configured static checking
+is described without claiming runtime validation.
+3. Compare an existing project's established framework with the default for a
+new project. Confirm existing choices remain in use and no migration, second
+runner or dependency installation occurs without approval.
+4. Using future owned fixtures only, compare an explicitly registered temporary
+workflow recovery snapshot that meets all release conditions with protected
+user-owned, pre-existing, unregistered, harness-owned and deliverable archives.
+Exercise path guards without touching real or pre-existing archives.
+5. Compare nested cases across three harnesses and two independent requirements
+with setup, expected-data construction, fixture copying, polling, helper
+mechanics and a non-loop parent assertion. Confirm independent cases retain
+their identity, helper mechanics add none, and parent assertions are bounded
+without double-counting parameter children.

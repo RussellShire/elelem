@@ -37,7 +37,7 @@ project/
 - Formatter: `PHP-CS-Fixer` or `PHP_CodeSniffer` with PSR-12 standard
 - Linter: `PHPStan` (level 8+) or `Psalm` for static analysis
 - Run `composer validate` to check composer.json validity
-- Never suppress static analysis errors with `@phpstan-ignore` without a comment explaining why
+- Suppress static analysis errors with `@phpstan-ignore` only when active project policy permits it and a comment explains why. Functional syntax does not authorise suppressions; fix the underlying issue or seek direction
 
 ## Build and Run
 

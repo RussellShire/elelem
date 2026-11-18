@@ -7,10 +7,11 @@ globs: **/*.js, **/*.mjs, **/*.cjs
 
 ## Type Safety
 
-Use JSDoc type annotations for better IDE support and runtime safety checks:
+Use JSDoc type annotations when project needs and active project policy permit them, such as for configured editor assistance or static checking:
 
-- Document function parameters and return types with `@param` and `@returns`
-- Use `@type` for variable type hints
+- Document function parameters and return types with `@param` and `@returns` when needed
+- Use `@type` for variable type hints when needed
+- JSDoc types do not validate values at runtime
 - Consider migrating to TypeScript for large codebases
 
 ## Modern JavaScript

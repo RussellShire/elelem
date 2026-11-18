@@ -87,6 +87,20 @@ This section is the sole canonical value rule. Auditor prompts receive this
 section verbatim; they must not substitute
 or paraphrase it.
 
+### Test and case boundaries
+
+A case is a separately exercised scenario or input-result combination. Treat
+parameterised cases independently when their inputs or outcomes differ. Three
+harnesses checking two independent requirements produce six decision units,
+even when one aggregate PASS is printed.
+
+Test setup, expected-data and expected-inventory construction, fixture copying,
+polling, and helper mechanics do not create cases by themselves. An assertion
+helper checking independently driven product targets must preserve their case
+identities. Loops and printed PASS-line counts do not determine case count. Bound
+distinct non-loop parent assertions separately, without double-counting
+parameterised children.
+
 ## Test-Driven Development
 
 ### The Iron Law

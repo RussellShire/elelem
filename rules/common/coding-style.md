@@ -11,7 +11,13 @@ You **MUST** prioritise writing descriptive, self-explanatory code over adding c
 
 ## Default Rule: Write Code Without Comments
 
-You **MUST NOT** add comments unless ALL of these conditions are met:
+### Required functional syntax
+
+Minimal machine-consumed syntax is permitted only when necessary to satisfy a configured compiler, build or type toolchain, or a required framework contract. This includes required compiler and build directives, type annotations and framework annotations, including docblock-shaped JSDoc, in production and test files. Tool consumption alone, optional IDE hints and redundant typing do not make syntax necessary.
+
+This exception does not permit explanatory prose, lint or type-check suppressions, or check-disabling directives. Those remain subject to applicable project policy and their existing justification or reference requirements.
+
+You **MUST NOT** add explanatory prose comments unless ALL of these conditions are met:
 
 1. The code implements a workaround for an external bug/limitation (e.g. browser quirk, library bug) **or** documents a non-obvious performance optimisation with a measurable benchmark
 2. You have a specific ticket/issue/benchmark reference to cite
@@ -25,15 +31,15 @@ You **MUST NOT** add comments unless ALL of these conditions are met:
 - "Step X" comments in tests, use the test name instead
 - Any comment that just repeats what the code says
 
-**Absolute ban in test files.** Tests are documentation. Test names and assertions must be self-explanatory. Zero comments except ticket references for regression tests.
+**Test files:** Explanatory comments and narration are forbidden in test files. The only prose-comment exception is ticket references for regression tests. This ban does not apply to required functional syntax permitted by the narrow exception above.
 
-When you think a comment is needed, refactor first: rename variables or functions, extract to a well-named method, simplify the logic. Only add a comment after refactoring has failed, and you have a ticket reference for a workaround.
+When you think explanatory prose is needed, refactor first: rename variables or functions, extract to a well-named method, simplify the logic. Add explanatory prose only after refactoring has failed and when all three conditions above are met.
 
 ## Docblocks
 
-You **MUST** avoid docblocks where type systems and function signatures provide sufficient information.
+For explanatory documentation, you **MUST** avoid docblocks where type systems and function signatures provide sufficient information. This restriction does not apply to required functional syntax permitted above.
 
-You **MAY ONLY** use docblocks when:
+You **MAY ONLY** use explanatory docblocks when:
 
 - The project uses a documentation generator that reads them (e.g. phpDocumentor, TypeDoc, JSDoc, Sphinx, Rustdoc, Javadoc), check for a config file such as `phpdoc.xml`, `typedoc.json`, `jsdoc.json`, `docs/conf.py`, etc. before adding any
 - Providing usage examples for complex public APIs that are part of a published package

@@ -11,7 +11,7 @@ You **MUST** use explicit types on all function signatures (parameters and retur
 
 - Prefer `interface` for object shapes that may be extended; `type` for unions, intersections, and mapped types
 - Use `unknown` over `any` for truly dynamic values; narrow with type guards
-- Never use `any` without a comment explaining why and a plan to remove it
+- Never use `any` without a comment permitted by active project policy that explains why and includes a plan to remove it; if the comment is not permitted, use `unknown` and narrow the value or request direction
 - Use strict null checks; prefer `value | null` or `value | undefined` over optional fields when the distinction matters
 - Use const assertions (`as const`) for literal types and readonly tuples
 

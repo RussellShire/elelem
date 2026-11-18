@@ -35,10 +35,11 @@ required file cannot be materialised, block before execution.
   review, design approval and wave readiness; no second ledger. Record any
   preparation, review or approval skip separately with exact-source provenance.
 - Registry of exact files created by this workflow, with whether each existed
-  before the workflow. For authorised staging files, also record the exact
-  authorised staging root. Do not register pre-existing files as created.
-  Record any separate, explicit user permission to remove a pre-existing file
-  with its exact path and scope.
+  before the workflow. For a recovery snapshot, also record its ownership,
+  purpose and explicit temporary classification. Do not register pre-existing
+  files as created or adopt them retrospectively. For authorised staging files,
+  also record the exact authorised staging root. Record any separate, explicit
+  user permission to remove a pre-existing file with its exact path and scope.
 - Repository baseline: revision, relevant working-tree changes and the
   implementation-relevant files, contracts and configuration observed. Keep
   the original starting baseline, including contents of relevant dirty paths,
@@ -189,10 +190,19 @@ clean-up leaves every artefact in place and reports that fact.
 Use a manifest-only procedure over exact registered files, separately for the
 repository workflow directory and each recorded authorised staging root.
 Workflow-created files are eligible only when the registry says they did not
-exist before the workflow and the user has not skipped clean-up. Before
-deleting each path, reject absolute paths, `..` traversal, paths outside its
-recorded root, and any symlink in the file or parent path. Re-check the
-resolved parent remains inside that root. Preserve unregistered and unknown
+exist before the workflow and the user has not skipped clean-up. A recovery
+snapshot is a cleanup candidate only when that workflow created it, explicitly
+registered it as temporary, recorded its ownership and purpose, and it remains
+within the recorded owned scope. It must no longer be required for active
+recovery or evidence, and all applicable final review, verification and cleanup
+gates must permit removal. Candidate eligibility does not release evidence or
+waive a gate. Filename, extension or registration alone is not authority.
+
+User-owned, pre-existing, unregistered and harness-owned archives, and user
+deliverables, remain protected. Do not adopt pre-existing files retrospectively.
+Before deleting each eligible path, reject absolute paths, `..` traversal, paths
+outside its recorded root, and any symlink in the file or parent path. Re-check
+the resolved parent remains inside that root. Preserve unregistered and unknown
 files, including unknown directories. Do not recursively remove directories.
 Never delete a harness-owned or pre-existing plan file unless a separate record
 grants explicit user permission for that exact path and scope. Without that
@@ -204,8 +214,8 @@ delete `workflow.md` last so a failure retains the recovery registry. If any
 registered file is retained or clean-up fails, retain `workflow.md` and report
 the remaining paths. Remove the workflow directory or staging directories only
 if empty. Remove a staging directory only if this workflow created it and it is
-empty. Never delete implementation files, archives, Git history or the ignore
-rule. Artefact authorisation grants no authority over other files.
+empty. Never delete implementation files, protected archives, Git history or the
+ignore rule. Artefact authorisation grants no authority over other files.
 
 If clean-up fails, report it as incomplete or blocked, identify retained
 recovery state and do not claim clean-up succeeded. Do not replace this

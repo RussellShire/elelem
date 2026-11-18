@@ -37,7 +37,7 @@ project/
 - Formatter: `gofmt` or `goimports` (adds import management)
 - Linter: `golangci-lint` with a project-specific configuration
 - Run `go vet` to catch common mistakes
-- Never suppress a lint error without a `//nolint:rulename // reason` comment with explanation
+- Suppress a lint error only when active project policy permits it and the required `//nolint:rulename // reason` explanation states why. Functional syntax does not authorise suppressions; fix the underlying issue or seek direction
 
 ## Build and Run
 

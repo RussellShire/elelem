@@ -7,7 +7,7 @@ globs: **/*_test.go
 
 ## Framework
 
-Use the standard `testing` package. For advanced assertions, use `testify/assert` or `testify/require` if the project already uses it.
+Use the standard `testing` package for new projects or projects without an established applicable framework. Preserve the established applicable framework in existing projects. For advanced assertions, use `testify/assert` or `testify/require` if the project already uses it. Do not introduce a second runner or migrate frameworks without an approved migration. A framework preference does not authorise dependency installation. When multiple frameworks are established, use project context or ask the user rather than assuming a hierarchy. Framework-specific API instructions and examples below apply only when using the named framework. In an existing project with a different established applicable framework, use its equivalent APIs rather than changing frameworks to follow an example.
 
 ## File and Function Naming
 
@@ -27,7 +27,7 @@ Use the standard `testing` package. For advanced assertions, use `testify/assert
 
 - Use `t.Fatalf()` when a failure means later assertions are meaningless
 - Use `t.Errorf()` when you want to report an error and continue
-- Prefer `testify/require` for fatal assertions, `testify/assert` for non-fatal
+- When using `testify`, prefer `testify/require` for fatal assertions and `testify/assert` for non-fatal assertions
 - Format error messages: `"got %v, want %v"` or similar
 
 ## What Not to Mock

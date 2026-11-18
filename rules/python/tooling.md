@@ -31,7 +31,7 @@ project/
 - Formatter: `ruff format` (or `black` if the project already uses it)
 - Linter: `ruff check` with the project's configured rule set
 - Type checker: `mypy` or `pyright` per project convention
-- Never silence a lint or type error with an inline ignore without a comment explaining why and a ticket reference
+- Silence a lint or type error with an inline ignore only when active project policy permits it and a comment explains why and includes a ticket reference. Functional syntax does not authorise suppressions; fix the underlying issue or seek direction
 
 ## Virtual Environments
 
