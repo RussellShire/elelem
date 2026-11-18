@@ -86,9 +86,23 @@ Same-wave tasks must have disjoint writes and must not consume another task's ch
 files or results. Stable shared reads are allowed. Respect resource constraints
 and verified harness concurrency. Before each dispatch, load and apply
 `../_shared/subagent-dispatch.md` for isolation, specialist selection, native
-model resolution, retained pins and drift checks. The coordinator records the
-nested selection record defined in `../_shared/task-briefs.md` before dispatch.
-Do not replace its routing procedure or infer runtime execution from the pin.
+model resolution, preflight, consent, retained pins and drift checks. Confirm
+the approved wave contains the complete preflight candidate and applicable
+request evidence defined in `../_shared/task-briefs.md`; missing or stale
+preflight blocks the affected task. Repeat fresh availability, capability,
+schema, consent and routing checks immediately before each call. Record the actual
+dispatch pin only after those final checks. Assemble the call using only the
+live exposed controls, then compare the actual invocation settings with the
+authorised pin before sending, including its model, required effort and
+independent specialist. A missing required control or invocation mismatch blocks
+the call; model names in
+the worker prompt or metadata are not routing proof. After submission, retain the
+actual submitted call arguments or a captured tool-call evidence reference in
+the existing task record. Include model, effort/variant and specialist controls
+as actually submitted, with explicit unsupported or absent evidence where
+relevant. Keep this invocation evidence distinct from the preflight candidate,
+authorised pin and observed runtime evidence. Do not replace the shared routing
+procedure or infer runtime execution from a candidate or pin.
 
 Load `../_shared/worker-contract.md` before dispatch. Deliver the applicable
 sections verbatim with source identity, complete brief and required stable source

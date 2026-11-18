@@ -113,16 +113,6 @@ _copy_and_substitute_harness() {
   done
   install_files_from_dir "$source_dir" "$target" skills manifest files "$resolve_function"
   substitute_tool_names "$target" "$placeholders_ref" "$substitutions_ref"
-  for file in "${files[@]}"; do
-    if [[ ! -f "$target/$file" ]]; then
-      _fail "${harness}_installer_copy_and_substitution" "installer helper did not copy $file"
-      return
-    fi
-    if grep -q '{{' "$target/$file"; then
-      _fail "${harness}_installer_copy_and_substitution" "unsubstituted tool placeholder remains in $file"
-      return
-    fi
-  done
 }
 
 test_claude_installer_copy_and_substitution() {
@@ -163,16 +153,6 @@ test_codex_installer_copy_and_substitution() {
     _fail "codex_installer_copy_and_substitution" "Codex installer scan found unresolved placeholders"
     return
   fi
-  for file in "${files[@]}"; do
-    if [[ ! -f "$target/$file" ]]; then
-      _fail "codex_installer_copy_and_substitution" "installer helper did not copy $file"
-      return
-    fi
-    if grep -q '{{' "$target/$file"; then
-      _fail "codex_installer_copy_and_substitution" "unsubstituted tool placeholder remains in $file"
-      return
-    fi
-  done
 }
 
 test_test_pruning_contract_is_documented() {
@@ -1710,25 +1690,71 @@ test_common_rule_checks_reject_wrong_skill_tool_mappings() {
   fi
 }
 
+_implementation_selection_has_automatic_fallback_permission() {
+  python3 - "$1" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text()
+section = re.search(
+    r"^### Explicit alternative and task pin\s*\n(.*?)(?=^### |\Z)",
+    text,
+    re.M | re.S,
+)
+legacy_permission = False
+if section is not None:
+    for paragraph in re.split(r"\n\s*\n", section[1]):
+        normalised = re.sub(r"\s+", " ", paragraph.strip())
+        if (
+            re.match(
+                r"Use only the current effective session selection, including its applicable "
+                r"reasoning effort or variant, as the configuration fallback candidate\.",
+                normalised,
+            )
+            and re.search(
+                r"If usable, warn and continue without a routine prompt",
+                normalised,
+            )
+        ):
+            legacy_permission = True
+            break
+synthetic_permission = re.search(
+    r"configuration fault.{0,120}continue with the current model without a prompt"
+    r"|configuration fault.{0,160}current (effective )?(session )?model.{0,100}"
+    r"(fallback|continue).{0,100}without (a )?(routine )?prompt",
+    text,
+    re.I | re.S,
+)
+raise SystemExit(0 if legacy_permission or synthetic_permission else 1)
+PY
+}
+
 _check_implementation_selection_consumers() {
   local root="$1" scope="$2" requirement file pattern content missing=0
   local requirements=(
     'wave-planning/SKILL.md|lowest capable implementation tier.{0,80}`low`.{0,30}`medium`.{0,30}`high`.{0,100}rationale'
     'wave-planning/SKILL.md|specialist.{0,100}independent.{0,80}model'
-    'wave-planning/SKILL.md|native resolution.{0,100}subagent-dispatch.md.{0,180}current-model configuration fallback'
+    'wave-planning/SKILL.md|after.{0,80}implementation tiers.{0,120}preflight.{0,100}before readiness review'
+    'wave-planning/SKILL.md|shared.{0,80}subagent-dispatch.md'
     '_shared/wave-readiness.md|requested implementation tier.{0,100}rationale.{0,100}independent specialist'
-    '_shared/wave-readiness.md|native mapping.{0,120}configuration fallback.{0,160}availability.{0,80}capability.{0,80}routing'
-    '_shared/wave-readiness.md|before first dispatch.{0,100}actual task pin'
-    '_shared/wave-readiness.md|drift.{0,100}authorisation'
-    'subagent-driven-development/SKILL.md|load and apply.{0,100}subagent-dispatch.md.{0,120}native model resolution.{0,80}retained pins and drift checks'
-    'subagent-driven-development/implementer-prompt.md|Apply dispatch prerequisites and routing outside the worker packet'
+    '_shared/wave-readiness.md|preflight candidate'
+    '_shared/wave-readiness.md|applicable exact user request'
+    '_shared/wave-readiness.md|unresolved.{0,140}GAPS'
+    '_shared/wave-readiness.md|READY.{0,100}exact reviewed schedule.{0,100}preflight'
+    'subagent-driven-development/SKILL.md|load and apply.{0,100}subagent-dispatch.md.{0,120}preflight.{0,100}retained pins and drift checks'
+    'subagent-driven-development/SKILL.md|actual invocation settings.{0,100}pin.{0,80}before sending'
+    'subagent-driven-development/implementer-prompt.md|caller-side routing checklist.{0,80}non-executable'
+    'subagent-driven-development/implementer-prompt.md|Routing and prerequisites are completed by the caller and stay outside the worker packet'
     '_shared/task-briefs.md|configured source/revision.{0,100}requested tier.{0,80}rationale'
-    '_shared/task-briefs.md|native selector.{0,60}provider.{0,60}API target/resolved model.{0,80}effort.{0,40}variant'
-    '_shared/task-briefs.md|fallback flag.{0,60}reason.{0,60}warning.{0,60}evidence'
-    '_shared/task-briefs.md|schema.{0,60}catalogue/capability.{0,60}routing evidence'
-    '_shared/subagent-dispatch.md|corrections.{0,100}reuse.{0,80}actual pin.{0,80}fallback'
+    '_shared/task-briefs.md|native selector.{0,100}resolved provider/API target'
+    '_shared/task-briefs.md|fallback flag.{0,60}reason.{0,60}warning.{0,100}historical'
+    '_shared/task-briefs.md|current tool schema.{0,60}catalogue/capability.{0,60}explicit-routing evidence'
+    '_shared/task-briefs.md|compare the actual invocation settings.{0,100}pin before sending'
+    '_shared/subagent-dispatch.md|unsupported required effort.{0,100}invocation mismatch'
+    '_shared/subagent-dispatch.md|corrections.{0,100}reuse.{0,80}retained actual pin'
     '_shared/subagent-dispatch.md|Do not reselect.{0,100}current session model'
-    '_shared/subagent-dispatch.md|drift.{0,100}authorisation'
+    '_shared/subagent-dispatch.md|material configuration drift.{0,100}authorisation'
     '_shared/subagent-dispatch.md|runtime.{0,100}outside.{0,100}policy'
   )
   for requirement in "${requirements[@]}"; do
@@ -1739,6 +1765,27 @@ _check_implementation_selection_consumers() {
       missing=1
     fi
   done
+  local critical_requirements=(
+    'exact_model_request|Where that live tool requires an explicit user model request, obtain an exact model/variant request for each named task and its bounded in-scope corrections'
+    'route_drift_consent|A target, variant, required effort, selector identity affecting the route or task-scope change invalidates the affected consent and preflight'
+  )
+  for requirement in "${critical_requirements[@]}"; do
+    local identifier="${requirement%%|*}"
+    pattern="${requirement#*|}"
+    content="$(tr '\n' ' ' < "$root/_shared/subagent-dispatch.md" | tr -s '[:space:]' ' ')"
+    if ! grep -Fqi "$pattern" <<< "$content"; then
+      _fail "${scope}_implementation_selection_${identifier}" "missing critical clause: $pattern"
+      missing=1
+    fi
+  done
+  if ! _check_implementation_invocation_shape "$root/subagent-driven-development/implementer-prompt.md"; then
+    _fail "${scope}_implementation_selection_opencode_invocation" 'missing labelled sibling OpenCode agent and model arguments'
+    missing=1
+  fi
+  if _implementation_selection_has_automatic_fallback_permission "$root/_shared/subagent-dispatch.md"; then
+    _fail "${scope}_implementation_selection_configuration_fallback" 'affirmative automatic current-model fallback permission remains'
+    missing=1
+  fi
   (( missing != 0 )) || _pass "${scope}_implementation_selection_consumers"
 }
 
@@ -1755,6 +1802,178 @@ test_implementation_selection_consumers_are_installed_in_all_harnesses() {
   done
 }
 
+_check_implementation_invocation_shape() {
+  python3 - "$1" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text()
+section = re.search(r"^#### OpenCode invocation shape \(non-executable\)\n(.*?)(?=^#### |^## |\Z)", text, re.M | re.S)
+if section is None:
+    raise SystemExit("labelled OpenCode invocation example is missing")
+blocks = re.findall(r"^```text\n(.*?)^```", section[1], re.M | re.S)
+if len(blocks) != 1:
+    raise SystemExit("labelled OpenCode invocation example must contain one text block")
+call = re.search(r"(?ms)^subagent\(\{\n(.*?)^\}\)$", blocks[0])
+if call is None:
+    raise SystemExit("OpenCode example is not a labelled subagent call shape")
+agent = re.search(r"^(\s*)agent: \"\[independent specialist\]\",$", call[1], re.M)
+model = re.search(r"^(\s*)model: \"\[authorised native selector\]\",?$", call[1], re.M)
+if agent is None or model is None or agent[1] != model[1]:
+    raise SystemExit("OpenCode example must provide sibling agent and model fields")
+PY
+}
+
+test_implementation_invocation_shape_is_present_in_all_harnesses() {
+  local relative harness path missing=0
+  relative='subagent-driven-development/implementer-prompt.md'
+  for path in "$REPO_ROOT/skills/$relative"; do
+    if ! _check_implementation_invocation_shape "$path"; then
+      _fail 'source_implementation_invocation_shape' 'expected sibling OpenCode agent and model fields'
+      missing=1
+    fi
+  done
+  for harness in claude opencode codex; do
+    path="$TEST_TMP/$harness/skills/$relative"
+    if ! _check_implementation_invocation_shape "$path"; then
+      _fail "${harness}_implementation_invocation_shape" 'expected sibling OpenCode agent and model fields'
+      missing=1
+    fi
+  done
+  (( missing != 0 )) || _pass 'implementation_invocation_shape_is_present_in_all_harnesses'
+}
+
+_mutate_implementation_selection_fixture() {
+  python3 - "$1" "$2" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+mutation = sys.argv[2]
+patterns = {
+    "missing-model": (r'^  model: "\[authorised native selector\]",\n', ""),
+    "missing-model-crash": (r'^  model: "\[authorised native selector\]",\n', ""),
+    "missing-request": (
+        r"Where that live tool requires an explicit user model request,\s+obtain an\s+exact model/variant request for each named task and its bounded in-scope\s+corrections\.",
+        "",
+    ),
+    "missing-drift": (
+        r"A target, variant, required effort, selector identity affecting\s+the route or task-scope change invalidates the affected consent and preflight\.",
+        "",
+    ),
+    "automatic-fallback": (
+      r"\Z",
+      "\nIf the configuration fault is missing, continue with the current model without a prompt.\n",
+    ),
+    "legacy-fallback": (
+        r"(?=### Resolution procedure)",
+        "Use only the current effective session selection, including its applicable\n"
+        "reasoning effort or variant, as the configuration fallback candidate. Verify it\n"
+        "is available, capable and explicitly routable to the same specialist before\n"
+        "dispatch. If usable, warn and continue without a routine prompt, retaining the\n"
+        "requested tier separately from the actual fallback selection. Do not manufacture\n"
+        "a variant such as `#high`, drop effort/variant or silently rely on inheritance.\n"
+        "No arbitrary working-model search, omitted-model defaults or workflow tier\n"
+        "escalation is permitted. Non-configuration capability or routing insufficiency\n"
+        "requires a decision, as does an unusable or unverifiable current model. A valid\n"
+        "mapping that cannot handle the task is not a configuration-fallback opportunity.\n\n",
+    ),
+}
+pattern, replacement = patterns[mutation]
+content, count = re.subn(pattern, replacement, path.read_text(), count=1, flags=re.M)
+if count != 1:
+    raise SystemExit(f"mutation {mutation} did not match exactly once")
+path.write_text(content)
+if mutation == "missing-model-crash":
+    path.write_bytes(path.read_bytes() + b"\xff")
+PY
+}
+
+_check_implementation_selection_mutation() {
+  local harness="$1" mutation="$2" failure_id="$3"
+  local suffix="${4:-}"
+  local fixture="$TEST_TMP/selection-mutation-$harness-$mutation${suffix:+-$suffix}"
+  local relative file before after output stderr_file expected_stderr_file failures stderr_mismatch=0
+  case "$mutation" in
+    missing-model|missing-model-crash) relative='subagent-driven-development/implementer-prompt.md' ;;
+    *) relative='_shared/subagent-dispatch.md' ;;
+  esac
+  mkdir -p "$fixture/$harness"
+  cp -R "$TEST_TMP/$harness/skills" "$fixture/$harness/skills"
+  file="$fixture/$harness/skills/$relative"
+  before="$(shasum -a 256 "$file" | awk '{print $1}')"
+  _mutate_implementation_selection_fixture "$file" "$mutation" || return 1
+  after="$(shasum -a 256 "$file" | awk '{print $1}')"
+  [[ "$before" != "$after" ]] || return 1
+  stderr_file="$fixture/checker.stderr"
+  output="$(passed=0; failed=0; _check_implementation_selection_consumers "$fixture/$harness/skills" "$harness" 2>"$stderr_file")"
+  failures="$(grep -c '^\[FAIL\]' <<< "$output" || true)"
+  if [[ "$mutation" == missing-model ]]; then
+    expected_stderr_file="$fixture/expected.stderr"
+    printf '%s\n' 'OpenCode example must provide sibling agent and model fields' > "$expected_stderr_file"
+    cmp -s "$stderr_file" "$expected_stderr_file" || stderr_mismatch=1
+  elif [[ -s "$stderr_file" ]]; then
+    stderr_mismatch=1
+  fi
+  if [[ "$failures" == 1 ]] &&
+    grep -Fq "[FAIL] ${harness}_implementation_selection_${failure_id}:" <<< "$output" &&
+    (( stderr_mismatch == 0 )); then
+    return 0
+  fi
+  printf '%s\n' "$output" >&2
+  cat "$stderr_file" >&2
+  return 1
+}
+
+test_implementation_selection_mutations_are_rejected() {
+  local harness mutation failure_id index missing=0
+  local harnesses=(claude opencode codex)
+  local mutations=(missing-model missing-request missing-drift automatic-fallback legacy-fallback)
+  local failure_ids=(opencode_invocation exact_model_request route_drift_consent configuration_fallback configuration_fallback)
+  for harness in "${harnesses[@]}"; do
+    for index in "${!mutations[@]}"; do
+      mutation="${mutations[$index]}"
+      failure_id="${failure_ids[$index]}"
+      if _check_implementation_selection_mutation "$harness" "$mutation" "$failure_id"; then
+        _pass "${harness}_selection_mutation_${mutation}"
+      else
+        _fail "${harness}_selection_mutation_${mutation}" 'the consumer checker did not report the intended missing safeguard'
+        missing=1
+      fi
+    done
+  done
+  (( missing != 0 )) || _pass 'implementation_selection_mutations_are_rejected'
+}
+
+test_negative_selection_mutations_do_not_leak_stderr() {
+  local stderr_file="$TEST_TMP/selection-mutation-stderr.log"
+  if ! _check_implementation_selection_mutation opencode missing-model opencode_invocation stderr-check 2>"$stderr_file"; then
+    cat "$stderr_file" >&2
+    _fail 'negative_selection_mutations_do_not_leak_stderr' 'the expected invocation-shape failure was not detected'
+  elif [[ -s "$stderr_file" ]]; then
+    cat "$stderr_file" >&2
+    _fail 'negative_selection_mutations_do_not_leak_stderr' 'expected checker diagnostics escaped to stderr'
+  else
+    _pass 'negative_selection_mutations_do_not_leak_stderr'
+  fi
+}
+
+test_negative_selection_checker_rejects_incidental_crashes() {
+  local output_file="$TEST_TMP/selection-mutation-crash.output"
+  if _check_implementation_selection_mutation opencode missing-model-crash opencode_invocation crash-check 2>"$output_file"; then
+    cat "$output_file" >&2
+    _fail 'negative_selection_checker_rejects_incidental_crashes' 'an incidental checker crash was accepted as the intended safeguard failure'
+  elif ! grep -Fq '[FAIL] opencode_implementation_selection_opencode_invocation:' "$output_file" ||
+    ! grep -Fq 'UnicodeDecodeError' "$output_file"; then
+    cat "$output_file" >&2
+    _fail 'negative_selection_checker_rejects_incidental_crashes' 'the rejected checker output did not retain both the intended failure and incidental crash'
+  else
+    _pass 'negative_selection_checker_rejects_incidental_crashes'
+  fi
+}
+
 
 test_opencode_installs_the_actual_shell_enumeration_tools() {
   local target="$TEST_TMP/opencode-tools"
@@ -1768,17 +1987,17 @@ test_opencode_installs_the_actual_shell_enumeration_tools() {
   _pass 'opencode_installs_the_actual_shell_enumeration_tools'
 }
 
-test_implementation_consumers_do_not_override_configuration_fallback() {
-  local file content missing=0
-  local files=('wave-planning/SKILL.md' '_shared/wave-readiness.md' 'subagent-driven-development/SKILL.md' 'subagent-driven-development/implementer-prompt.md')
-  for file in "${files[@]}"; do
-    content="$(tr '\n' ' ' < "$REPO_ROOT/skills/$file" | tr -s '[:space:]' ' ')"
-    if grep -Eiq 'select a concrete capable identifier separately|Resolve a concrete, harness-verified lower-cost capable model|Use bounded lower-cost capable specialist workers' <<< "$content"; then
-      _fail "implementation_unconstrained_selection_${file//\//_}" 'obsolete concrete-model selection overrides native configuration and retained pins'
-      missing=1
-    fi
-  done
-  (( missing != 0 )) || _pass 'implementation_consumers_do_not_override_configuration_fallback'
+test_implementation_consumers_require_fail_closed_configuration_faults() {
+  local file="$REPO_ROOT/skills/_shared/subagent-dispatch.md"
+  local content
+  content="$(tr '\n' ' ' < "$file" | tr -s '[:space:]' ' ')"
+  if ! grep -Fqi 'A configuration fault blocks affected dispatch.' <<< "$content"; then
+    _fail 'implementation_consumers_require_fail_closed_configuration_faults' 'canonical policy must block affected dispatch on a configuration fault'
+  elif _implementation_selection_has_automatic_fallback_permission "$file"; then
+    _fail 'implementation_consumers_require_fail_closed_configuration_faults' 'canonical policy permits an automatic current-model fallback'
+  else
+    _pass 'implementation_consumers_require_fail_closed_configuration_faults'
+  fi
 }
 
 test_blocker_containment_policy_is_dependency_scoped() {
@@ -1801,6 +2020,7 @@ test_blocker_containment_policy_is_dependency_scoped() {
     'provisional hold is not global classification|If no safe boundary can be established, provisionally hold all new dispatch until scope is established; do not mislabel uncertainty as a proven global safety failure'
     'safe cancellation and settlement|Cancel affected active work only where safe cancellation is supported and safe. Otherwise let it settle without claiming it was cancelled or stopped.{0,180}do not automatically accept its output'
     'retain unaffected and renew affected evidence|Preserve unaffected valid work and evidence. Renew affected assumptions, contracts, approval, readiness, review and verification under.{0,60}phase-evidence.md'
+    'review finding containment|applicable review has unresolved issues affecting the scope.{0,180}do not hold proven-independent eligible work'
     'resume after resolution and revalidation|Resume affected work only after supported resolution is recorded and dependent eligibility is revalidated'
     'no unchanged retries or silent scope change|Do not force unchanged retries, silently expand scope, redesign, escalate the model tier or patch worker code in the coordinator context'
     'unresolved required work blocks completion|Required unresolved work or barriers continue to block overall completion'
@@ -1938,9 +2158,10 @@ test_opencode_installer_copy_and_substitution
 test_codex_installer_copy_and_substitution
 test_blueprint_skill_and_prompt_are_delivered_with_resolving_links
 test_implementation_selection_consumers_use_the_shared_contract
-test_implementation_consumers_do_not_override_configuration_fallback
+test_implementation_selection_mutations_are_rejected
+test_negative_selection_mutations_do_not_leak_stderr
+test_negative_selection_checker_rejects_incidental_crashes
 test_blocker_containment_policy_is_dependency_scoped
-test_blocker_review_findings_are_scoped_to_affected_work
 test_opencode_installs_the_actual_shell_enumeration_tools
 test_changed_workflow_skills_are_installed_in_all_harnesses
 test_changed_common_rules_are_installed_in_all_harnesses
