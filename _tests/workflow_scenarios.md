@@ -5,7 +5,7 @@ These are manual harness smoke tests. They exercise conversational behaviour and
 ## Implementation model selection
 
 These are optional future manual checks, not a completion gate for this change.
-Live runtime acceptance was explicitly waived and remains unverified, not passed.
+No live runtime acceptance was authorised; it remains unverified, not passed.
 Run only in separately authorised disposable native configurations, recording
 harness version, actual schema, active instruction sources and redacted selection
 evidence. Catalogue availability and structural checks are not live routing proof.
@@ -18,20 +18,43 @@ evidence. Catalogue availability and structural checks are not live routing proo
      independent fields with source-only profiles in the relevant harness.
    - Failure: tier is treated as effort, provider target slashes redirect across
      providers, a child profile is invented, or specialist selection changes.
-2. Separately supply missing, malformed, ambiguous, disabled/inactive and
+2. Start with an absent exact model/variant request required by the live
+   model-override instruction, then supply configuration, tier selection or
+   generic design approval instead. Separately supply an exact request for a
+   named task and bounded corrections.
+   - Expected evidence: only the exact model/variant request for the named task
+     and corrections satisfies the live requirement. Show the native selector,
+     resolved provider/API target, settings, effort/variant and task scope.
+   - Failure: configuration or generic approval is treated as model consent, or
+     the selector is presented without its resolved target and settings.
+3. Separately supply missing, malformed, ambiguous, disabled/inactive and
    unavailable selected mappings, then withhold inspection/enumeration evidence.
-   - Expected evidence: confirmed configuration faults warn with source/tier and
-     exact current-model fallback, retaining effort/variant after capability and
-     explicit same-specialist routing checks, without routine prompts. Missing
-     evidence blocks instead of being relabelled as a configuration fault.
-   - Failure: an arbitrary default is used, an incapable valid mapping triggers
-     fallback, or an unusable current model is dispatched without a decision.
-3. After a current-model fallback, request an in-scope correction while the
-   parent uses another model; separately introduce relevant configuration drift.
+   - Expected evidence: confirmed configuration faults block affected dispatch.
+     An alternative, including the current model, proceeds only after the user
+     requests that exact selection for the task or a specifically identified
+     contingency, and availability, capability and explicit routing checks pass.
+     Missing evidence
+     blocks instead of being relabelled as a mapping fault.
+   - Failure: an automatic fallback, arbitrary default or incapable valid mapping
+     is dispatched.
+4. Request an in-scope correction while the parent uses another model; separately
+   introduce relevant configuration drift.
    - Expected evidence: the retained actual task pin is reused after fresh checks;
      relevant drift or requested workflow model change requires authorisation.
    - Failure: corrections silently reselect the then-current parent model.
-4. Observe an existing external runtime recovery plugin without modifying it.
+5. Change an OpenCode alias target, remove a selected variant, or request an
+   unsupported required effort after preflight. Separately change a source
+   revision while preserving the same route, constraints and consent.
+   - Expected evidence: alias-target, variant, required-effort or selector-route
+     changes invalidate affected preflight and consent; demonstrated equivalent
+     source changes can retain valid evidence. Unsupported required effort blocks.
+   - Failure: a historical candidate or pin is treated as current without checks.
+6. Resume a legacy task record containing a fallback pin but no exact request
+   evidence where the live tool requires consent.
+   - Expected evidence: the legacy fallback remains historical and no inferred
+     consent is granted; obtain the required exact request before reuse.
+   - Failure: a prior warning or fallback pin is treated as user consent.
+7. Observe an existing external runtime recovery plugin without modifying it.
    - Expected evidence: external plugins' runtime retries and model switches stay
      outside this policy. Distinguish requested selection from observed runtime
      execution using available native evidence, retaining uncertainty where absent.

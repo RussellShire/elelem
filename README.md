@@ -319,37 +319,49 @@ installed classic 0.163.0 source/schema evidence is not live dispatch proof.
 #### Faults, corrections and runtime boundary
 
 A confirmed configuration-resolution fault (missing, malformed, ambiguous,
-disabled/inactive or unavailable selected mapping) triggers a visible warning
-naming the fault, source, requested tier and exact current-model fallback.
-Continue without a routine prompt only after the current selection is available,
-capable and explicitly routable to the same specialist. Preserve its applicable
-effort/variant, and keep requested tier distinct from effective selection.
-An illustrative warning, with placeholders rather than selected models:
+disabled/inactive or unavailable selected mapping) blocks affected dispatch.
+Show the source, requested tier and fault, then wait for resolution. An
+alternative, including the current model, is usable only after the user requests
+that exact model/variant for the named tasks or a specifically identified
+contingency, and fresh availability, capability and explicit-routing checks pass.
+It is never an automatic fallback.
 
 ```text
-Warning: requested tier low is missing from <config-source>.
-Using current-model fallback <current-provider>/<current-model>, with its existing effort/variant, for <same-specialist>; availability, capability and explicit routing checked.
+Blocked: requested tier low is missing from <config-source>.
+Native selector: <native-selector>; resolved provider/API target: <resolved-target>.
+Task scope: <named-task-and-corrections>. Request the exact alternative model/variant if one should be considered.
 ```
 
-Inability to inspect or enumerate is missing evidence, not a mapping fault.
-A valid but incapable mapping, unsupported route or unusable current model
-requires a user decision. No arbitrary defaults, working-model search, omitted
-model inheritance or workflow tier escalation is allowed; an execution failure
-is not a configuration fallback opportunity.
+Before readiness review, inspect the live model-override instruction and show
+both the native selector and resolved provider/API target, plus applicable
+settings, effort or variant and task/correction scope. Where the live tool
+requires an explicit user model request, obtain an exact model/variant request
+for each named task and bounded in-scope corrections. Configuration, tier
+selection and design approval are not that request. Record its source and scope.
+Do not impose that request on a harness whose live interface does not require it.
 
-Before first dispatch record the source/revision, tier/rationale, independent
-specialist, selector/provider/API target, effort/variant, fallback reason/warning
-and evidence in the existing task record. In-scope corrections must reuse the
-actual selected or fallback pin; do not reselect the then-current session model.
-Relevant drift or a requested workflow model change requires explicit authorisation.
+Inability to inspect or enumerate is missing evidence, not a mapping fault, and
+blocks dispatch. A valid but incapable mapping, unsupported required effort,
+route mismatch and execution failure are distinct blockers. Do not search for an
+arbitrary working model, inherit an omitted-model default or escalate the tier.
+Readiness reviews the exact schedule and preflight revision; unresolved routes,
+missing required consent, unsupported controls or missing inspection evidence
+leave the affected task at `GAPS`. `READY` is conditional on fresh checks and
+does not guarantee future availability or runtime identity. Keep the preflight
+candidate separate from the actual dispatch pin. Populate the actual pin only
+after final checks immediately before the call, then compare actual invocation
+settings with the pin before sending. Missing required controls or a mismatch
+block the call. Corrections reuse the retained actual pin after fresh checks; do
+not reselect the then-current session model. Relevant drift or a requested model
+change pauses affected work for explicit authorisation.
 
 Existing external plugins' runtime retries and model-switch recovery are outside
 this policy and remain unchanged. Do not block solely because of their mere
 existence; workflow pins do not control external runtime changes. Requested
 selection is not observed runtime proof. Native availability, catalogue/docs
 and structural tests are not successful live-route evidence, nor is worker
-self-report. Live runtime acceptance for this implementation was explicitly
-waived and remains unverified, not passed. Optional future manual scenarios in
+self-report. No live runtime acceptance was authorised; it remains unverified,
+not passed. Optional future manual scenarios in
 `_tests/workflow_scenarios.md` are not a completion gate for this change.
 
 Native references (checked 2026-11-10):

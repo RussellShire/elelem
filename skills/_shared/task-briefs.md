@@ -105,17 +105,33 @@ Every task brief records:
 - Required implementation tier (`low`, `medium` or `high`) and short lowest-capable
   tier rationale, separate from the independent specialist rationale. Preparation
   and reviewer selection retain their scope/capability policy.
-- Before dispatch: configured source/revision, requested tier and rationale,
-  native selector, provider, API target/resolved model, reasoning effort or
-  variant, fallback flag, reason, warning and evidence. Record explicit absence
-  or inapplicability rather than guessing metadata. Include actual schema,
-  catalogue/capability and routing evidence and the independent specialist.
-- The retained actual task pin from the existing workflow record. In-scope
-  corrections consume that retained actual selection, including fallback, with
-  fresh drift/routing checks, not a newly selected current-session model.
-  Preserve original selection provenance, record observed execution evidence and
-  uncertainty separately, and require explicit authorisation for any workflow
-  model change. External runtime retries and switches remain outside the pin.
+- Before readiness, record the preflight candidate: configured source/revision,
+  requested tier and rationale, independent specialist, native selector,
+  resolved provider/API target, reasoning effort or variant, and preflight
+  revision. Record effort or variant as explicitly absent when inapplicable.
+  Include current tool schema, catalogue/capability and explicit-routing
+  evidence. Distinguish the native selector from an opaque API target.
+- Record whether the live tool requires an exact user model request. When
+  required, retain the request source and exact named task/correction scope; when
+  not required, record the inspected interface evidence for that conclusion.
+  Preserve fallback flag, reason, warning and source as historical or explicitly
+  authorised alternative context only, never as authority for automatic use.
+- The actual dispatch pin is distinct from the preflight candidate. Populate it
+  only after final availability, capability, consent and routing checks, and
+  confirmation that required controls are supported, immediately before the
+  call. Compare the actual invocation settings with that pin before sending.
+  Retain the actual submitted call arguments or a captured tool-call evidence
+  reference. Include model, effort/variant and specialist controls as actually
+  submitted, with explicit unsupported or absent evidence where relevant. Keep
+  this invocation evidence distinct from the preflight candidate, authorised
+  pin and observed runtime evidence. Keep observed runtime evidence and
+  uncertainty separate from both candidate and pin. External runtime retries
+  and switches remain outside the pin.
+- In-scope corrections consume the retained actual pin with fresh availability,
+  routing and drift checks, not a newly selected current-session model. Preserve
+  original selection provenance and require explicit authorisation when a
+  material route, required effort or consent-scope change invalidates it.
+  Historical pins, including fallback records, do not prove missing consent.
 
 The complete requirement map must cover every approved requirement. Same-wave
 tasks have disjoint writes and may not read one another's changing files.

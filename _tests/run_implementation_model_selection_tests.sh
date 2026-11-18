@@ -72,24 +72,69 @@ check_contract codex_checks_independent_native_fields "$dispatch" \
   'V2.{0,100}gated.{0,100}actual.{0,60}schema' \
   'specialist.{0,80}overrides.{0,100}inherited provider.{0,100}blockers'
 
-check_contract config_fault_warns_before_current_only_fallback "$dispatch" \
-  'Missing, invalid or unresolvable.{0,100}configuration' \
-  'warning.{0,100}configuration fault' \
-  'current effective session selection.{0,100}effort.{0,60}variant' \
-  'available, capable.{0,60}explicitly routable.{0,80}same specialist' \
-  'without a routine prompt'
+check_contract exact_model_request_is_live_and_task_scoped "$dispatch" \
+  'live model-override instruction' \
+  'exact model/variant request' \
+  'named task' \
+  'in-scope corrections' \
+  'configuration, tier.{0,40}design approval'
+
+check_contract configuration_faults_require_an_explicit_alternative "$dispatch" \
+  'configuration fault.{0,100}block' \
+  'user explicitly requests that exact selection' \
+  'not an automatic fallback' \
+  'identified contingency'
+
+check_contract missing_inspection_evidence_is_not_a_mapping_fault "$dispatch" \
+  'inability to inspect.{0,80}missing evidence' \
+  'not.{0,60}configuration fault' \
+  'block.{0,80}dispatch'
+
+check_contract native_selector_and_resolved_target_are_both_presented "$dispatch" \
+  'native selector' \
+  'resolved.{0,40}(provider|API).{0,40}target' \
+  'task.{0,40}scope' \
+  'settings'
 
 check_contract runtime_failures_do_not_trigger_config_fallback "$dispatch" \
   'disabled.{0,80}unavailable.{0,160}configuration-resolution' \
-  'execution failure.{0,100}not.{0,80}configuration fallback' \
-  'Non-configuration capability.{0,80}routing.{0,100}decision' \
-  'No arbitrary.{0,80}search.{0,80}omitted-model.{0,80}tier escalation'
+  'execution failure.{0,120}distinct blockers.{0,80}not configuration-fallback' \
+  'valid but incapable mapping.{0,80}unsupported required effort.{0,80}unsupported route' \
+  'Do not search for an arbitrary working model.{0,80}omitted-model defaults.{0,80}silently escalate'
 
-check_contract corrections_reuse_actual_pin "$dispatch" \
-  'Pin.{0,100}before first dispatch' \
-  'corrections.{0,100}reuse.{0,80}actual.{0,80}fallback' \
-  'not reselect.{0,80}current session model' \
-  'drift.{0,100}authorisation'
+check_contract implementation_selection_distinguishes_candidate_and_actual_pin "$briefs" \
+  'actual dispatch pin.{0,60}distinct from the preflight candidate' \
+  'actual dispatch pin.{0,200}only after final.{0,200}immediately before the call' \
+  'preflight revision' \
+  'request source.{0,100}exact named task/correction scope' \
+  'effort or variant.{0,40}explicitly absent' \
+  'observed runtime evidence.{0,80}separate from both candidate and pin'
+
+check_contract implementation_selection_retains_submitted_invocation_evidence "$briefs" \
+  'retain.{0,100}(actual submitted call arguments|captured tool-call evidence reference)' \
+  'actual submitted call arguments.{0,160}model.{0,100}effort/variant.{0,100}specialist controls' \
+  'unsupported or absent.{0,100}evidence' \
+  'distinct from the preflight candidate, authorised pin and observed runtime evidence'
+
+check_contract implementation_selection_retains_request_and_route_evidence "$briefs" \
+  'configured source/revision' \
+  'current tool schema' \
+  'catalogue/capability' \
+  'routing evidence' \
+  'fallback flag.{0,60}reason.{0,60}warning.{0,100}historical' \
+  'never as authority'
+
+check_contract corrections_reuse_pin_and_material_drift_renews_consent "$dispatch" \
+  'unchanged.{0,80}correction.{0,80}retained actual pin' \
+  'target, variant, required effort, selector identity.{0,100}task-scope change' \
+  'invalidates the affected consent and preflight' \
+  'source revision change demonstrated.{0,180}reuse existing evidence' \
+  'legacy.{0,80}fallback.{0,100}no inferred consent'
+
+check_contract caller_retains_submitted_invocation_evidence skills/subagent-driven-development/SKILL.md \
+  'retain.{0,100}(actual submitted call arguments|captured tool-call evidence reference)' \
+  'model, effort/variant and specialist controls.{0,100}actually submitted' \
+  'unsupported or absent.{0,100}evidence'
 
 check_contract external_runtime_plugins_remain_outside_policy "$dispatch" \
   'external.{0,80}runtime retries.{0,60}model switches.{0,100}outside.{0,60}policy' \
@@ -98,20 +143,10 @@ check_contract external_runtime_plugins_remain_outside_policy "$dispatch" \
   'requested workflow selection.{0,80}observed.{0,80}execution' \
   'self-report.{0,80}not.{0,60}routing proof'
 
-check_contract task_brief_carries_resolved_selection "$briefs" \
-  'implementation.{0,80}`low`.{0,40}`medium`.{0,40}`high`.{0,80}rationale' \
-  'configured source.{0,40}revision.{0,80}requested tier' \
-  'selector.{0,60}provider.{0,60}API target.{0,80}effort.{0,40}variant' \
-  'fallback flag.{0,60}reason.{0,60}warning.{0,60}evidence' \
-  'corrections.{0,100}retained actual selection'
-
 check_contract existing_task_record_retains_pin_provenance "$artefacts" \
-  'load.{0,80}task-briefs.md.{0,80}nested implementation selection record.{0,100}existing task record before first dispatch' \
-  'Preserve.{0,80}original.{0,80}provenance'
-
-check_contract selection_record_preserves_observed_execution "$briefs" \
-  'original selection provenance.{0,80}observed execution evidence.{0,80}uncertainty separately' \
-  'explicit authorisation.{0,80}workflow model change'
+  'load.{0,80}task-briefs.md.{0,80}nested implementation selection record' \
+  'preflight candidate.{0,80}actual dispatch pin' \
+  'original provenance'
 
 check_contract readme_explains_tier_setup_without_installing_models README.md \
   'lowest capable tier.{0,100}rationale' \
@@ -155,13 +190,15 @@ check_contract readme_explains_codex_source_only_routing README.md \
   'V2.{0,80}gated.{0,80}actual.{0,40}schema' \
   'inherited provider.{0,80}specialist.{0,80}overrides.{0,80}block'
 
-check_contract readme_explains_fault_fallback_and_correction_pin README.md \
+check_contract readme_explains_fail_closed_alternatives_and_correction_pin README.md \
   'configuration-resolution.{0,80}missing.{0,80}malformed.{0,80}ambiguous.{0,80}disabled.{0,80}inactive.{0,80}unavailable' \
-  'available, capable and explicitly routable.{0,60}same specialist' \
-  'without a routine prompt' \
+  'configuration.{0,120}fault.{0,100}blocks affected dispatch' \
+  'exact model/variant request.{0,100}named task' \
+  'current model.{0,100}user requests.{0,80}exact model/variant' \
   'inability to inspect or enumerate.{0,80}missing evidence.{0,40}not.{0,40}mapping fault' \
-  'valid but incapable.{0,80}unsupported route.{0,80}unusable current model.{0,80}decision' \
-  'corrections.{0,80}reuse.{0,80}fallback pin' \
+  'valid but incapable mapping.{0,80}unsupported required effort.{0,80}route mismatch' \
+  'native selector.{0,100}resolved.{0,40}(provider|API).{0,40}target' \
+  'corrections.{0,80}reuse.{0,80}actual pin' \
   'not reselect.{0,80}then-current' \
   'drift.{0,80}model change.{0,80}authorisation'
 
@@ -170,16 +207,31 @@ check_contract readme_distinguishes_runtime_evidence README.md \
   'not block.{0,80}mere existence' \
   'pins do not control.{0,80}runtime' \
   'requested selection.{0,60}not.{0,40}observed runtime proof' \
-  'runtime acceptance.{0,80}waived.{0,80}unverified, not passed' \
+  'no live runtime acceptance was authorised.{0,80}unverified, not passed' \
+  'preflight candidate.{0,100}actual dispatch pin' \
+  'actual invocation settings.{0,100}pin.{0,80}before sending' \
   'bash _tests/run_implementation_model_selection_tests.sh'
 
-check_contract scenarios_keep_live_selection_checks_optional _tests/workflow_scenarios.md \
+check_contract scenarios_describe_fail_closed_selection _tests/workflow_scenarios.md \
   'Implementation model selection' \
   'optional future manual checks.{0,80}not.{0,40}completion gate' \
-  'runtime acceptance.{0,80}waived.{0,80}unverified, not passed' \
+  'runtime acceptance.{0,80}authorised.{0,80}unverified, not passed' \
+  'exact model/variant request.{0,100}named task' \
+  'configuration faults block affected dispatch' \
+  'current model.{0,120}requests that exact selection' \
   'external plugins.{0,80}runtime retries.{0,80}model switches.{0,80}outside.{0,40}policy' \
   'requested selection.{0,80}observed runtime' \
-  'current.{0,80}fallback.{0,80}correction'
+  'correction.{0,250}retained actual task pin'
+
+check_contract scenarios_cover_selection_faults_and_drift _tests/workflow_scenarios.md \
+  'absent exact model/variant request' \
+  'missing, malformed, ambiguous, disabled/inactive and unavailable' \
+  'user requests that exact selection.{0,100}specifically identified contingency' \
+  'alias target.{0,60}variant' \
+  'unsupported required effort' \
+  'correction.{0,100}parent.{0,60}another model' \
+  'legacy fallback.{0,100}no inferred consent' \
+  'external.{0,40}runtime.{0,40}plugin'
 
 check_native_example() {
   local harness="$1" index="$2"
