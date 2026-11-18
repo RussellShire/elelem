@@ -90,9 +90,15 @@ Validate the approved design and source inputs before invoking Implementation
 Planning. Reconcile its returned draft, revision and independent review evidence;
 unresolved material findings block the approval transition. Present that exact
 revision for separate explicit user approval through `{{ASK_USER_QUESTION_TOOL}}`.
-Only then persist its approved content as `blueprint.md` under the shared artefact
+Only then, once canonical writes are permitted, persist its approved exact content
+as `.elelem/workflows/<ticket-or-slug>/blueprint.md` under the shared artefact
 contract, with separate review and approval sources, before invoking Wave Planning.
-The preparation phase neither approves nor writes shared state.
+Approval does not override write restrictions or make the blueprint permanent.
+Until canonical persistence is permitted, retain the exact content and provenance
+in conversation, not external staging, including combined design-and-blueprint
+documents. Missing exact content or required review or approval evidence blocks
+dependent work; never reconstruct an allegedly approved revision. The preparation
+phase neither approves nor writes shared state.
 
 Legacy, ticket and direct entry return missing blueprint evidence to this
 coordinator as `NEEDS_CONTEXT`; never infer completion from an implementation
@@ -123,10 +129,16 @@ contract for demonstrated equivalence, source revision linkage and scoped skips.
 
 Before any repository artefact is created, ensure the root `.gitignore` has
 the exact `.elelem/` entry. Preserve all existing content and verify with
-`git check-ignore`. In plan mode, write only to
-authorised locations. If repository writes are prohibited, use authorised
-staging; never instruct a phase or worker to write to the repository. Failure
-to materialise required workflow files is a blocker before execution.
+`git check-ignore`. In plan mode, write only to authorised locations. If
+repository writes are prohibited, retain blueprint content in conversation until
+canonical persistence is permitted. External staging permissions apply only to
+other artefacts, never blueprint content or combined design-and-blueprint
+documents. Blueprint approval or an "approve and save" action does not override
+write restrictions; switching agents alone grants no write permission. Never
+instruct a phase or worker to write to the repository while prohibited. Failure
+to materialise required workflow files is a blocker before execution; approved
+canonical `blueprint.md` remains required before Wave Planning under the normal
+approval path. Apply explicit scoped skips only under the shared contracts.
 Ask once for Git commit preference and record it in workflow state. Default to
 leaving changes uncommitted, and never push.
 

@@ -65,9 +65,12 @@ complete supplied input and skips neither review nor separate approval.
 
 ## Return
 
-Return the draft content and revision, design/source identities, reconciled review
-verdict and iteration evidence, findings, questions, blockers and recommended
-next action to the coordinator. Do not write shared state or persist blueprint.md;
-do not seek user approval; do not schedule or implement. Drafts remain in
-conversation or authorised staging. The coordinator alone obtains separate
-explicit approval of the exact revision and persists approved blueprint.md.
+Return the exact draft content and revision in conversation, with design/source
+identities, reconciled review verdict and iteration evidence, findings, questions,
+blockers and recommended next action to the coordinator. Do not write shared
+state or persist blueprint content; do not seek user approval; do not schedule
+or implement. Drafts remain in conversation, never in external staging, including
+combined design-and-blueprint documents. The coordinator alone obtains separate
+explicit approval of the exact revision and, once writes are permitted, persists
+that approved content as `.elelem/workflows/<ticket-or-slug>/blueprint.md` under
+the shared artefact contract. Approval grants no exception to write restrictions.
