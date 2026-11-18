@@ -11,7 +11,14 @@ current task:
   of the exact blueprint revision, never a draft or review verdict alone.
 - `waves.md`: approved task briefs, waves and readiness verdict.
 
-Do not replace, truncate or repurpose pre-existing content. Drafts remain in
+Do not replace, truncate or repurpose pre-existing content. Blueprint drafts
+remain in conversation. Only the coordinator persists the separately approved
+exact revision as `.elelem/workflows/<ticket-or-slug>/blueprint.md`, once writing
+there is permitted, and registers it for the existing manifest-only clean-up.
+Blueprint content, including combined design-and-blueprint documents, must not
+be saved to external staging such as `~/.opencode/plan`. Approval or an
+"approve and save" action neither makes a workflow blueprint permanent nor
+overrides write restrictions. Drafts of other artefacts may remain in
 conversation or authorised staging until writing there is permitted. If a
 required file cannot be materialised, block before execution.
 
@@ -78,25 +85,34 @@ prompts. A phase's
 
 ### Context-reduction checkpoint
 
-Before requesting native compaction, persist the authorised current revision,
-original evidence and permission references, next action and ownership in the
-existing workflow state. Retain the immutable baseline, accepted checkpoints,
-exact-source skips, pending questions, blockers and unaccepted task status.
-This recoverability checkpoint is not task acceptance or a new approval.
+Before requesting native compaction, persist only the authorised current
+revision, original evidence and permission references, next action and ownership
+in the existing workflow state, subject to the blueprint persistence rules above.
+Retain the immutable baseline, accepted checkpoints, exact-source skips, pending
+questions, blockers and unaccepted task status. This recoverability checkpoint
+is not task acceptance or a new approval.
 
 Missing recoverable decisions, draft proposals or evidence blocks destructive
-reduction. Preserve draft content through accessible original sources or
-authorised staging before it can be lost. Never persist an unapproved design
-into `plan.md`. Never persist an unapproved blueprint into `blueprint.md`.
-A summary is not a substitute for exact permission or procedure
-provenance. Follow `./phase-evidence.md` for the concise maintenance record;
-do not create another ledger, transcript dump or per-phase artefact family.
+reduction. Blueprint drafts and approved content awaiting permitted canonical
+persistence remain in conversation, with exact revision, source identity and
+original review and approval provenance as applicable. Defer compaction if that
+exact content and provenance cannot remain recoverable without prohibited writes;
+external staging, including combined documents, is not an alternative. Preserve
+other draft content through accessible original sources or authorised staging
+before it can be lost. Never persist an unapproved design into `plan.md`. Never
+persist an unapproved blueprint into `blueprint.md`. Missing exact blueprint
+content or required review or approval evidence blocks dependent work; never
+reconstruct an allegedly approved revision. A summary is not a substitute for
+exact content, permission or procedure provenance. Follow `./phase-evidence.md`
+for the concise maintenance record; do not create another ledger, transcript
+dump or per-phase artefact family.
 
-Respect Plan-mode restrictions and authorised staging permissions. Do not
-trigger reduction requiring unauthorised recovery writes. After native or
-manual completion, reload only the state needed for the next action and apply
-the normal resume validation below, including ownership, revision, approval,
-baseline/checkpoints and evidence validity. Do not repeat valid completed work.
+Respect Plan-mode restrictions and authorised staging permissions for
+non-blueprint artefacts. Do not trigger reduction requiring unauthorised recovery
+writes. After native or manual completion, reload only the state needed for the
+next action and apply the normal resume validation below, including ownership,
+revision, approval, baseline/checkpoints and evidence validity. Do not repeat
+valid completed work.
 
 Task statuses use `queued`, `running`, `review`, `verified`, `integrated`,
 `accepted-unverified`, `blocked` or `skipped`. `integrated` requires task review,
@@ -115,12 +131,15 @@ Before creating repository artefacts, inspect the root `.gitignore`. Ensure it
 contains the exact entry `.elelem/`, preserving all existing bytes. Do not
 change an existing rule unnecessarily.
 Verify the intended workflow path with `git check-ignore`. If an ignore update
-or workflow write is not allowed in current plan mode, write only to an
-authorised staging location; do not direct another agent to write in the
-repository. The coordinator records authorised staging paths and materialises
-the required files only when permitted. Copy or materialise without replacing
-any existing file; an existing destination is preserved and blocks that write
-until resolved.
+or workflow write is not allowed in current plan mode, retain blueprint content
+in conversation until canonical persistence is permitted, never in external
+staging or a combined design-and-blueprint file. Authorised staging remains
+available for other artefacts only; do not direct another agent to write in the
+repository. Switching agents alone grants no write permission, and blueprint
+approval does not override write restrictions. The coordinator records authorised
+staging paths for other artefacts and materialises required files only when
+permitted. Copy or materialise without replacing any existing file; an existing
+destination is preserved and blocks that write until resolved.
 
 ## Checkpoints and accepted changes
 
@@ -167,9 +186,11 @@ accepted checkpoints, not HEAD alone or a moving replacement baseline.
 Never accept a stale approval merely because its file still exists. Every phase
 is user-skippable, but a skip is not approval and missing required inputs still
 block downstream work. When blueprint approval is explicitly skipped, record
-`SKIPPED`, not approved; retain the complete supplied revision in conversation or
-authorised staging with accessible source identity, not as approved blueprint.md.
-Consumers must receive that complete input and the separate applicable skips.
+`SKIPPED`, not approved; retain the complete supplied exact revision in
+conversation with accessible source identity, never in external staging or as
+approved `blueprint.md`. This also applies to combined design-and-blueprint
+documents. Consumers must receive that complete input and the separate applicable
+skips; missing exact content or required evidence blocks dependent work.
 Preparation skips require equivalent complete supplied instructions; review and
 approval remain required unless separately skipped. Apply `./phase-evidence.md`
 before reusing or resuming any blueprint-dependent work.
