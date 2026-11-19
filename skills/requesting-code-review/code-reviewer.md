@@ -119,6 +119,7 @@ Do not use these committed-range commands for current-tree mode.
 - What's wrong
 - Why it matters
 - How to fix (if not obvious)
+- The approved requirement or demonstrated supported-contract defect that makes it blocking
 
 ### Recommendations
 [Improvements for code quality, architecture, or process]
@@ -161,25 +162,14 @@ Do not use these committed-range commands for current-tree mode.
 ### Issues
 
 #### Important
-1. **Missing help text in CLI wrapper**
-   - File: index-conversations:1-31
-   - Issue: No --help flag, users won't discover --concurrency
-   - Fix: Add --help case with usage examples
-
-2. **Date validation missing**
+1. **Date validation violates the documented API contract**
    - File: search.ts:25-27
+   - Approved requirement: invalid dates return an actionable error
    - Issue: Invalid dates silently return no results
-   - Fix: Validate ISO format, throw error with example
-
-#### Minor
-1. **Progress indicators**
-   - File: indexer.ts:130
-   - Issue: No "X of Y" counter for long operations
-   - Impact: Users don't know how long to wait
+   - Fix: Validate the accepted date format and return the contracted error
 
 ### Recommendations
-- Add progress reporting for user experience
-- Consider config file for excluded projects (portability)
+- Keep optional help, progress and configuration ideas advisory and out of scope pending approval unless required by a demonstrated supported-contract defect. This disposition does not create a new severity class.
 
 ### Verdict
 
@@ -189,5 +179,5 @@ Do not use these committed-range commands for current-tree mode.
 
 **Ready to merge: With fixes**
 
-**Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
+**Reasoning:** The date-validation finding is Important because it violates an explicit API requirement. The progress suggestion is advisory and does not block acceptance or authorise additional scope.
 ```

@@ -19,6 +19,10 @@ _fail() {
   ((failed += 1))
 }
 
+_manifest_has_unsupported_skill_entries() {
+  awk -F/ '$1 == "skills" && !(NF >= 3 && $2 ~ /^elelem-language-[[:alnum:]_-]+$/ && $3 != "") { found = 1 } END { exit !found }' "$1"
+}
+
 _copy_install_source() {
   local source="$1"
   mkdir -p "$source"
@@ -28,7 +32,8 @@ _copy_install_source() {
 
 _run_pty_installer() {
   local source="$1" harness="$2" home="$3" invocation="$4" input="$5"
-  python3 - "$source/install-$harness.sh" "$home" "$invocation" "$TEST_TMP" "$input" <<'PY'
+  local deadline_seconds="${6:-45}" cleanup_grace_seconds="${7:-0.5}"
+  python3 - "$source/install-$harness.sh" "$home" "$invocation" "$TEST_TMP" "$input" "$deadline_seconds" "$cleanup_grace_seconds" <<'PY'
 import errno
 import os
 import pty
@@ -37,7 +42,7 @@ import signal
 import sys
 import time
 
-installer, home, invocation, test_root, input_text = sys.argv[1:]
+installer, home, invocation, test_root, input_text, deadline_seconds, cleanup_grace_seconds = sys.argv[1:]
 process_id, terminal = pty.fork()
 if process_id == 0:
     os.chdir(invocation)
@@ -67,45 +72,92 @@ def collect_output() -> None:
         if error.errno not in (errno.EIO, errno.EAGAIN):
             raise
 
-input_index = 0
-while input_index < len(input_text):
-    if input_text.startswith("\x1b[", input_index):
-        chunk = input_text[input_index:input_index + 3]
-        input_index += 3
-        delay = 0.15
-    else:
-        chunk = input_text[input_index]
-        input_index += 1
-        delay = 0.15 if chunk == "\n" else 0.03
-    os.write(terminal, chunk.encode())
-    readable, _, _ = select.select([terminal], [], [], delay)
-    if readable:
-        collect_output()
+def remaining_grace_timeout(grace_deadline: float, current_time: float) -> float:
+    return max(0.0, min(0.05, grace_deadline - current_time))
 
-deadline = time.monotonic() + 45
-while True:
-    readable, _, _ = select.select([terminal], [], [], 0.05)
-    if readable:
-        collect_output()
-    waited_pid, wait_status = os.waitpid(process_id, os.WNOHANG)
-    if waited_pid:
-        break
-    if time.monotonic() >= deadline:
+def stop_child() -> int:
+    try:
         os.kill(process_id, signal.SIGTERM)
-        os.waitpid(process_id, 0)
+    except ProcessLookupError:
+        pass
+    grace_deadline = time.monotonic() + float(cleanup_grace_seconds)
+    while True:
         collect_output()
-        sys.stdout.write(output.decode(errors="replace"))
-        raise SystemExit(124)
+        waited_pid, wait_status = os.waitpid(process_id, os.WNOHANG)
+        if waited_pid:
+            return wait_status
+        wait_timeout = remaining_grace_timeout(grace_deadline, time.monotonic())
+        if wait_timeout == 0:
+            break
+        select.select([terminal], [], [], wait_timeout)
+    try:
+        os.kill(process_id, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    while True:
+        try:
+            _, wait_status = os.waitpid(process_id, 0)
+            return wait_status
+        except InterruptedError:
+            continue
 
-collect_output()
-sys.stdout.write(output.decode(errors="replace"))
-raise SystemExit(os.waitstatus_to_exitcode(wait_status))
+child_reaped = False
+try:
+    input_index = 0
+    while input_index < len(input_text):
+        if input_text.startswith("\x1b[", input_index):
+            chunk = input_text[input_index:input_index + 3]
+            input_index += 3
+            delay = 0.15
+        else:
+            chunk = input_text[input_index]
+            input_index += 1
+            delay = 0.15 if chunk == "\n" else 0.03
+        os.write(terminal, chunk.encode())
+        readable, _, _ = select.select([terminal], [], [], delay)
+        if readable:
+            collect_output()
+
+    deadline = time.monotonic() + float(deadline_seconds)
+    while True:
+        readable, _, _ = select.select([terminal], [], [], 0.05)
+        if readable:
+            collect_output()
+        waited_pid, wait_status = os.waitpid(process_id, os.WNOHANG)
+        if waited_pid:
+            child_reaped = True
+            break
+        if time.monotonic() >= deadline:
+            stop_child()
+            child_reaped = True
+            collect_output()
+            sys.stderr.write(output.decode(errors="replace"))
+            print("Timed out waiting for installer completion", file=sys.stderr)
+            raise SystemExit(124)
+
+    collect_output()
+    sys.stdout.write(output.decode(errors="replace"))
+    raise SystemExit(os.waitstatus_to_exitcode(wait_status))
+except Exception:
+    if not child_reaped:
+        stop_child()
+        child_reaped = True
+    collect_output()
+    sys.stderr.write(output.decode(errors="replace"))
+    raise
+finally:
+    try:
+        if not child_reaped:
+            stop_child()
+    finally:
+        os.close(terminal)
 PY
 }
 
 _run_opencode_reinstall_with_testing_deselected() {
   local source="$1" home="$2" invocation="$3"
-  python3 - "$source/install-opencode.sh" "$home" "$invocation" "$TEST_TMP" <<'PY'
+  local prompt_timeout_seconds="${4:-20}" deadline_seconds="${5:-45}" cleanup_grace_seconds="${6:-0.5}"
+  python3 - "$source/install-opencode.sh" "$home" "$invocation" "$TEST_TMP" "$prompt_timeout_seconds" "$deadline_seconds" "$cleanup_grace_seconds" <<'PY'
 import errno
 import os
 import pty
@@ -114,7 +166,7 @@ import signal
 import sys
 import time
 
-installer, home, invocation, test_root = sys.argv[1:]
+installer, home, invocation, test_root, prompt_timeout_seconds, deadline_seconds, cleanup_grace_seconds = sys.argv[1:]
 process_id, terminal = pty.fork()
 if process_id == 0:
     os.chdir(invocation)
@@ -144,9 +196,21 @@ def collect_output() -> None:
         if error.errno not in (errno.EIO, errno.EAGAIN):
             raise
 
+def remaining_grace_timeout(grace_deadline: float, current_time: float) -> float:
+    return max(0.0, min(0.05, grace_deadline - current_time))
+
 def wait_for(marker: bytes) -> None:
-    deadline = time.monotonic() + 20
+    global child_reaped
+    deadline = time.monotonic() + float(prompt_timeout_seconds)
     while marker not in output:
+        waited_pid, wait_status = os.waitpid(process_id, os.WNOHANG)
+        if waited_pid:
+            child_reaped = True
+            collect_output()
+            if marker in output:
+                return
+            exit_code = os.waitstatus_to_exitcode(wait_status)
+            raise ChildProcessError(f"Installer exited with status {exit_code} before prompt: {marker.decode(errors='replace')}")
         readable, _, _ = select.select([terminal], [], [], 0.05)
         if readable:
             collect_output()
@@ -159,54 +223,97 @@ def send(value: bytes) -> None:
     if readable:
         collect_output()
 
-try:
-    wait_for(b"Install scope:")
-    send(b"\n")
-    wait_for(b"Common instruction files to install:")
-    for rule_name in (
-        b"code-organisation", b"code-review", b"coding-style", b"consistency",
-        b"debugging", b"documentation", b"errors", b"git", b"language",
-        b"performance", b"security", b"skills-policy", b"subagents", b"testing",
-    ):
-        send(b"\x1b[B")
-        wait_for(b"> [x] " + rule_name)
-    send(b" ")
-    wait_for(b"> [ ] testing")
-    send(b"\n")
-    wait_for(b"Skills (target:")
-    send(b" ")
-    wait_for(b"> [ ] Install skills")
-    send(b"\n")
-    wait_for(b"Optional agent bundle:")
-    send(b" ")
-    wait_for(b"> [x] Elelem agent bundle (11 agents)")
-    send(b"\n")
-except TimeoutError as error:
-    os.kill(process_id, signal.SIGTERM)
-    os.waitpid(process_id, 0)
-    collect_output()
-    sys.stdout.write(output.decode(errors="replace"))
-    print(f"Timed out waiting for installer prompt: {error}", file=sys.stderr)
-    raise SystemExit(124)
-
-deadline = time.monotonic() + 45
-while True:
-    readable, _, _ = select.select([terminal], [], [], 0.05)
-    if readable:
-        collect_output()
-    waited_pid, wait_status = os.waitpid(process_id, os.WNOHANG)
-    if waited_pid:
-        break
-    if time.monotonic() >= deadline:
+def stop_child() -> int:
+    try:
         os.kill(process_id, signal.SIGTERM)
-        os.waitpid(process_id, 0)
+    except ProcessLookupError:
+        pass
+    grace_deadline = time.monotonic() + float(cleanup_grace_seconds)
+    while True:
+        collect_output()
+        waited_pid, wait_status = os.waitpid(process_id, os.WNOHANG)
+        if waited_pid:
+            return wait_status
+        wait_timeout = remaining_grace_timeout(grace_deadline, time.monotonic())
+        if wait_timeout == 0:
+            break
+        select.select([terminal], [], [], wait_timeout)
+    try:
+        os.kill(process_id, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    while True:
+        try:
+            _, wait_status = os.waitpid(process_id, 0)
+            return wait_status
+        except InterruptedError:
+            continue
+
+child_reaped = False
+try:
+    try:
+        wait_for(b"Install scope:")
+        send(b"\n")
+        wait_for(b"Common instruction files to install:")
+        for rule_name in (
+            b"code-organisation", b"code-review", b"coding-style", b"consistency",
+            b"debugging", b"documentation", b"errors", b"git", b"language",
+            b"performance", b"security", b"skills-policy", b"subagents", b"testing",
+        ):
+            send(b"\x1b[B")
+            wait_for(b"> [x] " + rule_name)
+        send(b" ")
+        wait_for(b"> [ ] testing")
+        send(b"\n")
+        wait_for(b"Skills (target:")
+        send(b" ")
+        wait_for(b"> [ ] Install skills")
+        send(b"\n")
+        wait_for(b"Optional agent bundle:")
+        send(b" ")
+        wait_for(b"> [x] Elelem agent bundle (11 agents)")
+        send(b"\n")
+
+        deadline = time.monotonic() + float(deadline_seconds)
+        while True:
+            readable, _, _ = select.select([terminal], [], [], 0.05)
+            if readable:
+                collect_output()
+            waited_pid, wait_status = os.waitpid(process_id, os.WNOHANG)
+            if waited_pid:
+                child_reaped = True
+                break
+            if time.monotonic() >= deadline:
+                stop_child()
+                child_reaped = True
+                collect_output()
+                sys.stderr.write(output.decode(errors="replace"))
+                print("Timed out waiting for installer completion", file=sys.stderr)
+                raise SystemExit(124)
+
         collect_output()
         sys.stdout.write(output.decode(errors="replace"))
+        raise SystemExit(os.waitstatus_to_exitcode(wait_status))
+    except TimeoutError as error:
+        stop_child()
+        child_reaped = True
+        collect_output()
+        sys.stderr.write(output.decode(errors="replace"))
+        print(f"Timed out waiting for installer prompt: {error}", file=sys.stderr)
         raise SystemExit(124)
-
-collect_output()
-sys.stdout.write(output.decode(errors="replace"))
-raise SystemExit(os.waitstatus_to_exitcode(wait_status))
+except Exception:
+    if not child_reaped:
+        stop_child()
+        child_reaped = True
+    collect_output()
+    sys.stderr.write(output.decode(errors="replace"))
+    raise
+finally:
+    try:
+        if not child_reaped:
+            stop_child()
+    finally:
+        os.close(terminal)
 PY
 }
 
@@ -251,6 +358,197 @@ test_opencode_user_install_delivers_selected_rules_and_installed_contracts() {
   _pass "$name"
 }
 
+test_pty_installer_timeout_reports_output_and_reaps_term_ignoring_child() {
+  local name='pty_installer_timeout_reports_output_and_reaps_term_ignoring_child'
+  local source="$TEST_TMP/timeout-source"
+  local home="$TEST_TMP/timeout-home"
+  local invocation="$TEST_TMP/timeout-invocation"
+  local pid_file="$TEST_TMP/timeout-child.pid"
+  local output status child_pid
+  mkdir -p "$source" "$home" "$invocation"
+  cat > "$source/install-fixture.sh" <<EOF
+#!/usr/bin/env bash
+trap '' TERM
+printf '%s\\n' "\$\$" > '$pid_file'
+printf 'fixture waiting for input\\n'
+while IFS= read -r input; do :; done
+EOF
+  if output="$(_run_pty_installer "$source" fixture "$home" "$invocation" '' 2 0.15 2>&1)"; then
+    status=0
+  else
+    status=$?
+  fi
+  child_pid="$(cat "$pid_file")"
+  if [[ "$status" -ne 124 ]] || ! grep -Fq 'Timed out waiting for installer completion' <<< "$output" || ! grep -Fq 'fixture waiting for input' <<< "$output" || kill -0 "$child_pid" 2>/dev/null; then
+    printf '%s\n' "$output"
+    _fail "$name" 'timeout did not report diagnostics and reap its child'
+    return
+  fi
+  _pass "$name"
+}
+
+test_opencode_missing_prompt_timeout_reports_output_and_reaps_term_ignoring_child() {
+  local name='opencode_missing_prompt_timeout_reports_output_and_reaps_term_ignoring_child'
+  local source="$TEST_TMP/missing-prompt-source"
+  local home="$TEST_TMP/missing-prompt-home"
+  local invocation="$TEST_TMP/missing-prompt-invocation"
+  local pid_file="$TEST_TMP/missing-prompt-child.pid"
+  local output status child_pid
+  mkdir -p "$source" "$home" "$invocation"
+  cat > "$source/install-opencode.sh" <<EOF
+#!/usr/bin/env bash
+trap '' TERM
+printf '%s\\n' "\$\$" > '$pid_file'
+printf 'Install scope:\\n'
+IFS= read -r answer
+printf 'fixture stopped before common rules\\n'
+while IFS= read -r answer; do :; done
+EOF
+  if output="$(_run_opencode_reinstall_with_testing_deselected "$source" "$home" "$invocation" 0.3 1 0.15 2>&1)"; then
+    status=0
+  else
+    status=$?
+  fi
+  child_pid="$(cat "$pid_file")"
+  if [[ "$status" -ne 124 ]] || ! grep -Fq 'Timed out waiting for installer prompt: Common instruction files to install:' <<< "$output" || ! grep -Fq 'fixture stopped before common rules' <<< "$output" || kill -0 "$child_pid" 2>/dev/null; then
+    printf '%s\n' "$output"
+    _fail "$name" 'missing prompt did not report diagnostics and reap its child'
+    return
+  fi
+  _pass "$name"
+}
+
+test_expired_cleanup_grace_has_a_zero_select_timeout() {
+  local name='expired_cleanup_grace_has_a_zero_select_timeout'
+  local output
+  if output="$(python3 - "$SCRIPT_DIR/run_policy_installation_tests.sh" 2>&1 <<'PY'
+import re
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as script_file:
+    script = script_file.read()
+function_bodies = re.findall(
+    r"(?m)^def remaining_grace_timeout\(grace_deadline: float, current_time: float\) -> float:\n(    return .*\n)",
+    script,
+)
+assert len(function_bodies) == 2, f"expected two embedded grace calculations, found {len(function_bodies)}"
+for function_body in function_bodies:
+    namespace = {}
+    exec(
+        "def remaining_grace_timeout(grace_deadline: float, current_time: float) -> float:\n" + function_body,
+        namespace,
+    )
+    remaining_grace_timeout = namespace["remaining_grace_timeout"]
+    assert remaining_grace_timeout(10.0, 10.0) == 0.0
+    assert remaining_grace_timeout(10.0, 11.0) == 0.0
+    assert remaining_grace_timeout(11.0, 10.0) == 0.05
+PY
+)"; then
+    _pass "$name"
+  else
+    printf '%s\n' "$output"
+    _fail "$name" 'expired cleanup grace was not clamped before select'
+  fi
+}
+
+test_opencode_early_exit_preserves_output_and_error() {
+  local name='opencode_early_exit_preserves_output_and_error'
+  local source="$TEST_TMP/early-opencode-source"
+  local home="$TEST_TMP/early-opencode-home"
+  local invocation="$TEST_TMP/early-opencode-invocation"
+  local pid_file="$TEST_TMP/early-opencode-child.pid"
+  local output status child_pid
+  mkdir -p "$source" "$home" "$invocation"
+  cat > "$source/install-opencode.sh" <<EOF
+#!/usr/bin/env bash
+printf '%s\\n' "\$\$" > '$pid_file'
+printf 'installer exited before scope prompt\\n'
+exit 7
+EOF
+  if output="$(_run_opencode_reinstall_with_testing_deselected "$source" "$home" "$invocation" 0.3 2 0.1 2>&1)"; then
+    status=0
+  else
+    status=$?
+  fi
+  if [[ ! -s "$pid_file" ]]; then
+    printf '%s\n' "$output"
+    _fail "$name" 'installer fixture did not reach its exit state'
+    return
+  fi
+  child_pid="$(cat "$pid_file")"
+  if [[ "$status" -eq 0 ]] || [[ "$(grep -Fc 'installer exited before scope prompt' <<< "$output")" -ne 1 ]] || ! grep -Fq 'ChildProcessError' <<< "$output" || kill -0 "$child_pid" 2>/dev/null; then
+    printf '%s\n' "$output"
+    _fail "$name" 'early child exit did not preserve diagnostics and its failure'
+    return
+  fi
+  _pass "$name"
+}
+
+test_opencode_unexpected_error_preserves_output_and_error() {
+  local name='opencode_unexpected_error_preserves_output_and_error'
+  local source="$TEST_TMP/unexpected-opencode-source"
+  local home="$TEST_TMP/unexpected-opencode-home"
+  local invocation="$TEST_TMP/unexpected-opencode-invocation"
+  local pid_file="$TEST_TMP/unexpected-opencode-child.pid"
+  local output status child_pid
+  mkdir -p "$source" "$home" "$invocation"
+  cat > "$source/install-opencode.sh" <<EOF
+#!/usr/bin/env bash
+printf '%s\\n' "\$\$" > '$pid_file'
+printf 'Install scope:\\n'
+printf 'Common instruction files to install:\\n'
+printf '%s\\n' '> [x] code-organisation' '> [x] code-review' '> [x] coding-style' '> [x] consistency' '> [x] debugging' '> [x] documentation' '> [x] errors' '> [x] git' '> [x] language' '> [x] performance' '> [x] security' '> [x] skills-policy' '> [x] subagents' '> [x] testing' '> [ ] testing'
+printf 'Skills (target: fixture):\\n> [ ] Install skills\\nOptional agent bundle:\\n> [x] Elelem agent bundle (11 agents)\\n'
+printf 'installer output before unexpected error\\n'
+while IFS= read -r answer; do :; done
+EOF
+  if output="$(_run_opencode_reinstall_with_testing_deselected "$source" "$home" "$invocation" 1 invalid 0.1 2>&1)"; then
+    status=0
+  else
+    status=$?
+  fi
+  if [[ ! -s "$pid_file" ]]; then
+    _fail "$name" 'installer fixture did not reach its ready state'
+    return
+  fi
+  child_pid="$(cat "$pid_file")"
+  if [[ "$status" -eq 0 ]] || [[ "$(grep -Fc 'installer output before unexpected error' <<< "$output")" -ne 1 ]] || ! grep -Fq 'ValueError' <<< "$output" || kill -0 "$child_pid" 2>/dev/null; then
+    printf '%s\n' "$output"
+    _fail "$name" 'unexpected error did not preserve diagnostics and the original error'
+    return
+  fi
+  _pass "$name"
+}
+
+test_claude_manifest_rejects_optional_skill_paths() {
+  local name='claude_manifest_rejects_optional_skill_paths'
+  local manifest="$TEST_TMP/optional-skill-manifest"
+  printf '%s\n' 'skills/elelem-language-python/SKILL.md' > "$manifest"
+  if _manifest_has_unsupported_skill_entries "$manifest"; then
+    _fail "$name" 'manifest policy rejects a mandatory language pack entry'
+    return
+  fi
+  printf '%s\n' 'skills/fast-path-implementation/SKILL.md' >> "$manifest"
+  if ! _manifest_has_unsupported_skill_entries "$manifest"; then
+    _fail "$name" 'manifest policy accepts a non-language optional skill entry'
+    return
+  fi
+  _pass "$name"
+}
+
+test_claude_manifest_rejects_malformed_language_paths() {
+  local name='claude_manifest_rejects_malformed_language_paths'
+  local manifest="$TEST_TMP/malformed-language-manifest" path
+  for path in 'skills/elelem-language-' 'skills/elelem-language-python' 'skills/elelem-language-python/'; do
+    printf '%s\n' "$path" > "$manifest"
+    if ! _manifest_has_unsupported_skill_entries "$manifest"; then
+      _fail "$name" "manifest policy accepts malformed language path: $path"
+      return
+    fi
+  done
+  _pass "$name"
+}
+
 test_claude_user_install_can_select_rules_without_skills() {
   local name='claude_user_install_can_select_rules_without_skills'
   local source="$TEST_TMP/claude-source"
@@ -264,7 +562,7 @@ test_claude_user_install_can_select_rules_without_skills() {
     _fail "$name" 'Claude user-scope installer did not complete'
     return
   fi
-  if [[ ! -f "$home/.claude/rules/common/testing.md" || -e "$home/.claude/skills/debugging/SKILL.md" ]] || awk -F/ '$1 == "skills" && !(NF >= 3 && $2 ~ /^elelem-language-[[:alnum:]_-]+$/ && $3 != "") { found = 1 } END { exit !found }' "$source/.elelem-manifest-claude"; then
+  if [[ ! -f "$home/.claude/rules/common/testing.md" || -e "$home/.claude/skills/debugging/SKILL.md" ]] || _manifest_has_unsupported_skill_entries "$source/.elelem-manifest-claude"; then
     _fail "$name" 'Claude did not preserve rules-only selection and its manifest'
     return
   fi
@@ -272,6 +570,13 @@ test_claude_user_install_can_select_rules_without_skills() {
 }
 
 test_opencode_user_install_delivers_selected_rules_and_installed_contracts
+test_pty_installer_timeout_reports_output_and_reaps_term_ignoring_child
+test_opencode_missing_prompt_timeout_reports_output_and_reaps_term_ignoring_child
+test_expired_cleanup_grace_has_a_zero_select_timeout
+test_opencode_early_exit_preserves_output_and_error
+test_opencode_unexpected_error_preserves_output_and_error
+test_claude_manifest_rejects_optional_skill_paths
+test_claude_manifest_rejects_malformed_language_paths
 test_claude_user_install_can_select_rules_without_skills
 printf 'Tests: %d passed, %d failed\n' "$passed" "$failed"
 ((failed == 0))

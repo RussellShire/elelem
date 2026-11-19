@@ -3,9 +3,9 @@
 Use for an independent review of a worker's actual task changes. This is a
 read-only review, separate from worker self-review and orchestrator
 verification. Select a suitable reviewer under
-`../_shared/subagent-dispatch.md`; reviews require the high-capability tier
-specified by the workflow design. Verify the concrete model identifier and
-routing. Do not infer model switching from metadata. The coordinator must
+`../_shared/subagent-dispatch.md` by scope and required capability, honouring
+any stricter approved task-review capability requirement. Verify the concrete
+model identifier and routing. Do not infer model switching from metadata. The coordinator must
 honour an explicitly authorised task-review skip and not dispatch this prompt
 for the skipped scope. A skip is recorded by the coordinator, not converted by
 the reviewer into a verdict. If the supplied context records that the review

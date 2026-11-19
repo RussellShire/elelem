@@ -10,7 +10,7 @@ metadata:
 
 The iron-law rules (the iron law itself, what counts as a completion claim, when the rule fires) live in `../../rules/common/verification.md`. The procedural rules that bind once this skill is running (the common-failures table, the rationalisation prevention table, the red-flags stop list) live in `RULES.md` alongside this file. This skill is the procedure that produces the evidence those rules require.
 
-Before running the gate function below, you **MUST** read `RULES.md` (sibling file in this skill directory) using the Read tool if you have not already read it in this session.
+Before running the gate function below, you **MUST** read `RULES.md` (sibling file in this skill directory) using `{{READ_FILE_TOOL}}` if you have not already read it in this session.
 
 ## The Gate Function
 

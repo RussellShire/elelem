@@ -109,12 +109,15 @@ remain blockers.
 
 For scheduling-only gaps, return precise corrections to wave planning. No new
 user prompt is needed if requirements, architecture and contracts remain
-unchanged. Blueprint instruction gaps return to Implementation Planning through
-the coordinator for renewed blueprint review and separate user approval. True
-behaviour/architecture, external expectation or design-contract gaps return to
-design Planning for affected design and blueprint review/approval. Scheduling
-gaps stay in Wave Planning and renew readiness only. Reassess readiness against
-the corrected matching inputs. Never dispatch on `GAPS`.
+unchanged. Scheduling gaps stay in Wave Planning and renew readiness only.
+Blueprint instruction gaps return to Implementation Planning through the
+coordinator for renewed independent blueprint review and separate user approval.
+True behaviour/architecture, external expectation or design-contract gaps return
+to design Planning for one revised consolidated proposal, independent design
+review and explicit user approval, then affected blueprint gates and readiness
+reassessment. Review verdict, user approval and verification remain distinct.
+Honour any existing scoped skips without treating a skip as a verdict or approval.
+Never dispatch on `GAPS`.
 
 If wave planning was explicitly skipped, do not invent parallel tasks or claim
 this review occurred. Require one complete, bounded task brief; execute only

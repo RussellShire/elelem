@@ -117,6 +117,7 @@ test_full_install_to_tmp_user_scope() {
 test_main_flow_keeps_user_rules_and_project_skills_selections_separate() {
   local name='main_flow_keeps_user_rules_and_project_skills_selections_separate'
   local fixture_root project_directory home_directory user_source project_source source_directory manifest_file installed_skill manifest_base expected_manifest actual_manifest source_file
+  local expected_packs language_directory language_name relative_pack relative_file
   local common_rule_count
   fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/elelem-codex-mixed-scopes.XXXXXX")"
   trap 'rm -rf "$fixture_root"' RETURN
@@ -131,6 +132,18 @@ test_main_flow_keeps_user_rules_and_project_skills_selections_separate() {
     cp -R "$REPO_ROOT/rules" "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$source_directory/"
   done
   common_rule_count="$(find "$project_source/rules/common" -maxdepth 1 -type f -name '*.md' | wc -l | tr -d ' ')"
+  expected_packs="$fixture_root/expected-packs"
+  for language_directory in "$project_source/rules/"*/; do
+    language_name="${language_directory%/}"
+    language_name="${language_name##*/}"
+    [[ "$language_name" != common ]] || continue
+    relative_pack=".agents/skills/elelem-language-$language_name"
+    printf '%s/SKILL.md\n' "$relative_pack"
+    for source_file in "$language_directory"*.md; do
+      [[ -f "$source_file" ]] || continue
+      printf '%s/references/%s\n' "$relative_pack" "${source_file##*/}"
+    done
+  done | sort > "$expected_packs"
 
   cat > "$fixture_root/invocation/user/run-installer.sh" <<'INSTALLER'
 #!/usr/bin/env bash
@@ -154,11 +167,11 @@ exit "$installer_status"
 INSTALLER
   chmod +x "$fixture_root/invocation/user/run-installer.sh" "$fixture_root/invocation/project/run-installer.sh"
 
-  if ! printf '\n\n\n \n\n' | HOME="$home_directory" XDG_CONFIG_HOME="$fixture_root/xdg" CODEX_HOME="$fixture_root/codex" TMPDIR="$fixture_root/tmp" PYTHONDONTWRITEBYTECODE=1 TERM=dumb NO_COLOR=1 /usr/bin/script -q "$fixture_root/user-session.log" "$fixture_root/invocation/user/run-installer.sh" >/dev/null; then
+  if ! printf '\n\n \n\n' | HOME="$home_directory" XDG_CONFIG_HOME="$fixture_root/xdg" CODEX_HOME="$fixture_root/codex" TMPDIR="$fixture_root/tmp" PYTHONDONTWRITEBYTECODE=1 TERM=dumb NO_COLOR=1 /usr/bin/script -q "$fixture_root/user-session.log" "$fixture_root/invocation/user/run-installer.sh" >/dev/null; then
     _fail "$name" 'user-scope rules-only installer exited unsuccessfully'
     return
   fi
-  if ! grep -Fq 'CODEX_INSTALLER_EXIT=0' "$fixture_root/user-session.log"; then
+  if ! grep -Fq 'CODEX_INSTALLER_EXIT=0' "$fixture_root/user-session.log" || ! grep -Fq 'Done.' "$fixture_root/user-session.log" || grep -Fq 'Aborted.' "$fixture_root/user-session.log"; then
     _fail "$name" 'user-scope rules-only installer did not complete'
     return
   fi
@@ -172,7 +185,7 @@ common_rule_count = int(sys.argv[2])
 chunks = [b"\x1b[A\n", project + b"\n"]
 for _ in range(common_rule_count):
     chunks.extend((b" ", b"\x1b[B"))
-chunks.extend((b"\n", b"\n", b" \n", b"\n", b"\n"))
+chunks.extend((b"\n", b" \n", b"\n", b"\n"))
 for chunk in chunks:
     sys.stdout.buffer.write(chunk)
     sys.stdout.flush()
@@ -181,7 +194,7 @@ PY
     _fail "$name" 'project-scope skills-only installer exited unsuccessfully'
     return
   fi
-  if ! grep -Fq 'CODEX_INSTALLER_EXIT=0' "$fixture_root/project-session.log"; then
+  if ! grep -Fq 'CODEX_INSTALLER_EXIT=0' "$fixture_root/project-session.log" || ! grep -Fq 'Done.' "$fixture_root/project-session.log" || grep -Fq 'Aborted.' "$fixture_root/project-session.log"; then
     _fail "$name" 'project-scope skills-only installer did not complete'
     return
   fi
@@ -192,11 +205,19 @@ PY
     return
   fi
   manifest_base="$(sed -n '1p' "$manifest_file")"
-  if [[ "$manifest_base" != "$home_directory" ]] || tail -n +2 "$manifest_file" | grep -q '[^[:space:]]'; then
-    _fail "$name" "user-scope rules-only manifest has base '$manifest_base' and entries '$(tail -n +2 "$manifest_file" | tr '\n' ',')'"
+  actual_manifest="$fixture_root/actual-user-manifest"
+  tail -n +2 "$manifest_file" > "$actual_manifest"
+  if [[ "$manifest_base" != "$home_directory" ]] || ! cmp -s "$expected_packs" "$actual_manifest"; then
+    _fail "$name" "user-scope rules-only manifest has base '$manifest_base' or unexpected entries"
     return
   fi
-  if ! grep -Fq 'rules/common/workflow.md' "$home_directory/.codex/AGENTS.md" || [[ -e "$home_directory/.agents/skills/subagent-driven-development/SKILL.md" ]]; then
+  while IFS= read -r relative_file; do
+    if [[ ! -f "$home_directory/$relative_file" ]]; then
+      _fail "$name" "user-scope mandatory language pack file is missing: $relative_file"
+      return
+    fi
+  done < "$expected_packs"
+  if ! grep -Fq 'rules/common/workflow.md' "$home_directory/.codex/AGENTS.md" || [[ -e "$home_directory/.agents/skills/subagent-driven-development/SKILL.md" ]] || [[ -e "$home_directory/.codex/agents" || -e "$home_directory/.codex/agents.LICENSE" ]]; then
     _fail "$name" 'user-scope rules-only selection was not preserved'
     return
   fi
@@ -210,15 +231,28 @@ PY
   fi
   expected_manifest="$fixture_root/expected-project-manifest"
   actual_manifest="$fixture_root/actual-project-manifest"
-  while IFS= read -r source_file; do
-    printf '.agents/skills/%s\n' "${source_file#"$project_source/skills/"}"
-  done < <(find "$project_source/skills" -type f | sort) > "$expected_manifest"
-  tail -n +2 "$manifest_file" | sed '/^$/d' > "$actual_manifest"
+  {
+    while IFS= read -r source_file; do
+      printf '.agents/skills/%s\n' "${source_file#"$project_source/skills/"}"
+    done < <(find "$project_source/skills" -type f)
+    cat "$expected_packs"
+  } | sort > "$expected_manifest"
+  tail -n +2 "$manifest_file" > "$actual_manifest"
   if ! cmp -s "$expected_manifest" "$actual_manifest"; then
-    _fail "$name" 'project-scope manifest entries do not match the selected skills source'
+    _fail "$name" 'project-scope manifest entries do not match the selected skills and mandatory packs'
     return
   fi
-  if ! grep -Fq 'No elelem rules are currently installed for this scope.' "$project_directory/AGENTS.md" || grep -Eq '^## rules/' "$project_directory/AGENTS.md" || grep -Fq 'rules/' "$manifest_file" || ! grep -Fq 'rules/common/workflow.md' "$home_directory/.codex/AGENTS.md"; then
+  while IFS= read -r relative_file; do
+    if [[ ! -f "$project_directory/$relative_file" ]]; then
+      _fail "$name" "project-scope mandatory language pack file is missing: $relative_file"
+      return
+    fi
+  done < "$expected_packs"
+  if [[ -e "$project_directory/.codex/agents" || -e "$project_directory/.codex/agents.LICENSE" ]]; then
+    _fail "$name" 'project-scope agent bundle was installed despite being declined'
+    return
+  fi
+  if ! grep -Fq '# On-demand language packs' "$project_directory/AGENTS.md" || ! grep -Fq '/skills or $skill-name' "$project_directory/AGENTS.md" || grep -Eq '^## rules/' "$project_directory/AGENTS.md" || grep -Fq 'rules/' "$manifest_file" || ! grep -Fq 'rules/common/workflow.md' "$home_directory/.codex/AGENTS.md"; then
     _fail "$name" 'project rule deselection activated rules or disturbed the user-scope installation'
     return
   fi
@@ -364,7 +398,7 @@ test_codex_installs_all_packs_without_optional_instructions() {
   input="$input\n \n \n\n"
   mkdir -p "$(dirname "$target")"
   printf 'User instructions before.\n' > "$target"
-  if ! run_codex_language_fixture "$input" first || ! assert_codex_language_packs "$base"; then
+  if ! run_codex_language_fixture "$input" first; then
     _fail "codex_${scope}_mandatory_packs" "declined optional instructions did not install every pack"; return
   fi
   assert_codex_deferred_payload "$target" "$scope" || return

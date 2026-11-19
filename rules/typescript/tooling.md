@@ -41,7 +41,7 @@ project/
 - Formatter: `prettier` with project-specific configuration
 - Linter: `eslint` with `@typescript-eslint/parser` and recommended rules
 - Type checker: `tsc --noEmit` for type checking without emitting files
-- Never suppress a lint or type error without a comment explaining why
+- Suppress a lint or type error only when active project policy permits it and a comment explains why. Functional syntax does not authorise suppressions; fix the underlying issue or seek direction
 
 ## Build and Run
 

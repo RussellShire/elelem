@@ -16,6 +16,7 @@ paths = {
     "phase_evidence": "skills/_shared/phase-evidence.md",
     "worker_contract": "skills/_shared/worker-contract.md",
     "research": "skills/research/SKILL.md",
+    "coordinator": "skills/workflow-coordinator/SKILL.md",
     "router": "skills/brainstorming/SKILL.md",
     "standard": "skills/brainstorming-standard/SKILL.md",
     "guided": "skills/brainstorming-guided/SKILL.md",
@@ -228,7 +229,7 @@ def ticket_consumers_contract(create: str, work: str) -> bool:
         ))
         and has_all(create, create_rules + (
             "user has explicitly requested ticket creation", "approved plan revision", "not an automatic side effect",
-            "Confirm the result with the user before creating anything", "Stop further creation immediately",
+            "Apply Detection Result Handling", "Stop further creation immediately",
             "MUST NOT** roll back successfully created tickets",
         ))
         and has_all(work, work_rules + (
@@ -295,6 +296,110 @@ def ticket_unresolved_parent_question_contract(work: str) -> bool:
     ))
 
 
+def ticket_detection_contract(detect: str) -> bool:
+    resolution = section(detect, "## Result contract\n", "## Worked Example\n")
+    required = (
+        "`confirmed`", "`candidate`", "`ambiguous`", "`unsupported`", "`none`",
+        "status", "system", "matches", "mechanism", "evidence",
+        "confidence", "support", "MCP > remote > CLI",
+        "single supported MCP system", "policy-confirmed",
+        "not proof of authentication or project access",
+        "supported matching remote", "CLI-only", "candidate",
+        "Multiple unresolved matches", "Azure DevOps", "Bitbucket",
+        "detected but unsupported",
+    )
+    matrix = section(resolution, "| Evidence scenario |", "\n\nFor multiple matches")
+    cases = (
+        ("one supported MCP", "confirmed"),
+        ("multiple MCP matches and a matching remote", "ambiguous"),
+        ("one supported matching remote", "confirmed"),
+        ("one CLI-only match", "candidate"),
+        ("unsupported remote and supported CLI", "unsupported"),
+        ("no match", "none"),
+    )
+    return has_all(resolution, required) and all(
+        f"| {scenario} | {status} |" in matrix for scenario, status in cases
+    )
+
+
+def ticket_creation_result_contract(create: str) -> bool:
+    resolution = section(create, "## Detection Result Handling\n", "## Procedure\n")
+    return has_all(resolution, (
+        "supported target", "confirm that target with the user before any writes",
+        "candidate", "ambiguous", "ask the user to select",
+        "unsupported", "do not call that backend", "supported alternative",
+        "the user's authorisation to use the existing Markdown fallback",
+        "none", "Markdown fallback", "Preserve an explicit selection", "do not detect again",
+    ))
+
+
+def ticket_pickup_result_contract(work: str) -> bool:
+    resolution = section(work, "## Detection Result Handling\n", "## Procedure\n")
+    return has_all(resolution, (
+        "supported target", "fetching may proceed",
+        "candidate", "ambiguous", "ask the user to select and confirm a supported target before fetching",
+        "unsupported", "do not call that backend", "supported alternative",
+        "the user's authorisation to use the existing pasted-ticket or Markdown recovery path",
+        "none", "paste the ticket content", "Preserve an explicit selection", "do not detect again",
+    ))
+
+
+def github_hierarchy_contract(create: str, owner: str) -> bool:
+    github = section(create, "### GitHub Issues\n", "### Jira\n")
+    hierarchy = section(owner, "### GitHub Relationship Degradation\n", "### Termination rule\n")
+    parent_references = section(owner, "### Parent references by system\n", "Parent lookup failures")
+    return has_all(github, (
+        "matching textual parent references in Story and Task bodies when creating them",
+        "Epic -> Story -> Task", "If Task-to-Story is explicitly rejected",
+        "keep the successful Epic-to-Story relationship",
+        "give the Task no native parent", "Part of #<story>, Epic: #<epic>",
+        "Never give a Story-grouped Task a native Epic parent",
+        "If Epic-to-Story is explicitly rejected", "no native parent relationships",
+        "textual parent references throughout", "For a flat Epic and Tasks",
+        "Part of #<epic>", "labels remain mandatory",
+        "outcome is uncertain", "stop further ticket creation and relationship writes",
+        "Do not retry", "reparent", "delete successful links",
+    )) and has_all(hierarchy, (
+        "Story theme", "complete Epic `## Design`",
+        "attempt each Epic-to-Task relationship at most once",
+        "If a flat Epic-to-Task relationship is explicitly rejected, give that Task no native parent",
+        "When a native relationship succeeds, its immediate parent must match the body's `Part of #...` reference",
+        "Epic: #N` in the Task body records the ancestor and does not replace the Story parent",
+    )) and has_all(parent_references, (
+        "use the native parent field first", "Part of #N", "Epic: #N",
+    ))
+
+
+def epic_body_limit_contract(owner: str, create: str) -> bool:
+    limits = section(owner, "## Epic Body Limits\n", "## Single Source of Truth\n")
+    failure = section(create, "8. **Back-fill the epic body.**", "9. **Report to the user.**")
+    github = section(create, "### GitHub Issues\n", "### Jira\n")
+    return has_all(limits, (
+        "complete rendered Epic body", "body limit is known", "before creating the Epic",
+        "stop before creating", "ask the user for an authorised alternative",
+        "additional headings", "truncation", "splitting the design",
+        "external-only design reference",
+        "Do not evade a limit with additional headings, truncation, splitting the design, or an external-only design reference.",
+        "limit is discovered through rejection", "Do not create children under a missing or incomplete Epic",
+        "back-fill", "attempted at most once", "update is rejected or its outcome is uncertain",
+        "preserve created tickets", "report the exact failed operation and current partial state",
+        "If it exceeds the limit, preserve the created tickets, do not attempt the update",
+        "Do not create children under a missing or incomplete Epic.",
+    )) and has_all(failure, (
+        "complete updated Epic body", "known body limit", "do not repeat that body write",
+        "preserve the created tickets", "report the exact failed operation",
+    )) and has_all(github, ("complete rendered Epic body", "known body limit", "Before creating the Epic"))
+
+
+def work_question_is_portable_and_single_choice(work: str) -> bool:
+    example = section(work, "7. **Get explicit scope confirmation.**", "If the user selects \"Adjust scope\"")
+    return has_all(example, (
+        "schematic example", "Adapt its fields to the actual exposed question-tool interface",
+        "{{ASK_USER_QUESTION_TOOL}}", "multiSelect: false",
+        "Plain-text confirmation is not sufficient",
+    ))
+
+
 def repository_discovery_contract(project: str) -> bool:
     activation = (
         "Run repository discovery first.", "If Atlassian MCP is unavailable, do not load the optional helper",
@@ -328,6 +433,18 @@ def phase_behaviour_contract(texts_to_check: dict[str, str]) -> bool:
         and has_all(texts_to_check["skip"], ("user must explicitly select this method", "If no design exists", "one focused follow-up", "not a phase skip"))
         and has_all(texts_to_check["design_review"], ("holistic review", "Approved", "Issues Found", "SKIPPED", "The coordinator owns user approval"))
         and all("records the result and next action" not in texts_to_check[name] for name in ("research", "router", "standard", "guided", "skip", "committee", "design_review", "work"))
+    )
+
+
+def research_selection_contract(research: str, coordinator: str, phase_evidence: str) -> bool:
+    normalised_research = " ".join(research.split())
+    normalised_coordinator = " ".join(coordinator.split())
+    return (
+        has_all(research, ("Research is collaborative by default", "Ask the user which uncertainty or option to investigate next"))
+        and "Committee mode is available only" not in normalised_research
+        and "Committee mode is an explicit less-conversational choice" not in normalised_coordinator
+        and has_all(coordinator, ("Planning committee mode", "explicit less-conversational choice"))
+        and has_all(phase_evidence, ("Planning committee selection cannot retrospectively authorise", "autonomous Research"))
     )
 
 
@@ -381,22 +498,10 @@ def blueprint_task_link_contract(owner: str) -> bool:
 
 check("blueprint preparation loads canonical inputs before independent review", blueprint_preparation_contract(texts["implementation_planning"]))
 blueprint_consumer_clauses: dict[str, tuple[str, ...]] = {
-    "wave": (
-        "matching approved blueprint revision", "separate blueprint approval source",
-        "equivalent complete supplied input", "package cohesive blueprint units",
-        "requirement-to-unit-to-task map", "complete applicable steps",
-        "without rediscovering implementation instructions", "NEEDS_CONTEXT",
-    ),
     "readiness": (
         "full blueprint", "blueprint revision", "source identities", "unit-to-task map",
         "complete applicable steps", "missing or stale blueprint evidence", "GAPS",
         "instruction gaps return to Implementation Planning", "design Planning",
-    ),
-    "executor": (
-        "matching approved blueprint revision", "separate blueprint approval source",
-        "complete applicable steps", "direct or wave-skip entry", "NEEDS_CONTEXT",
-        "valid in-scope corrections reuse current blueprint instructions",
-        "new consequential choices return upstream",
     ),
     "implementer": (
         "matching blueprint revision and unit IDs", "full applicable exact-file instructions",
@@ -409,9 +514,7 @@ check("blueprint reviewer receives complete schema and independent read-only obl
 check("task briefs retain blueprint revision with complete instructions", blueprint_task_link_contract(texts["briefs"]))
 check("blueprint schema has one canonical owner", blueprint_owner_contract(texts))
 check("canonical proposal schema and actual pre-use loading", proposal_contract(texts))
-check("design reviewer loads and delivers canonical proposal schema", proposal_delivery_contract(texts["design_prompt"]))
 check("committee mapping has one owner and retains fallback and deliberation", committee_contract(texts))
-check("ticket hierarchy, grouping and recovery have one owner", ticket_contract(texts))
 check(
     "ticket entry loads canonical phase evidence before applying it",
     "Apply `../_shared/phase-evidence.md`" in texts["work"]
@@ -421,8 +524,14 @@ check(
     "unresolved ticket parent asks user to resolve the reference before stopping",
     ticket_unresolved_parent_question_contract(texts["work"]),
 )
+check("ticket detection reports certainty, support and evidence by precedence", ticket_detection_contract(texts["detect"]))
+check("ticket creation preserves detection certainty before writes", ticket_creation_result_contract(texts["create"]))
+check("ticket pickup preserves detection certainty before fetching", ticket_pickup_result_contract(texts["work"]))
+check("GitHub relationship degradation preserves the recoverable hierarchy", github_hierarchy_contract(texts["create"], texts["tickets"]))
+check("complete Epic body limits stop unsafe creation and back-fill", epic_body_limit_contract(texts["tickets"], texts["create"]))
+check("ticket scope question remains portable and single-choice", work_question_is_portable_and_single_choice(texts["work"]))
 check("discovery and ticket consumers load installed-source contracts", discovery_contract(texts))
-check("phase-specific interaction and approval boundaries remain", phase_behaviour_contract(texts))
+check("Research remains conversational while Planning committee remains distinct", research_selection_contract(texts["research"], texts["coordinator"], texts["phase_evidence"]))
 
 print(f"Cases: {passed + failed}, Passed: {passed}, Failed: {failed}")
 if failed:

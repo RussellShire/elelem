@@ -15,11 +15,11 @@ If you cannot verify a suggestion without additional information, you **MUST** s
 
 Feedback from your human partner is trusted: you do not need to verify its correctness, but you **MUST** still clarify any item whose scope or intent is unclear before implementing.
 
-## Clarify Before Partial Implementation
+## Contain Unclear Findings
 
-When feedback contains multiple items and any item is unclear, you **MUST NOT** implement any of the items until the unclear ones are clarified. Items in a review are frequently related; a partial implementation built on partial understanding produces a wrong implementation.
+When a finding is unclear, block that finding and potentially affected work whose dependencies, inputs or resources may be affected. Record the affected tasks, contracts and resources, the evidence and uncertainty, and the dependency, input and resource independence that supports any continuation. The coordinator may continue only already-authorised eligible work after recording that independence, within the approved schedule and existing wave barriers. Unknown impact blocks potentially affected work until its scope is established.
 
-The correct response is: "I understand items X, Y, Z. I need clarification on items A and B before implementing any of this."
+For example: "I can evaluate and route items X, Y and Z. Item A is unclear, so it and any work that may depend on it are paused. I need clarification on A before its correction can be authorised."
 
 ## YAGNI Check on "Implement Properly"
 
@@ -46,7 +46,7 @@ When you receive a categorised review (Critical / Important / Minor, or equivale
 - **Critical** and **Important** issues block acceptance of the affected work and its dependent work, and must be fixed before merge in ad-hoc work.
 - **Minor** issues **MAY** be deferred with an explicit note.
 
-An unresolved finding does not block already-authorised, demonstrably independent eligible work. Before continuing, load and apply `./subagent-dispatch.md` for affected dependency and resource closure and wave barriers; do not proceed past the affected gate or present unresolved work as complete.
+An unresolved finding does not block already-authorised, demonstrably independent eligible work, provided the coordinator records dependency, input and resource independence and establishes that the finding cannot affect it. It blocks acceptance of affected work and potentially affected dependants. Before continuing, load and apply `./subagent-dispatch.md` for affected closure and wave barriers. Unknown impact blocks potentially affected work. Do not proceed past the affected gate or present unresolved work as complete.
 
 ## Cumulative Review Adapter
 

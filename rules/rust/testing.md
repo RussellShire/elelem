@@ -7,14 +7,14 @@ globs: **/*.rs
 
 ## Framework
 
-Use the built-in test framework (`#[test]` and `#[cfg(test)]`). For advanced features, use `rstest` for parameterised tests.
+Use the built-in test framework (`#[test]` and `#[cfg(test)]`) for new projects or projects without an established applicable framework. Preserve the established applicable framework in existing projects. Use `rstest` for advanced parameterised tests in new projects or when the project already uses it. Do not introduce a second runner or migrate frameworks without an approved migration. A framework preference does not authorise dependency installation. When multiple frameworks are established, use project context or ask the user rather than assuming a hierarchy. Framework-specific API instructions and examples below apply only when using the named framework. In an existing project with a different established applicable framework, use its equivalent APIs rather than changing frameworks to follow an example.
 
 ## File and Function Naming
 
 - Tests live in a `tests` module at the bottom of each file: `#[cfg(test)] mod tests { ... }`
 - Integration tests live in `tests/` directory at the project root
 - Test functions: `#[test] fn test_feature_scenario()` using descriptive names
-- Benchmark functions: use `criterion` crate for benchmarking
+- Benchmark functions: use the `criterion` crate in new projects or when the established project already uses it; do not replace existing benchmark tools or install it without approved dependency changes
 
 ## Structure
 
@@ -22,7 +22,7 @@ Use the built-in test framework (`#[test]` and `#[cfg(test)]`). For advanced fea
 - Use `#[should_panic(expected = "message")]` for tests that expect panics
 - Use `Result<(), E>` return type for tests with `?` operator
 - Group related tests in nested `mod` blocks within the tests module
-- Use `rstest` for parameterised tests rather than copy-pasting
+- Use `rstest` for parameterised tests in new projects or when the project already uses it; in existing projects, preserve the established applicable framework rather than introducing `rstest` solely to avoid copy-pasting
 
 ## Assertions
 

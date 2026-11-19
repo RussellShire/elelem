@@ -38,6 +38,8 @@ approve the workflow.
 
 ## The Mode Question
 
+The following tool call is schematic, not a literal schema. Adapt it to the actual exposed question tool, preserve a single selection, and make the tool call rather than asking in plain text.
+
 ```
 {{ASK_USER_QUESTION_TOOL}}:
   question: "How would you like to approach the design step?"

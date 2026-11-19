@@ -7,7 +7,7 @@ globs: **/*.go
 
 ## Type Safety
 
-You **MUST** handle all errors explicitly. Never ignore errors with `_` unless you document why in a comment.
+You **MUST** handle all errors explicitly. Never ignore errors with `_` unless a justification comment is permitted by active project policy and explains why. If such a comment is not permitted, handle the error explicitly or request direction.
 
 - Return errors as the last return value
 - Wrap errors with `fmt.Errorf("context: %w", err)` to add context

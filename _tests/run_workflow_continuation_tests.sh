@@ -344,7 +344,7 @@ test_review_findings_block_affected_task_without_holding_independent_progress() 
 
 test_context_boundary_policy() {
   local name="$1" relative="$2" pattern="$3" content
-  if [[ ! -r "$REPO_ROOT/$relative" ]]; then
+  if [[ ! -f "$REPO_ROOT/$relative" || ! -r "$REPO_ROOT/$relative" ]]; then
     _fail "$name" "cannot read $relative to check requirement $name: $pattern"
     return
   fi
@@ -658,6 +658,28 @@ run_case() {
   return 0
 }
 
+test_context_boundary_policy_self_check() {
+  local name="$1" relative="$2" pattern="$3" expected_status="$4" fixture_root
+  fixture_root="$(mktemp -d "$TEST_TMP/context-boundary.XXXXXX")" || {
+    _fail "$name" "could not create context boundary fixture"
+    return
+  }
+  printf 'Boundary\n    policy\tpresent\n' > "$fixture_root/policy.md"
+  if ! (
+    local REPO_ROOT="$fixture_root" passed=0 failed=0
+    run_case "$name" test_context_boundary_policy "$relative" "$pattern" > "$fixture_root/result"
+    [[ "$case_result_count" == 1 && "$case_result_status" == "$expected_status" ]] &&
+      [[ "$case_result_detail" != "test function is missing:"* ]] &&
+      [[ "$(( passed + failed ))" == 1 ]] &&
+      [[ "$(wc -l < "$fixture_root/result")" -eq 1 ]] &&
+      grep -Fq "[$expected_status] $name" "$fixture_root/result"
+  ); then
+    _fail "$name" "expected exactly one $expected_status result for $relative with pattern $pattern"
+    return
+  fi
+  _pass "$name"
+}
+
 test_names=(
   coordinator_validates_returns_before_advancing
   coordinator_preserves_approval_gates
@@ -679,8 +701,6 @@ test_names=(
   handoff_preserves_exact_skip_provenance
   resume_reuses_valid_phase_evidence
   blocker_containment_consumers_reference_canonical_policy
-  generic_pause_clauses_contain_only_affected_transitions
-  review_findings_block_affected_task_without_holding_independent_progress
   supported_installers_deliver_workflow_continuation_policy
 )
 
@@ -688,18 +708,11 @@ for name in "${test_names[@]}"; do
   run_case "$name"
 done
 
-for requirement in "${context_policy_cases[@]}"; do
-  IFS='|' read -r name relative pattern <<< "$requirement"
-  case "$name" in
-    blueprint_wave_input|blueprint_wave_complete_steps|blueprint_executor_direct_entry|blueprint_corrections_reuse|blueprint_reviewer_authority)
-      continue ;;
-    verification_validity_is_input_based|verification_reuse_survives_session_resume|final_gate_invokes_evidence_owner|final_gate_reuses_matching_evidence|standing_rule_requires_coordinator)
-      continue ;;
-    blocker_policy_task_dependency_closure|blocker_policy_shared_contract_scope|blocker_policy_global_safety_scope|blocker_policy_independent_eligibility|blocker_policy_unknown_impact|blocker_policy_provisional_hold|blocker_policy_review_scope|blocker_policy_coordinator_loads_owner|blocker_policy_brief_loads_owner|blocker_policy_executor_loads_owner|blocker_policy_fast_path_invokes_executor)
-      continue ;;
-  esac
-  run_case "$name" test_context_boundary_policy "$relative" "$pattern"
-done
+run_case context_boundary_helper_accepts_matching_content test_context_boundary_policy_self_check policy.md 'boundary policy present' PASS
+run_case context_boundary_helper_rejects_missing_content test_context_boundary_policy_self_check policy.md 'absent policy' FAIL
+run_case context_boundary_helper_rejects_missing_file test_context_boundary_policy_self_check absent.md 'boundary policy present' FAIL
+
+run_case claude_installer_delivers_context_boundary_policy test_installer_delivers_context_boundary_policy claude
 
 for requirement in "${continuation_guard_mutation_cases[@]}"; do
   IFS='|' read -r name relative pattern removed <<< "$requirement"

@@ -80,7 +80,7 @@ verified. Skipped clean-up retains registered artefacts and must be disclosed.
 There is no complexity-based automatic bypass. A missing required input blocks
 downstream work even when its producing phase was skipped.
 
-Research and planning are conversational by default. Committee mode is an
+Research is conversational by default. Planning committee mode is an
 explicit less-conversational choice, not an automatic alternative. After both
 design and blueprint approvals, wave planning and execution proceed without
 routine task or wave approval prompts. Ask the user before changing approved

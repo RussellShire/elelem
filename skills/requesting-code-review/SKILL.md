@@ -10,7 +10,7 @@ metadata:
 
 The iron-law rules (when reviews are mandatory, forbidden response phrases) live in `../../rules/common/code-review.md`. The procedural rules that bind once a review skill is running (verify before acting, severity discipline, when to push back, GitHub inline reply procedure) live in `../_shared/code-review.md`. Subagent iron-law rules live in `../../rules/common/subagents.md` and the dispatch procedure rules live in `../_shared/subagent-dispatch.md`. This skill is the procedure that dispatches a reviewer.
 
-Before running the procedure below, you **MUST** read `../_shared/code-review.md` and `../_shared/subagent-dispatch.md` using the Read tool if you have not already read them in this session. Before dispatch, load `../_shared/worker-contract.md` and deliver its All workers and Read-only workers sections verbatim with source identity as required by the dispatch procedure.
+Before running the procedure below, you **MUST** read `../_shared/code-review.md` and `../_shared/subagent-dispatch.md` using `{{READ_FILE_TOOL}}` if you have not already read them in this session. Before dispatch, load `../_shared/worker-contract.md` and deliver its All workers and Read-only workers sections verbatim with source identity as required by the dispatch procedure.
 
 ## Procedure
 
@@ -62,11 +62,11 @@ Dispatch a capable reviewer selected for the scope, with the filled template. Th
 The reviewer returns `REVIEWED` with:
 
 - Strengths: clean separation, real tests, no mocks of code under test
-- Important: no progress indicators on long repair runs
-- Minor: magic number (100) for the reporting interval
-- Assessment: ready to proceed with Important fixed
+- Important: invalid dates silently return no results, contrary to the approved API requirement that invalid dates return an actionable error
+- Optional improvement: a progress indicator could improve usability, but no approved requirement or supported-contract defect was identified, so it remains advisory and out of scope pending approval
+- Assessment: resolve the grounded Important issue before accepting the affected task. The optional progress suggestion is not a blocking finding and remains out of scope unless approved.
 
-Fix the Important issue before accepting the affected task, and log the Minor finding. Continue only eligible independent work while the issue remains unresolved, applying `../_shared/code-review.md` and the dispatch procedure.
+The reviewer must identify the approved requirement or demonstrated supported-contract defect that makes a finding blocking. Optional usability features are advisory and out of scope pending approval, not a separate severity class. Continue only eligible independent work while a blocking issue remains unresolved, applying `../_shared/code-review.md` and the dispatch procedure.
 
 ## Template
 

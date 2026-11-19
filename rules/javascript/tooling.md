@@ -32,7 +32,7 @@ project/
 - Formatter: `prettier` with project-specific configuration
 - Linter: `eslint` with modern config (`@eslint/js`, `eslint-config-prettier`)
 - Use `"type": "module"` in `package.json` for ESM by default
-- Never suppress a lint error without a comment explaining why
+- Suppress a lint error only when active project policy permits it and a comment explains why. Functional syntax does not authorise suppressions; fix the underlying issue or seek direction
 
 ## Build and Run
 
