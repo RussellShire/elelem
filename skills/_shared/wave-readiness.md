@@ -26,6 +26,14 @@ task, not links alone. Include any separately recorded scoped preparation,
 blueprint-review or approval skips with equivalent complete supplied inputs.
 Load and apply `phase-evidence.md` to validate those ordered prerequisites.
 
+Include each task's completed implementation-selection preflight candidate from
+`subagent-dispatch.md` and its complete record under `task-briefs.md`: native
+selector and resolved target, source and revision, live tool schema,
+availability/capability and explicit-routing evidence, required effort or
+variant, specialist, and applicable exact user request and named task/correction
+scope. If the live interface requires no such request, include evidence for that
+conclusion. A proposed candidate is not an actual dispatch pin.
+
 ## Readiness checks
 
 The independent reviewer returns `READY` or `GAPS`, with evidence for each
@@ -63,27 +71,30 @@ skipped. Check:
 - The requested implementation tier (`low`, `medium` or `high`) has a
   lowest-capable rationale and an independent specialist rationale. No task
   depends on workers discovering architecture outside the brief.
-- The native mapping or bounded current-model configuration fallback path under
-  `./subagent-dispatch.md` requires fresh availability, capability and explicit
-  routing checks. Confirm the configuration source and actual schema can be
-  inspected; missing evidence is not a configuration fault. Require, before first dispatch,
-  the actual task pin and full provenance from `./task-briefs.md`, including any
-  fallback warning and reason. Readiness does not select concrete models or
-  replace per-dispatch checks. Corrections retain the pin, including fallback;
-  relevant drift or workflow model changes require explicit authorisation.
+- Every task has a completed preflight candidate and any required exact user
+  request under `./subagent-dispatch.md`. Missing consent, unresolved routes,
+  configuration faults, unsupported controls or missing inspection evidence
+  leave the affected task at `GAPS`; a skip cannot waive preflight.
+- `READY` covers the exact reviewed schedule and preflight revision, conditional
+  on fresh availability, capability, consent, schema and routing checks before
+  each dispatch. It does not guarantee future availability or runtime identity.
+  The actual task pin is recorded only after final checks immediately before its
+  call. Corrections retain that pin; material drift renews affected preflight,
+  consent and readiness as applicable.
 
-Preparation and reviewer model policies remain unchanged. Implementation
-configuration fallback does not waive non-configuration capability or routing
-blockers. External runtime plugin recovery remains outside workflow-selection
-policy; it neither blocks readiness by itself nor is prevented by task pins.
+Preparation and reviewer model policies remain unchanged. Explicit alternatives
+do not waive capability, schema or routing blockers. External runtime plugin
+recovery remains outside workflow-selection policy; it neither blocks readiness
+by itself nor is prevented by task pins.
 
 ## Verdict and response
 
-`READY` means the proposed schedule is complete and safe to dispatch against
-the supplied approved design and blueprint. It does not approve either or
-authorise their change. Record verdict, reviewer identity, plan revision, blueprint
-revision, source identities, unit-to-task coverage and material
-findings in `waves.md` and coordinator state.
+`READY` means the proposed schedule and its recorded preflight are complete and
+safe to dispatch against the supplied approved design and blueprint, subject to
+fresh per-dispatch checks. It does not promise later availability or runtime
+identity, approve either artefact, or authorise their change. Record verdict,
+reviewer identity, plan revision, blueprint revision, source identities,
+unit-to-task coverage and material findings in `waves.md` and coordinator state.
 
 If the user explicitly skips only this review, do not invoke a reviewer and do
 not record a review verdict. Record readiness review `SKIPPED`, its authorisation,

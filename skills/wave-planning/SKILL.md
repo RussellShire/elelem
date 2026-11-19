@@ -64,12 +64,19 @@ temporary outputs and global tools. Same-wave writes must not overlap. A task
 must not read a file another concurrent task can change. Shared stable reads
 are allowed. Do not schedule tasks whose external resources conflict.
 
-Require native resolution under `../_shared/subagent-dispatch.md` before first
-implementation dispatch, including only its warned, checked current-model
-configuration fallback.
-Use `../_shared/task-briefs.md` for selection provenance and the coordinator's
-retained actual task pin. Do not choose concrete models during decomposition,
-infer reasoning effort from a tier, or change specialist to obtain a model.
+After implementation tiers and independent specialists are assigned, resolve
+each task's concrete preflight candidate through `../_shared/subagent-dispatch.md`
+before readiness review. Inspect the live model-override instruction, verify
+native selector, resolved target, schema, availability, capability, effort or
+variant and explicit routing, and obtain any required exact user model request
+for its named task and bounded corrections. Record the preflight candidate,
+request evidence or inspected evidence that a request is not required, and
+preflight revision through `../_shared/task-briefs.md`. This is not the actual
+dispatch pin; do not pin until final checks immediately before the call.
+Configuration faults, missing evidence, unsupported controls or missing required
+consent block affected tasks. A review skip cannot waive preflight. Do not choose
+concrete models in the approved blueprint, infer reasoning effort from a tier,
+or change specialist to obtain a model.
 
 Assign stable wave identifiers and cap concurrency at verified harness and
 resource capacity. If capacity cannot be verified, report the limitation and

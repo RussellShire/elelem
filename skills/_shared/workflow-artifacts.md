@@ -53,9 +53,10 @@ required file cannot be materialised, block before execution.
   immutable throughout the workflow.
 - Task status, owner, review result, verification result, evidence and blockers.
 - Before recording or consuming an implementation selection, load
-  `./task-briefs.md` and apply its nested implementation selection record. Pin that record in
-  each existing task record before first dispatch. Preserve its original
-  provenance and any authorised revisions.
+  `./task-briefs.md` and apply its nested implementation selection record. Keep
+  the preflight candidate distinct from the actual dispatch pin, which is
+  populated only after final checks immediately before the call. Preserve
+  original provenance, request scope, and any authorised revisions.
 - Accepted-change checkpoints and wave integration results, including whether
   each checkpoint is verified or explicitly accepted-unverified.
 - Current artefact revisions and links or references to evidence.
@@ -172,6 +173,13 @@ not automatically accepted just because a task returned. Preserve user changes
 and pre-existing dirty paths. If a changed path cannot safely be attributed to
 an accepted task, user change, or recorded baseline, stop and ask rather than
 overwriting, accepting, or discarding it.
+
+On selection resume, load the nested selection record from `task-briefs.md`.
+Validate applicable consent and fresh route checks for historical pins,
+including fallback records; a legacy pin is not evidence of consent. Preserve
+the pin when checks show the route and constraints are unchanged. Material
+target, variant, required-effort, selector-route or task-scope drift pauses only
+the affected work for renewed preflight and authorisation.
 
 Do not invalidate approved work merely because an approved task changed files.
 Only unexpected changes or changes that invalidate recorded assumptions require

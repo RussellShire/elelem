@@ -47,7 +47,7 @@ Preparation phases (Research, Planning, Implementation Planning and Wave Plannin
 and independent design, blueprint or readiness reviews require high-capability
 reasoning. Select reviewers by scope and capability, not by assuming every review is tiny. Cross-cutting or
 design-level review needs a capable reviewer. The implementation configuration
-and configuration fallback below do not change preparation or reviewer policy.
+and explicit-alternative rules below do not change preparation or reviewer policy.
 
 ### Implementation tiers
 
@@ -131,37 +131,50 @@ overrides and inherited provider conflicts that prevent the requested selection
 are blockers, not reasons to change specialist or parent provider. Never assume
 a profile switches a child's inherited provider.
 
-### Configuration fallback and task pin
+### Explicit alternative and task pin
 
-Missing, invalid or unresolvable selected implementation configuration triggers
-a visible warning identifying the configuration fault, source and requested
-tier. This includes duplicate effective mappings, disabled/inactive mappings and
-unavailable mapped targets established during configuration-resolution checks.
-Distinguish these from an actual execution failure, which does not trigger
-configuration fallback. An inability to inspect configuration or enumerate the
-environment is missing evidence, not proof of a faulty mapping.
+Before readiness review, inspect the live model-override instruction for the
+selected dispatch tool. Present both the native selector and its resolved
+provider/API target, plus applicable settings, effort or variant and named task
+scope. Where that live tool requires an explicit user model request, obtain an
+exact model/variant request for each named task and its bounded in-scope
+corrections. Configuration, tier selection and design approval are not that
+request. Record the request source and scope. Do not impose this requirement on
+a harness whose live interface does not require it.
 
-Use only the current effective session selection, including its applicable
-reasoning effort or variant, as the configuration fallback candidate. Verify it
-is available, capable and explicitly routable to the same specialist before
-dispatch. If usable, warn and continue without a routine prompt, retaining the
-requested tier separately from the actual fallback selection. Do not manufacture
-a variant such as `#high`, drop effort/variant or silently rely on inheritance.
-No arbitrary working-model search, omitted-model defaults or workflow tier
-escalation is permitted. Non-configuration capability or routing insufficiency
-requires a decision, as does an unusable or unverifiable current model. A valid
-mapping that cannot handle the task is not a configuration-fallback opportunity.
+Missing, invalid or unresolvable selected implementation configuration is a
+configuration fault. This includes duplicate effective mappings,
+disabled/inactive mappings and unavailable mapped targets established during
+configuration-resolution checks. A configuration fault blocks affected
+dispatch. An alternative, including the current session model, may be used only
+when the user explicitly requests that exact selection for the named task or a
+specifically identified contingency, and its availability, capability, effort
+and explicit specialist routing checks pass. It is not an automatic fallback.
+Do not manufacture a variant such as `#high`, drop effort/variant or silently
+rely on inheritance.
 
-Before recording the actual workflow selection, load and apply
-`./workflow-artifacts.md`. Pin it before first dispatch in the existing task
-record, with the complete selection provenance
-required by `./task-briefs.md`. In-scope corrections must reuse that actual pin,
-including a fallback pin; recheck availability, routing and configuration drift.
-Do not reselect the then-current session model for corrections. Relevant drift
-or any requested workflow model change requires explicit authorisation; record
-the decision and revised pin rather than silently resolving again.
+An inability to inspect configuration or enumerate the environment is missing
+evidence, not a configuration fault; block dispatch until the required evidence
+is available. A valid but incapable mapping, unsupported required effort,
+unsupported route, invocation mismatch and actual execution failure are distinct
+blockers, not configuration-fallback opportunities. Do not search for an
+arbitrary working model, use omitted-model defaults or silently escalate the
+workflow tier. An execution failure does not trigger reselection.
 
-These rules govern workflow selection and configuration fallback only. Existing
+Before recording or consuming an implementation-selection record, load and apply
+`./workflow-artifacts.md`. Record selection provenance in the existing task
+record using `./task-briefs.md`. In-scope corrections reuse the retained actual
+pin with fresh availability, routing and drift checks. An unchanged bounded
+correction reuses that retained actual pin; do not reselect the then-current
+session model. A target, variant, required effort, selector identity affecting
+the route or task-scope change invalidates the affected consent and preflight.
+Material configuration drift pauses affected work for renewed checks and
+authorisation. A source revision change demonstrated to leave route, constraints
+and consent unchanged may reuse existing evidence with that equivalence recorded.
+Legacy fallback records remain historical and provide no inferred consent;
+validate missing applicable consent before reuse.
+
+These rules govern workflow selection and explicit alternatives only. Existing
 external plugins' runtime retries and model switches remain outside this policy
 and unchanged. Do not disable or block solely because of a runtime plugin.
 Do not claim workflow pins prevent external runtime changes. Distinguish requested
@@ -170,7 +183,7 @@ harness evidence and any uncertainty. A worker self-report is not routing proof.
 
 ### Resolution procedure
 
-Before every dispatch:
+Before readiness and before every dispatch:
 
 1. Enumerate the model identifiers exposed by the current environment using
    `{{MODEL_ENUMERATION}}`.
@@ -185,10 +198,9 @@ Before every dispatch:
    it. If it is unsuitable, ask the user to switch; do not replace the
    user-facing conversation with an unrequested detached agent.
 5. If enumeration, routing or required capability cannot be verified, report
-   a blocker. Apply only the bounded implementation configuration fallback above
-   when its checks succeed. Otherwise do not silently inherit, downgrade or
-   substitute a model. A user may explicitly authorise an alternative; record
-   the decision and its consequence.
+   a blocker. A configuration fault also blocks; an alternative requires the
+   exact user request and complete checks above. Never silently inherit, downgrade
+   or substitute a model.
 
 ### Tier changes and blockers
 
@@ -205,7 +217,7 @@ runtime plugin recovery remains outside this workflow-selection policy.
 | "This was available before"                     | Confirm current availability and routing for every dispatch. |
 | "The examples list it"                         | Examples are not an availability guarantee. |
 | "The skill metadata selected this model"        | Metadata does not switch the active primary model. |
-| "I can silently use the inherited model instead"| Only a configuration fault permits the warned, checked, explicitly routed current-model fallback; missing routing or capability remains a blocker. |
+| "I can silently use the inherited model instead"| A configuration fault blocks; only an explicitly requested, checked and explicitly routed alternative may proceed. |
 
 ## Answering subagent questions
 
