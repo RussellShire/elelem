@@ -24,11 +24,23 @@ _load_declaration() {
 }
 
 _test_contract() {
-  local content requirement label pattern
+  local content startup_content requirement startup_requirement label pattern
   local requirements=(
-    'ticket request|ask.{0,120}(ticket reference|ticket content)'
     'pasted fallback|integration.{0,160}paste'
-    'chosen base|always ask.{0,100}comparison branch'
+    'main first comparison|comparison branch first.{0,140}main.{0,80}first choice'
+    'comparison typed alternative|native free.form input is unavailable.{0,100}explicit.{0,20}other.{0,100}type the branch'
+    'comparison has no default|do not preselect a branch.{0,80}assume a default'
+    'branch only discovery|inspect only.{0,100}checked.out PR branch.{0,100}GIT_OPTIONAL_LOCKS=0.{0,100}(obvious issue key|branch.name search hint)'
+    'no usable hint manual route|no usable hint.{0,100}skip the lookup.{0,160}directly to asking for a ticket reference'
+    'request key excluded|do not infer an issue key from the request'
+    'discovery only without supplied ticket|if the user supplied.{0,100}skip Jira discovery'
+    'one read.only Jira attempt|one best.effort read.only Jira (lookup|search).{0,160}do not retry'
+    'one result confirmation|exactly one usable Jira match.{0,255}(Yes, continue|yes.{0,30}continue).{0,180}proceed only after the user explicitly confirms'
+    'multiple Jira choices|multiple distinct issue keys and summaries.{0,180}single.select choices in that prompt'
+    'manual ticket override|manual override.{0,160}(type|enter|alternate)'
+    'ticket typed alternative|always allow the user to enter a different ticket through native free.form input or an explicit.{0,5}other.{0,10}choice followed by asking them to type'
+    'unavailable Jira explanation|briefly say.{0,100}lookup could not be completed.{0,100}without suggesting that the issue does not exist'
+    'failed discovery manual route|Jira is unavailable.{0,100}lookup fails or times out.{0,100}no usable match.{0,200}go straight to asking.{0,100}ticket reference'
     'scope confirmation|purpose.{0,100}acceptance criteria.{0,100}dependencies.{0,100}exclusions.{0,200}confirm'
     'clarify criteria|do not infer.{0,100}acceptance criteria'
     'git boundaries|HEAD.{0,100}base tip.{0,100}merge.base.{0,100}status'
@@ -55,6 +67,23 @@ _test_contract() {
     label="${requirement%%|*}"; pattern="${requirement#*|}"
     if grep -Eiq "$pattern" <<< "$content"; then _pass "$label"; else _fail "$label" 'required instruction missing'; fi
   done
+  startup_content="$(awk '/^## 1\. Ticket and comparison branch$/ {capture=1; next} /^## 2\. Git boundaries and review inputs$/ {capture=0} capture {print}' "$SKILL" | tr '\n' ' ' | tr -s '[:space:]' ' ')"
+  local startup_requirements=(
+    'branch Other is selectable|comparison branch first.{0,255}offer an explicit.{0,5}Other.{0,10}choice.{0,80}type the branch'
+    'single Jira result shows key and summary|exactly one usable Jira match has an issue key and summary.{0,100}show both'
+    'multiple Jira choices label each key and summary|multiple distinct issue keys and summaries.{0,200}single.select choices.{0,120}labelled with each key and summary'
+    'timeout does not retry|lookup fails or times out.{0,255}do not retry'
+    'failed discovery asks for pasted content|no usable match.{0,200}go straight to asking for a ticket reference or pasted content'
+  )
+  for startup_requirement in "${startup_requirements[@]}"; do
+    label="${startup_requirement%%|*}"; pattern="${startup_requirement#*|}"
+    if grep -Eiq "$pattern" <<< "$startup_content"; then _pass "$label"; else _fail "$label" 'required startup instruction missing'; fi
+  done
+  if grep -Eiq 'retry (the )?(Jira )?(lookup|search|discovery) (if|when|after|on)' <<< "$content"; then
+    _fail 'no discovery retries' 'discovery instructions permit a retry'
+  else
+    _pass 'no discovery retries'
+  fi
 }
 
 _test_order_and_frontmatter() {
@@ -90,9 +119,14 @@ _test_install() {
 }
 
 _check_installed() {
-  local harness="$1" target="$2" installed="$2/reviewing-pull-requests/SKILL.md" reference count=0 expected
+  local harness="$1" target="$2" installed="$2/reviewing-pull-requests/SKILL.md" reference count=0 expected section comparison_prompt jira_prompt
   case "$harness" in claude) expected='AskUserQuestion' ;; opencode) expected='question' ;; codex) expected='request_user_input' ;; esac
   if [[ ! -f "$installed" ]] || grep -q '{{' "$installed" || ! grep -Fq "$expected" "$installed"; then _fail "${harness}_install" 'skill missing or tool substitution incorrect'; return; fi
+  section="$(awk '/^## 1\. Ticket and comparison branch$/ {capture=1; next} /^## 2\. Git boundaries and review inputs$/ {capture=0} capture {print}' "$installed")"
+  comparison_prompt="$(grep -i 'comparison branch' <<< "$section" | head -n 1)"
+  jira_prompt="$(grep -i 'usable Jira match' <<< "$section" | head -n 1)"
+  if grep -Fq "\`$expected\`" <<< "$comparison_prompt"; then _pass "${harness}_comparison_prompt_adapter"; else _fail "${harness}_comparison_prompt_adapter" 'comparison prompt does not use the installed question adapter'; fi
+  if grep -Fq "\`$expected\`" <<< "$jira_prompt"; then _pass "${harness}_jira_prompt_adapter"; else _fail "${harness}_jira_prompt_adapter" 'Jira prompt does not use the installed question adapter'; fi
   while IFS= read -r reference; do
     ((count++)) || true
     if [[ ! -f "$target/reviewing-pull-requests/$reference" ]]; then _fail "${harness}_install" "unresolved reference $reference"; return; fi
