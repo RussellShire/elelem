@@ -24,7 +24,7 @@ _load_declaration() {
 }
 
 _test_contract() {
-  local content startup_content requirement startup_requirement label pattern
+  local content startup_content walkthrough_content findings_content requirement startup_requirement label pattern
   local requirements=(
     'pasted fallback|integration.{0,160}paste'
     'main first comparison|comparison branch first.{0,140}main.{0,80}first choice'
@@ -48,7 +48,7 @@ _test_contract() {
     'committed range|merge.base.{0,100}pinned HEAD'
     'dirty contamination|dirty.{0,200}contaminat.{0,100}pause'
     'freshness|local refs.{0,100}stale.{0,100}remote.{0,100}unverified'
-    'interactive walkthrough|each section.{0,160}(questions|continue).{0,100}pause'
+    'interactive walkthrough|after every section.{0,255}wait before presenting'
     'review coverage|correctness.{0,100}ticket coverage.{0,100}regressions.{0,100}edge cases.{0,100}tests'
     'finding evidence|trigger.{0,100}consequence.{0,100}(source|evidence)'
     'finding categories|defects.{0,100}questions.{0,100}preferences'
@@ -78,6 +78,33 @@ _test_contract() {
   for startup_requirement in "${startup_requirements[@]}"; do
     label="${startup_requirement%%|*}"; pattern="${startup_requirement#*|}"
     if grep -Eiq "$pattern" <<< "$startup_content"; then _pass "$label"; else _fail "$label" 'required startup instruction missing'; fi
+  done
+  walkthrough_content="$(awk '/^## 3\. Walkthrough$/ {capture=1; next} /^## 4\. Findings$/ {capture=0} capture {print}' "$SKILL" | tr '\n' ' ' | tr -s '[:space:]' ' ')"
+  findings_content="$(awk '/^## 4\. Findings$/ {capture=1; next} /^## 5\. Recommendation$/ {capture=0} capture {print}' "$SKILL" | tr '\n' ' ' | tr -s '[:space:]' ' ')"
+  local walkthrough_requirements=(
+    'walkthrough one section at a time|one section at a time'
+    'walkthrough gate after every section including final|after every (walkthrough )?section.{0,120}(including|incl).{0,80}(last|final).{0,100}before Findings'
+    'walkthrough Continue precedes alternate input|Continue.{0,80}first option.{0,255}(Native free.form|Question or comment)'
+    'walkthrough only explicit Continue advances|(only|solely).{0,100}explicit `?Continue`?.{0,100}(advance|proceed|next section)'
+    'walkthrough native free-form questions and comments|native free.form input can carry a question or comment'
+    'walkthrough portable typed questions and comments|explicit.{0,30}(option|choice)[^.]{0,100}type a question or comment'
+    'walkthrough responds to answers before re-prompting|answer.{0,120}(respond|address).{0,120}(same|re.show)'
+    'walkthrough re-prompts the same item|re.show.{0,100}same (prompt|section)'
+    'walkthrough dismissal remains paused|dismiss.{0,120}(stay|remain).{0,40}paused'
+    'walkthrough chat fallback waits for explicit continuation|ask.{0,100}chat.{0,100}wait.{0,100}explicit continuation'
+  )
+  local findings_requirements=(
+    'findings invokes the shared adapter gate|ASK_USER_QUESTION_TOOL.{0,100}same question gate described in Walkthrough'
+    'findings gate after every actual finding including final|every (actual )?(individual )?finding.{0,120}(including|incl).{0,80}(last|final).{0,120}before Recommendation'
+    'empty findings phase does not present a question gate|no evidenced issues.{0,160}(do not|never).{0,40}present a question gate'
+  )
+  for requirement in "${walkthrough_requirements[@]}"; do
+    label="${requirement%%|*}"; pattern="${requirement#*|}"
+    if grep -Eiq "$pattern" <<< "$walkthrough_content"; then _pass "$label"; else _fail "$label" 'required Walkthrough instruction missing'; fi
+  done
+  for requirement in "${findings_requirements[@]}"; do
+    label="${requirement%%|*}"; pattern="${requirement#*|}"
+    if grep -Eiq "$pattern" <<< "$findings_content"; then _pass "$label"; else _fail "$label" 'required Findings instruction missing'; fi
   done
   if grep -Eiq 'retry (the )?(Jira )?(lookup|search|discovery) (if|when|after|on)' <<< "$content"; then
     _fail 'no discovery retries' 'discovery instructions permit a retry'
@@ -127,6 +154,10 @@ _check_installed() {
   jira_prompt="$(grep -i 'usable Jira match' <<< "$section" | head -n 1)"
   if grep -Fq "\`$expected\`" <<< "$comparison_prompt"; then _pass "${harness}_comparison_prompt_adapter"; else _fail "${harness}_comparison_prompt_adapter" 'comparison prompt does not use the installed question adapter'; fi
   if grep -Fq "\`$expected\`" <<< "$jira_prompt"; then _pass "${harness}_jira_prompt_adapter"; else _fail "${harness}_jira_prompt_adapter" 'Jira prompt does not use the installed question adapter'; fi
+  section="$(awk '/^## 3\. Walkthrough$/ {capture=1; next} /^## 4\. Findings$/ {capture=0} capture {print}' "$installed")"
+  if grep -Fq "\`$expected\`" <<< "$section"; then _pass "${harness}_walkthrough_prompt_adapter"; else _fail "${harness}_walkthrough_prompt_adapter" 'Walkthrough prompt does not use the installed question adapter'; fi
+  section="$(awk '/^## 4\. Findings$/ {capture=1; next} /^## 5\. Recommendation$/ {capture=0} capture {print}' "$installed")"
+  if grep -Fq "\`$expected\`" <<< "$section"; then _pass "${harness}_findings_prompt_adapter"; else _fail "${harness}_findings_prompt_adapter" 'Findings prompt does not use the installed question adapter'; fi
   while IFS= read -r reference; do
     ((count++)) || true
     if [[ ! -f "$target/reviewing-pull-requests/$reference" ]]; then _fail "${harness}_install" "unresolved reference $reference"; return; fi
